@@ -1,0 +1,112 @@
+import React from 'react';
+import { Calendar, MapPin } from 'lucide-react';
+
+interface ExperienceItem {
+  title: string;
+  company: string;
+  location: string;
+  period: string;
+  description: string[];
+  technologies: string[];
+}
+
+const Experience: React.FC = () => {
+  const experiences: ExperienceItem[] = [
+    {
+      title: "Senior Data Scientist",
+      company: "Tech Solutions Inc.",
+      location: "San Francisco, CA",
+      period: "2022 - Present",
+      description: [
+        "Led a team of 5 data scientists in developing machine learning models for customer behavior prediction",
+        "Implemented automated data pipelines processing 1M+ records daily using Python and Apache Spark",
+        "Increased model accuracy by 25% through advanced feature engineering and ensemble methods"
+      ],
+      technologies: ["Python", "TensorFlow", "Apache Spark", "AWS", "Docker"]
+    },
+    {
+      title: "Full Stack Developer",
+      company: "Digital Innovations",
+      location: "Remote",
+      period: "2020 - 2022",
+      description: [
+        "Built scalable web applications serving 100K+ users using React, Node.js, and PostgreSQL",
+        "Collaborated with design team to implement responsive UI/UX designs",
+        "Optimized application performance resulting in 40% faster load times"
+      ],
+      technologies: ["React", "Node.js", "PostgreSQL", "TypeScript", "MongoDB"]
+    },
+    {
+      title: "Data Analyst",
+      company: "Analytics Pro",
+      location: "New York, NY",
+      period: "2019 - 2020",
+      description: [
+        "Analyzed large datasets to identify trends and patterns for business intelligence",
+        "Created interactive dashboards using Tableau and Power BI for C-level executives",
+        "Provided actionable insights that led to 15% increase in revenue"
+      ],
+      technologies: ["SQL", "Tableau", "Power BI", "Python", "Excel"]
+    }
+  ];
+
+  return (
+    <section id="experience" className="py-20 bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl font-bold text-gray-900 mb-4">Professional Experience</h2>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            My journey in technology spans across different domains, from building software solutions to uncovering insights from data.
+          </p>
+        </div>
+
+        <div className="relative">
+          {/* Timeline line */}
+          <div className="absolute left-4 md:left-1/2 transform md:-translate-x-1/2 h-full w-0.5 bg-blue-200"></div>
+
+          {experiences.map((exp, index) => (
+            <div key={index} className={`relative flex items-center mb-12 ${
+              index % 2 === 0 ? 'md:flex-row' : 'md:flex-row-reverse'
+            }`}>
+              {/* Timeline dot */}
+              <div className="absolute left-4 md:left-1/2 transform md:-translate-x-1/2 w-4 h-4 bg-blue-700 rounded-full border-4 border-white shadow-lg"></div>
+
+              {/* Content */}
+              <div className={`ml-12 md:ml-0 md:w-5/12 ${index % 2 === 0 ? 'md:mr-auto md:pr-8' : 'md:ml-auto md:pl-8'}`}>
+                <div className="bg-white p-6 rounded-lg shadow-lg border border-gray-100">
+                  <div className="flex items-center text-sm text-gray-500 mb-2">
+                    <Calendar size={16} className="mr-2" />
+                    <span>{exp.period}</span>
+                    <MapPin size={16} className="ml-4 mr-2" />
+                    <span>{exp.location}</span>
+                  </div>
+                  
+                  <h3 className="text-xl font-bold text-gray-900 mb-1">{exp.title}</h3>
+                  <h4 className="text-lg text-blue-700 font-semibold mb-4">{exp.company}</h4>
+                  
+                  <ul className="space-y-2 mb-4">
+                    {exp.description.map((item, idx) => (
+                      <li key={idx} className="text-gray-700 text-sm leading-relaxed">
+                        • {item}
+                      </li>
+                    ))}
+                  </ul>
+                  
+                  <div className="flex flex-wrap gap-2">
+                    {exp.technologies.map((tech, idx) => (
+                      <span key={idx} className="px-3 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                        {tech}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+export default Experience;
