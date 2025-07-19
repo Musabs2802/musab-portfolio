@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import ProjectGrid from './ProjectGrid';
+import ProjectGrid from '../components/ProjectGrid';
 
 interface Project {
   id: number;
@@ -12,11 +12,11 @@ interface Project {
   results: string;
 }
 
-const ClientProjects: React.FC = () => {
+const Work: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'all' | 'software' | 'data-science' | 'analysis'>('all');
   const [showAll, setShowAll] = useState(false);
 
-const projects: Project[] = [
+  const projects: Project[] = [
     {
       id: 1,
       title: "E-commerce Platform Optimization",
@@ -78,7 +78,7 @@ const projects: Project[] = [
       results: "Identified 3 new market opportunities worth $10M+ potential revenue"
     }
   ];
-  
+
   const filteredProjects = activeTab === 'all'
     ? projects
     : projects.filter(project => project.category === activeTab);
@@ -93,11 +93,11 @@ const projects: Project[] = [
   ];
 
   return (
-    <section id="client-projects" className="py-20 bg-gray-50">
+    <section id="work" className="py-20 bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-16">
-          <h2 className="text-4xl font-extrabold text-gray-900 mb-4">Client Projects</h2>
+          <h2 className="text-4xl font-extrabold text-gray-900 mb-4">Work</h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
             High-impact solutions delivered for clients across software, data science, and analytics domains.
           </p>
@@ -131,12 +131,13 @@ const projects: Project[] = [
         {/* View More Button */}
         {filteredProjects.length > 3 && (
           <div className="mt-10 flex justify-center">
+            {showAll ? <></> : 
             <button
               onClick={() => setShowAll(!showAll)}
               className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-all"
             >
-              {showAll ? 'View Less' : 'View More'}
-            </button>
+              {showAll ? <></> : 'View More'}
+            </button>}
           </div>
         )}
       </div>
@@ -144,4 +145,4 @@ const projects: Project[] = [
   );
 };
 
-export default ClientProjects;
+export default Work;
