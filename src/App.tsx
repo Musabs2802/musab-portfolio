@@ -5,12 +5,14 @@ import Experience from './components/Experience';
 import ClientProjects from './components/ClientProjects';
 import PersonalProjects from './components/PersonalProjects';
 import Contact from './components/Contact';
+import Technologies from './components/Technologies';
 
 function App() {
   return (
     <div className="min-h-screen bg-white">
       <Header />
       <Hero />
+      <Technologies />
       <Experience />
       <ClientProjects />
       <PersonalProjects />
