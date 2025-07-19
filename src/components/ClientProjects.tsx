@@ -1,95 +1,22 @@
 import React, { useState } from 'react';
 import ProjectGrid from './ProjectGrid';
-
-interface Project {
-  id: number;
-  title: string;
-  description: string;
-  image: string;
-  technologies: string[];
-  category: 'software' | 'data-science' | 'analysis';
-  client: string;
-  results: string;
-}
+import workData from '../data/work.data';
 
 const ClientProjects: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'all' | 'software' | 'data-science' | 'analysis'>('all');
+  const [activeTab, setActiveTab] = useState<'All' | 'Software' | 'Data Science' | 'Analysis'>('All');
   const [showAll, setShowAll] = useState(false);
 
-const projects: Project[] = [
-    {
-      id: 1,
-      title: "E-commerce Platform Optimization",
-      description: "Built a comprehensive e-commerce platform with advanced analytics and personalization features for a retail client.",
-      image: "https://images.pexels.com/photos/230544/pexels-photo-230544.jpeg?auto=compress&cs=tinysrgb&w=600",
-      technologies: ["React", "Node.js", "PostgreSQL", "Redis", "AWS"],
-      category: "software",
-      client: "RetailCorp",
-      results: "Increased conversion rate by 35% and reduced page load time by 60%"
-    },
-    {
-      id: 2,
-      title: "Customer Behavior Prediction Model",
-      description: "Developed machine learning models to predict customer behavior and optimize marketing campaigns for a fintech company.",
-      image: "https://images.pexels.com/photos/590022/pexels-photo-590022.jpeg?auto=compress&cs=tinysrgb&w=600",
-      technologies: ["Python", "TensorFlow", "Scikit-learn", "Apache Spark", "AWS SageMaker"],
-      category: "data-science",
-      client: "FinTech Solutions",
-      results: "Improved prediction accuracy to 89% and increased ROI by 25%"
-    },
-    {
-      id: 3,
-      title: "Supply Chain Analytics Dashboard",
-      description: "Created real-time analytics dashboard for supply chain optimization with predictive insights and automated reporting.",
-      image: "https://images.pexels.com/photos/586103/pexels-photo-586103.jpeg?auto=compress&cs=tinysrgb&w=600",
-      technologies: ["Tableau", "SQL", "Python", "Power BI", "Azure"],
-      category: "analysis",
-      client: "LogisticsPro",
-      results: "Reduced operational costs by 20% and improved delivery times by 30%"
-    },
-    {
-      id: 4,
-      title: "Healthcare Management System",
-      description: "Developed a comprehensive healthcare management system with patient tracking, appointment scheduling, and analytics.",
-      image: "https://images.pexels.com/photos/4386467/pexels-photo-4386467.jpeg?auto=compress&cs=tinysrgb&w=600",
-      technologies: ["Vue.js", "Django", "MySQL", "Docker", "Kubernetes"],
-      category: "software",
-      client: "MedCare Systems",
-      results: "Streamlined operations for 50+ clinics and improved patient satisfaction by 40%"
-    },
-    {
-      id: 5,
-      title: "Fraud Detection AI System",
-      description: "Built an advanced fraud detection system using deep learning to identify suspicious transactions in real-time.",
-      image: "https://images.pexels.com/photos/4164418/pexels-photo-4164418.jpeg?auto=compress&cs=tinysrgb&w=600",
-      technologies: ["Python", "PyTorch", "Apache Kafka", "Elasticsearch", "Docker"],
-      category: "data-science",
-      client: "SecureBank",
-      results: "Reduced fraud incidents by 78% and saved $2M+ annually"
-    },
-    {
-      id: 6,
-      title: "Market Research Analytics",
-      description: "Conducted comprehensive market research and competitive analysis using advanced statistical methods and visualization.",
-      image: "https://images.pexels.com/photos/590020/pexels-photo-590020.jpeg?auto=compress&cs=tinysrgb&w=600",
-      technologies: ["R", "SPSS", "Tableau", "SQL", "Excel"],
-      category: "analysis",
-      client: "MarketInsights Co.",
-      results: "Identified 3 new market opportunities worth $10M+ potential revenue"
-    }
-  ];
-  
-  const filteredProjects = activeTab === 'all'
-    ? projects
-    : projects.filter(project => project.category === activeTab);
+  const filteredProjects = activeTab === 'All'
+    ? workData
+    : workData.filter(work => work.category === activeTab);
 
   const visibleProjects = showAll ? filteredProjects : filteredProjects.slice(0, 3);
 
   const tabs = [
-    { id: 'all', label: 'All Projects' },
-    { id: 'software', label: 'Software' },
-    { id: 'data-science', label: 'Data Science' },
-    { id: 'analysis', label: 'Analysis' }
+    { id: 'All', label: 'All Projects' },
+    { id: 'Software', label: 'Software' },
+    { id: 'Data Science', label: 'Data Science' },
+    { id: 'Analysis', label: 'Analysis' }
   ];
 
   return (

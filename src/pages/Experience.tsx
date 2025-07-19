@@ -1,55 +1,8 @@
 import React from 'react';
 import { Calendar, MapPin } from 'lucide-react';
-
-interface ExperienceItem {
-  title: string;
-  company: string;
-  location: string;
-  period: string;
-  description: string[];
-  technologies: string[];
-}
+import experienceData from '../data/experience.data';
 
 const Experience: React.FC = () => {
-  const experiences: ExperienceItem[] = [
-    {
-      title: "Senior Data Scientist",
-      company: "Tech Solutions Inc.",
-      location: "San Francisco, CA",
-      period: "2022 - Present",
-      description: [
-        "Led a team of 5 data scientists in developing machine learning models for customer behavior prediction",
-        "Implemented automated data pipelines processing 1M+ records daily using Python and Apache Spark",
-        "Increased model accuracy by 25% through advanced feature engineering and ensemble methods"
-      ],
-      technologies: ["Python", "TensorFlow", "Apache Spark", "AWS", "Docker"]
-    },
-    {
-      title: "Full Stack Developer",
-      company: "Digital Innovations",
-      location: "Remote",
-      period: "2020 - 2022",
-      description: [
-        "Built scalable web applications serving 100K+ users using React, Node.js, and PostgreSQL",
-        "Collaborated with design team to implement responsive UI/UX designs",
-        "Optimized application performance resulting in 40% faster load times"
-      ],
-      technologies: ["React", "Node.js", "PostgreSQL", "TypeScript", "MongoDB"]
-    },
-    {
-      title: "Data Analyst",
-      company: "Analytics Pro",
-      location: "New York, NY",
-      period: "2019 - 2020",
-      description: [
-        "Analyzed large datasets to identify trends and patterns for business intelligence",
-        "Created interactive dashboards using Tableau and Power BI for C-level executives",
-        "Provided actionable insights that led to 15% increase in revenue"
-      ],
-      technologies: ["SQL", "Tableau", "Power BI", "Python", "Excel"]
-    }
-  ];
-
   return (
     <section id="experience" className="py-20 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -65,7 +18,7 @@ const Experience: React.FC = () => {
           <div className="absolute left-4 md:left-1/2 transform md:-translate-x-1/2 h-full w-0.5 bg-blue-200"></div>
 
           {/* Timeline items */}
-          {experiences.map((exp, index) => (
+          {experienceData.map((exp, index) => (
             <div key={index} className={`relative flex items-center mb-12 ${
               index % 2 === 0 ? 'md:flex-row' : 'md:flex-row-reverse'
             }`}>
