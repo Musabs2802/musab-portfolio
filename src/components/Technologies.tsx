@@ -78,7 +78,7 @@ const Technologies: React.FC = () => {
           }
 
           .scroll-track {
-            animation: scroll 6s linear infinite;
+            animation: scroll 10s linear infinite;
           }
 
           .scroll-track:hover {
