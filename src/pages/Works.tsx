@@ -5,7 +5,6 @@ import workData from '../data/work.data';
 
 const Work: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'All' | 'Software' | 'Data Science' | 'Analysis'>('All');
-  const [showAll, setShowAll] = useState(false);
   
   useEffect(() => {
     window.scrollTo(0, 0); // Scroll to top on mount
@@ -14,8 +13,6 @@ const Work: React.FC = () => {
   const filteredProjects = activeTab === 'All'
     ? workData
     : workData.filter(work => work.category === activeTab);
-
-  const visibleProjects = showAll ? filteredProjects : filteredProjects.slice(0, 3);
 
   const tabs = [
     { id: 'All', label: 'All Projects' },
@@ -43,7 +40,6 @@ const Work: React.FC = () => {
                 key={tab.id}
                 onClick={() => {
                   setActiveTab(tab.id as any);
-                  setShowAll(false); // reset view more
                 }}
                 className={`px-5 py-2 text-sm font-semibold rounded-xl transition-all ${
                   activeTab === tab.id
@@ -58,20 +54,7 @@ const Work: React.FC = () => {
         </div>
 
         {/* Projects Grid */}
-        <ProjectGrid projects={visibleProjects} isClient={true} />
-
-        {/* View More Button */}
-        {filteredProjects.length > 3 && (
-          <div className="mt-10 flex justify-center">
-            {showAll ? <></> : 
-            <button
-              onClick={() => setShowAll(!showAll)}
-              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-all"
-            >
-              {showAll ? <></> : 'View More'}
-            </button>}
-          </div>
-        )}
+        <ProjectGrid projects={filteredProjects} isClient={true} />
       </div>
     </section>
   );
