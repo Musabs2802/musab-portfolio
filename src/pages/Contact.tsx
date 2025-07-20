@@ -1,5 +1,5 @@
 import React from 'react';
-import { Mail, Linkedin, Github, MapPin } from 'lucide-react';
+import { Mail, Linkedin, Github, MapPin, Phone } from 'lucide-react';
 
 const Contact: React.FC = () => {
   return (
@@ -22,8 +22,18 @@ const Contact: React.FC = () => {
               <Mail className="text-blue-600 mt-1 mr-4" size={24} />
               <div>
                 <p className="font-semibold">Email</p>
-                <a href="mailto:musab@example.com" className="text-gray-700 hover:text-blue-600 transition">
-                  musab@example.com
+                <a href="mailto:musabs2802@gmail.com" className="text-gray-700">
+                  musabs2802@gmail.com
+                </a>
+              </div>
+            </div>
+
+            <div className="flex items-start">
+              <Phone className="text-blue-400 mt-1 mr-4" size={24} />
+              <div>
+                <p className="font-semibold">Phone</p>
+                <a href="tel:+966507055745" className="text-gray-700">
+                  +966 50705-5745
                 </a>
               </div>
             </div>
@@ -42,7 +52,7 @@ const Contact: React.FC = () => {
             <p className="text-xl font-semibold mb-4">Find Me Online</p>
             <div className="flex space-x-4">
               <a
-                href="https://linkedin.com/in/musab"
+                href="https://github.com/Musabs2802"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="bg-blue-600 p-3 rounded-lg text-white hover:bg-blue-700 transition"
@@ -50,7 +60,7 @@ const Contact: React.FC = () => {
                 <Linkedin size={24} />
               </a>
               <a
-                href="https://github.com/musab"
+                href="https://www.linkedin.com/in/musab-shaikh-2802/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="bg-gray-800 p-3 rounded-lg text-white hover:bg-gray-900 transition"
