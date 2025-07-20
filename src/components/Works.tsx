@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import ProjectGrid from './ProjectGrid';
 import workData from '../data/work.data';
+import { useNavigate } from 'react-router-dom';
 
 const ClientProjects: React.FC = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'All' | 'Software' | 'Data Science' | 'Analysis'>('All');
   const [showAll, setShowAll] = useState(false);
 
@@ -57,14 +59,14 @@ const ClientProjects: React.FC = () => {
 
         {/* View More Button */}
         {filteredProjects.length > 3 && (
-          <div className="mt-10 flex justify-center">
-            <button
-              onClick={() => setShowAll(!showAll)}
-              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-all"
-            >
-              {showAll ? 'View Less' : 'View More'}
-            </button>
-          </div>
+        <div className="mt-10 flex justify-center">
+          <button
+            onClick={() => navigate('/works')}
+            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-all"
+          >
+            View More
+          </button>
+        </div>
         )}
       </div>
     </section>

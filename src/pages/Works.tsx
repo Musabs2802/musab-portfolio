@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import ProjectGrid from '../components/ProjectGrid';
 import workData from '../data/work.data';
 
@@ -6,6 +6,10 @@ import workData from '../data/work.data';
 const Work: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'All' | 'Software' | 'Data Science' | 'Analysis'>('All');
   const [showAll, setShowAll] = useState(false);
+  
+  useEffect(() => {
+    window.scrollTo(0, 0); // Scroll to top on mount
+  }, []);
 
   const filteredProjects = activeTab === 'All'
     ? workData
@@ -14,10 +18,10 @@ const Work: React.FC = () => {
   const visibleProjects = showAll ? filteredProjects : filteredProjects.slice(0, 3);
 
   const tabs = [
-    { id: 'all', label: 'All Projects' },
-    { id: 'software', label: 'Software' },
-    { id: 'data-science', label: 'Data Science' },
-    { id: 'analysis', label: 'Analysis' }
+    { id: 'All', label: 'All Projects' },
+    { id: 'Software', label: 'Software' },
+    { id: 'Data Science', label: 'Data Science' },
+    { id: 'Analysis', label: 'Analysis' }
   ];
 
   return (

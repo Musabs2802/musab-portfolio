@@ -1,60 +1,24 @@
 import React from 'react';
-import { siCss, siDocker, siGit, siHtml5, siJavascript, siJupyter, siMongodb, SimpleIcon, siNodedotjs, siNumpy, siPandas, siPlotly, siPostgresql, siPython, siPytorch, siReact, siScikitlearn, siTailwindcss, siTensorflow, siTypescript, siVuedotjs } from 'simple-icons';
-
-interface Technology {
-  name: string;
-  icon: SimpleIcon;
-  category: 'frontend' | 'language' | 'web' | 'styling' | 'backend' | 'data' | 'visualization' | 'ml' | 'tools' | 'database' | 'cloud';
-}
+import { Technology } from '../types';
+import technologiesData from '../data/technologies.data';
 
 const Technologies: React.FC = () => {
-  const technologies: Technology[] = [
-  { name: 'React', icon: siReact, category: 'frontend' },
-  { name: 'JavaScript', icon: siJavascript, category: 'language' },
-  { name: 'TypeScript', icon: siTypescript, category: 'language' },
-  { name: 'Vue.js', icon: siVuedotjs, category: 'frontend' },
-  { name: 'HTML5', icon: siHtml5, category: 'web' },
-  { name: 'CSS3', icon: siCss, category: 'web' },
-  { name: 'Tailwind', icon: siTailwindcss, category: 'styling' },
-  { name: 'Node.js', icon: siNodedotjs, category: 'backend' },
-  { name: 'Python', icon: siPython, category: 'language' },
-  { name: 'Pandas', icon: siPandas, category: 'data' },
-  { name: 'NumPy', icon: siNumpy, category: 'data' },
-  // These don't exist in Simple Icons:
-  { name: 'Matplotlib', icon: siPython, category: 'visualization' },
-  { name: 'Plotly', icon: siPlotly, category: 'visualization' },
-  { name: 'Seaborn', icon: siPython, category: 'visualization' },
-  { name: 'Scikit-learn', icon: siScikitlearn, category: 'ml' },
-  { name: 'TensorFlow', icon: siTensorflow, category: 'ml' },
-  { name: 'PyTorch', icon: siPytorch, category: 'ml' },
-  { name: 'Jupyter', icon: siJupyter, category: 'tools' },
-  // SQL as a language doesn't exist, use PostgreSQL or MySQL as proxy
-  { name: 'SQL', icon: siPostgresql, category: 'database' },
-  { name: 'PostgreSQL', icon: siPostgresql, category: 'database' },
-  { name: 'MongoDB', icon: siMongodb, category: 'database' },
-  { name: 'Git', icon: siGit, category: 'tools' },
-  { name: 'Docker', icon: siDocker, category: 'tools' },
-];
-
-
   const getCategoryStyles = (category: Technology['category']): string => {
     const categoryStyles: Record<Technology['category'], string> = {
-      frontend: 'bg-blue-100 text-blue-700',
-      language: 'bg-green-100 text-green-700',
-      data: 'bg-purple-100 text-purple-700',
-      ml: 'bg-red-100 text-red-700',
-      visualization: 'bg-orange-100 text-orange-700',
-      database: 'bg-indigo-100 text-indigo-700',
-      tools: 'bg-gray-100 text-gray-700',
-      cloud: 'bg-cyan-100 text-cyan-700',
-      web: 'bg-yellow-100 text-yellow-700',
-      styling: 'bg-pink-100 text-pink-700',
-      backend: 'bg-emerald-100 text-emerald-700',
+      Frontend: 'bg-blue-100 text-blue-700',
+      Language: 'bg-green-100 text-green-700',
+      Data: 'bg-purple-100 text-purple-700',
+      ML: 'bg-red-100 text-red-700',
+      Visualization: 'bg-orange-100 text-orange-700',
+      Database: 'bg-indigo-100 text-indigo-700',
+      Tools: 'bg-gray-100 text-gray-700',
+      Cloud: 'bg-cyan-100 text-cyan-700',
+      Backend: 'bg-emerald-100 text-emerald-700',
     };
     return categoryStyles[category];
   };
 
-  const duplicatedTechnologies: Technology[] = [...technologies, ...technologies];
+  const duplicatedTechnologies: Technology[] = [...technologiesData, ...technologiesData];
 
   return (
     <section className="py-16 bg-gradient-to-br from-slate-50 to-blue-50 overflow-hidden">
@@ -109,7 +73,7 @@ const Technologies: React.FC = () => {
               transform: translateX(0);
             }
             100% {
-              transform: translateX(-50%);
+              transform: translateX(-100%);
             }
           }
 

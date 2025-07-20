@@ -1,3 +1,5 @@
+import { SimpleIcon } from "simple-icons";
+
 export interface Experience {
   title: string;
   company: string;
@@ -30,3 +32,8 @@ export interface Work {
   results: string;
 }
 
+export interface Technology {
+  name: string;
+  icon: SimpleIcon;
+  category: 'Frontend' | 'Language' | 'Backend' | 'Data' | 'Visualization' | 'ML' | 'Tools' | 'Database' | 'Cloud';
+}
