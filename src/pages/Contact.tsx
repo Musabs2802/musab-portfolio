@@ -14,6 +14,18 @@ const Contact: React.FC = () => {
           </p>
         </div>
 
+        {/* Calendly CTA */}
+        <div className="text-center mb-16">
+          <a
+            href="https://calendly.com/musabs2802/introductory-meeting"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white font-semibold text-lg rounded-xl transition duration-300 shadow-lg"
+          >
+            📅 Book a Free Call with Me
+          </a>
+        </div>
+
         {/* Contact Info & Socials */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
           {/* Contact Info */}

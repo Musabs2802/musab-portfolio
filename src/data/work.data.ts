@@ -5,7 +5,7 @@ const workData: Work[] = [
       id: 1,
       title: "MBVS Networking App",
       description: "Built for professionals in Switzerland to network, find services, attend events, and apply for jobs — all in one intuitive app.",
-      image: "../src/assets/mbvs-networking-work-src.jpg",
+      image: "../src/assets/mbvs-networking-work-src.png",
       technologies: ["Flutter", "iOS", "Android"],
       category: "Software",
       client: "MBVS | Switzerland",
@@ -34,7 +34,7 @@ const workData: Work[] = [
     {
       id: 4,
       title: "Customer Propensity Model",
-      description: "Build a Machine Learning model based on historical sales to predict what customers would by which skus in the next month",
+      description: "Build a Machine Learning model based on historical sales to predict what customers would by which SKUs in the next month",
       image: "../src/assets/customer-propensity-work-scr.jpg",
       technologies: ["Python", "Machine Learning", "AWS"],
       category: "Data Science",

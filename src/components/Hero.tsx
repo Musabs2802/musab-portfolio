@@ -1,40 +1,10 @@
 import React from 'react';
-import { ChevronDown, Mail, Github, Linkedin } from 'lucide-react';
-import * as simpleIcons from 'simple-icons/icons';
+import { ChevronDown } from 'lucide-react';
 
 const Hero: React.FC = () => {
   const scrollToAbout = () => {
     document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' });
   };
-
-  const socialLinks = [
-    {
-      name: 'GitHub',
-      href: 'https://github.com/yourusername',
-      icon: <Github size={20} />,
-    },
-    {
-      name: 'LinkedIn',
-      href: 'https://linkedin.com/in/yourusername',
-      icon: <Linkedin size={20} />,
-    },
-    {
-      name: 'Kaggle',
-      href: 'https://kaggle.com/yourusername',
-      icon: (
-        <svg
-          width={20}
-          height={20}
-          fill={`#${simpleIcons.siKaggle.hex}`}
-          viewBox="0 0 24 24"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <title>{simpleIcons.siKaggle.title}</title>
-          <path d={simpleIcons.siKaggle.path} />
-        </svg>
-      ),
-    },
-  ];
 
   return (
     <section className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-teal-50 pt-24 px-6">
@@ -51,28 +21,15 @@ const Hero: React.FC = () => {
 
         {/* CTA Buttons */}
         <div className="flex flex-wrap justify-center gap-4 mb-12">
-          {/* Contact */}
+          {/* Calendly */}
           <a
-            href="mailto:musab@example.com"
-            className="flex items-center gap-2 bg-blue-700 text-white px-6 py-3 rounded-xl hover:bg-blue-800 transition duration-200 shadow-md"
+            href="https://calendly.com/musabs2802/introductory-meeting"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 transition duration-200 shadow-md"
           >
-            <Mail size={20} />
-            <span>Get In Touch</span>
+            <span>📅 Book a Free Call Now</span>
           </a>
-
-          {/* Social Buttons */}
-          {socialLinks.map(({ name, href, icon }) => (
-            <a
-              key={name}
-              href={href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 px-6 py-3 rounded-xl border border-gray-200 bg-white hover:shadow-lg transition duration-200"
-            >
-              {icon}
-              <span className="text-gray-800">{name}</span>
-            </a>
-          ))}
         </div>
 
         {/* Chevron Scroll */}
