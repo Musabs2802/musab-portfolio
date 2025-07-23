@@ -2,10 +2,9 @@
 import React from 'react';
 import Hero from '../components/Hero';
 import Technologies from '../components/Technologies';
-import Experience from '../components/Experience';
-import PersonalProjects from '../components/Projects';
 import Contact from '../components/Contact';
 import ClientProjects from '../components/Works';
+import Testimonials from '../components/Testimonials';
 
 const Home: React.FC = () => {
   return (
@@ -13,6 +12,7 @@ const Home: React.FC = () => {
       <Hero />
       <Technologies />
       <ClientProjects />
+      <Testimonials />
       <Contact />
     </main>
   );
