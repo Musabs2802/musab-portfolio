@@ -1,5 +1,5 @@
-import React from 'react';
-import { Mail, Linkedin, Github, MapPin, Phone } from 'lucide-react';
+import React from "react";
+import { Mail, Linkedin, Github, MapPin, Phone } from "lucide-react";
 
 const Contact: React.FC = () => {
   return (
@@ -9,8 +9,9 @@ const Contact: React.FC = () => {
         <div className="text-center mb-16">
           <h2 className="text-4xl font-bold mb-4">Let's Connect</h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            I'm always open to new opportunities, collaborations, or just a friendly chat.
-            Feel free to reach out via any of the platforms below.
+            I'm always open to new opportunities, collaborations, or just a
+            friendly chat. Feel free to reach out via any of the platforms
+            below.
           </p>
         </div>
 
@@ -20,7 +21,7 @@ const Contact: React.FC = () => {
             href="https://calendly.com/musabs2802/introductory-meeting"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-block px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white font-semibold text-lg rounded-xl transition duration-300 shadow-lg"
+            className="inline-block px-8 py-4 bg-primary-600 hover:bg-primary-500 text-white font-semibold text-lg rounded-xl transition duration-300 shadow-lg"
           >
             📅 Book a Free Call with Me
           </a>
@@ -31,7 +32,7 @@ const Contact: React.FC = () => {
           {/* Contact Info */}
           <div className="space-y-6">
             <div className="flex items-start">
-              <Mail className="text-blue-600 mt-1 mr-4" size={24} />
+              <Mail className="text-primary-600 mt-1 mr-4" size={24} />
               <div>
                 <p className="font-semibold">Email</p>
                 <a href="mailto:musabs2802@gmail.com" className="text-gray-700">
@@ -41,7 +42,7 @@ const Contact: React.FC = () => {
             </div>
 
             <div className="flex items-start">
-              <Phone className="text-blue-400 mt-1 mr-4" size={24} />
+              <Phone className="text-primary-600 mt-1 mr-4" size={24} />
               <div>
                 <p className="font-semibold">Phone</p>
                 <a href="tel:+966507055745" className="text-gray-700">
@@ -51,7 +52,7 @@ const Contact: React.FC = () => {
             </div>
 
             <div className="flex items-start">
-              <MapPin className="text-blue-600 mt-1 mr-4" size={24} />
+              <MapPin className="text-primary-600 mt-1 mr-4" size={24} />
               <div>
                 <p className="font-semibold">Location</p>
                 <p className="text-gray-700">Jeddah, Saudi Arabia</p>
@@ -67,7 +68,7 @@ const Contact: React.FC = () => {
                 href="https://github.com/Musabs2802"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="bg-blue-600 p-3 rounded-lg text-white hover:bg-blue-700 transition"
+                className="bg-primary-600 p-3 rounded-lg text-white hover:bg-primary-700 transition"
               >
                 <Linkedin size={24} />
               </a>

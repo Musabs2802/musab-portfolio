@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { Menu, X } from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import { Menu, X } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
 
 const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -11,8 +11,8 @@ const Header: React.FC = () => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50);
     };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   // Close mobile menu on route change
@@ -21,22 +21,22 @@ const Header: React.FC = () => {
   }, [location.pathname]);
 
   const navItems = [
-    { label: 'Home', to: '/' },
-    { label: 'Works', to: '/works' },
+    { label: "Home", to: "/" },
+    { label: "Works", to: "/works" },
     // { label: 'Projects', to: '/projects' },
-    { label: 'Experience', to: '/experience' },
-    { label: 'Contact', to: '/contact' },
+    { label: "Experience", to: "/experience" },
+    { label: "Contact", to: "/contact" },
   ];
 
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled ? 'bg-white/95 backdrop-blur-sm shadow-sm' : 'bg-transparent'
+        isScrolled ? "bg-white/95 backdrop-blur-sm shadow-sm" : "bg-transparent"
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          <div className="text-xl font-bold text-blue-700 cursor-pointer">
+          <div className="text-xl font-bold text-primary-700 cursor-pointer">
             <Link to="/">Musab Shaikh</Link>
           </div>
 
@@ -46,8 +46,10 @@ const Header: React.FC = () => {
               <Link
                 key={to}
                 to={to}
-                className={`text-gray-700 hover:text-blue-700 transition-colors duration-200 capitalize ${
-                  location.pathname === to ? 'font-semibold text-blue-700' : ''
+                className={`text-gray-700 hover:text-primary-700 transition-colors duration-200 capitalize ${
+                  location.pathname === to
+                    ? "font-semibold text-primary-700"
+                    : ""
                 }`}
               >
                 {label}
@@ -72,7 +74,7 @@ const Header: React.FC = () => {
               <Link
                 key={to}
                 to={to}
-                className="block w-full text-left py-2 text-gray-700 hover:text-blue-700 transition-colors duration-200 capitalize"
+                className="block w-full text-left py-2 text-gray-700 hover:text-primary-700 transition-colors duration-200 capitalize"
               >
                 {label}
               </Link>
