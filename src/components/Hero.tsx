@@ -7,45 +7,66 @@ const Hero: React.FC = () => {
   };
 
   return (
-    <section className="min-h-screen flex items-center justify-center bg-white dark:bg-neutral-900 pt-24 px-6">
-      <div className="max-w-4xl mx-auto text-center animate-fade-in">
-        {/* Heading */}
-        <h1 className="font-heading text-5xl md:text-7xl font-bold text-neutral-900 dark:text-white mb-4">
-          Hi, I’m{" "}
-          <span className="text-primary-600 dark:text-primary-400">Musab</span>
+    <section
+      className="relative min-h-screen flex items-center justify-center bg-[#FAFAF8] dark:bg-neutral-950 px-6 pt-28"
+      style={{
+        backgroundImage: `radial-gradient(circle, rgba(0,0,0,0.05) 1px, transparent 1px)`,
+        backgroundSize: "24px 24px",
+      }}
+    >
+      <div className="max-w-3xl mx-auto text-center animate-fade-in">
+        {/* Avatar / Illustration Placeholder */}
+        <div className="mx-auto mb-6 w-24 h-24 rounded-2xl bg-white dark:bg-neutral-900 shadow-sm flex items-center justify-center overflow-hidden">
+          <img
+            src="https://res.cloudinary.com/de75b0zis/image/upload/v1767276493/musab-img_dbulfo.png"
+            alt="Musab Shaikh"
+            className="w-full h-full object-cover transition-transform duration-300"
+          />
+        </div>
+
+        {/* Intro pill */}
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 mb-6 rounded-full bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-sm text-neutral-600 dark:text-neutral-400">
+          Hey! I’m{" "}
+          <span className="font-medium text-neutral-900 dark:text-white">
+            Musab Shaikh
+          </span>
+        </div>
+
+        {/* Main headline */}
+        <h1 className="font-heading text-4xl md:text-6xl font-semibold text-neutral-900 dark:text-white leading-tight mb-6">
+          I build data & software systems
+          <br />
+          <span className="text-neutral-500 dark:text-neutral-400">
+            that actually work.
+          </span>
         </h1>
 
-        {/* Subtitle */}
-        <h2 className="text-xl md:text-2xl font-sans text-neutral-600 dark:text-neutral-300 mb-6">
-          Software Engineer & Data Scientist
-        </h2>
-
-        {/* Description */}
-        <p className="text-base md:text-lg font-sans text-neutral-700 dark:text-neutral-400 max-w-2xl mx-auto mb-10 leading-relaxed">
-          I build scalable software and extract insights from data. Combining
-          full-stack development with machine learning, I help turn ideas into
-          data-driven solutions.
+        {/* Subtext */}
+        <p className="text-base md:text-lg text-neutral-600 dark:text-neutral-400 leading-relaxed max-w-2xl mx-auto mb-10">
+          From pricing optimization and demand forecasting to full-stack
+          applications, I turn complex business problems into clean,
+          production-ready solutions.
         </p>
 
-        {/* CTA Buttons */}
-        <div className="flex flex-wrap justify-center gap-4 mb-12">
+        {/* CTA */}
+        <div className="flex justify-center mb-14">
           <a
             href="https://calendly.com/musabs2802/introductory-meeting"
             target="_blank"
             rel="noopener noreferrer"
-            className="bg-primary-600 hover:bg-primary-700 text-white px-6 py-3 rounded-xl shadow-md transition duration-200"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-sm font-medium shadow-sm hover:opacity-90 transition"
           >
-            📅 Book a Free Call Now
+            Contact me
           </a>
         </div>
 
-        {/* Scroll Chevron */}
+        {/* Scroll indicator */}
         <button
           onClick={scrollToAbout}
           aria-label="Scroll to About Section"
-          className="animate-bounce text-neutral-400 hover:text-primary-600 dark:hover:text-primary-400 transition"
+          className="text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300 transition animate-bounce"
         >
-          <ChevronDown size={32} />
+          <ChevronDown size={28} />
         </button>
       </div>
     </section>

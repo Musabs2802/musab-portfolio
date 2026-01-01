@@ -3,12 +3,17 @@ import { Mail, Linkedin, Github, MapPin, Phone } from "lucide-react";
 
 const Contact: React.FC = () => {
   return (
-    <section id="contact" className="py-20 bg-gray-50 text-gray-900">
-      <div className="max-w-4xl mx-auto px-6">
+    <section
+      id="contact"
+      className="min-h-screen flex items-center justify-center bg-[#FAFAF8] dark:bg-neutral-950 px-6 pt-28 pb-16"
+    >
+      <div className="max-w-4xl mx-auto w-full">
         {/* Header */}
-        <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold mb-4">Let's Connect</h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+        <div className="text-center mb-12">
+          <h2 className="text-4xl md:text-5xl font-bold mb-4 text-neutral-900 dark:text-white">
+            Let's Connect
+          </h2>
+          <p className="text-lg text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto leading-relaxed">
             I'm always open to new opportunities, collaborations, or just a
             friendly chat. Feel free to reach out via any of the platforms
             below.
@@ -16,77 +21,109 @@ const Contact: React.FC = () => {
         </div>
 
         {/* Calendly CTA */}
-        <div className="text-center mb-16">
+        <div className="text-center mb-14">
           <a
             href="https://calendly.com/musabs2802/introductory-meeting"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-block px-8 py-4 bg-primary-600 hover:bg-primary-500 text-white font-semibold text-lg rounded-xl transition duration-300 shadow-lg"
+            className="inline-flex items-center gap-2 px-8 py-4 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 font-medium text-lg rounded-xl shadow-sm hover:opacity-90 transition"
           >
             📅 Book a Free Call with Me
           </a>
         </div>
 
         {/* Contact Info & Socials */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
-          {/* Contact Info */}
-          <div className="space-y-6">
-            <div className="flex items-start">
-              <Mail className="text-primary-600 mt-1 mr-4" size={24} />
-              <div>
-                <p className="font-semibold">Email</p>
-                <a href="mailto:musabs2802@gmail.com" className="text-gray-700">
-                  musabs2802@gmail.com
+        <div className="bg-white dark:bg-neutral-900 rounded-3xl shadow-sm p-8 md:p-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+            {/* Contact Info */}
+            <div className="space-y-6">
+              <h3 className="text-xl font-semibold mb-6 text-neutral-900 dark:text-white">
+                Contact Info
+              </h3>
+              <div className="flex items-start gap-4">
+                <Mail
+                  className="text-neutral-600 dark:text-neutral-400 mt-1 flex-shrink-0"
+                  size={20}
+                />
+                <div>
+                  <p className="font-semibold text-neutral-900 dark:text-white text-sm mb-1">
+                    Email
+                  </p>
+                  <a
+                    href="mailto:musabs2802@gmail.com"
+                    className="text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition"
+                  >
+                    musabs2802@gmail.com
+                  </a>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-4">
+                <Phone
+                  className="text-neutral-600 dark:text-neutral-400 mt-1 flex-shrink-0"
+                  size={20}
+                />
+                <div>
+                  <p className="font-semibold text-neutral-900 dark:text-white text-sm mb-1">
+                    Phone
+                  </p>
+                  <a
+                    href="tel:+966507055745"
+                    className="text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition"
+                  >
+                    +966 50705-5745
+                  </a>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-4">
+                <MapPin
+                  className="text-neutral-600 dark:text-neutral-400 mt-1 flex-shrink-0"
+                  size={20}
+                />
+                <div>
+                  <p className="font-semibold text-neutral-900 dark:text-white text-sm mb-1">
+                    Location
+                  </p>
+                  <p className="text-neutral-600 dark:text-neutral-400">
+                    Jeddah, Saudi Arabia
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Social Links */}
+            <div>
+              <h3 className="text-xl font-semibold mb-6 text-neutral-900 dark:text-white">
+                Find Me Online
+              </h3>
+              <div className="flex gap-4">
+                <a
+                  href="https://www.linkedin.com/in/musab-shaikh-2802/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center w-12 h-12 bg-neutral-900 dark:bg-white rounded-xl text-white dark:text-neutral-900 hover:opacity-90 transition shadow-sm"
+                  aria-label="LinkedIn"
+                >
+                  <Linkedin size={20} />
+                </a>
+                <a
+                  href="https://github.com/Musabs2802"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center w-12 h-12 bg-neutral-900 dark:bg-white rounded-xl text-white dark:text-neutral-900 hover:opacity-90 transition shadow-sm"
+                  aria-label="GitHub"
+                >
+                  <Github size={20} />
                 </a>
               </div>
-            </div>
-
-            <div className="flex items-start">
-              <Phone className="text-primary-600 mt-1 mr-4" size={24} />
-              <div>
-                <p className="font-semibold">Phone</p>
-                <a href="tel:+966507055745" className="text-gray-700">
-                  +966 50705-5745
-                </a>
-              </div>
-            </div>
-
-            <div className="flex items-start">
-              <MapPin className="text-primary-600 mt-1 mr-4" size={24} />
-              <div>
-                <p className="font-semibold">Location</p>
-                <p className="text-gray-700">Jeddah, Saudi Arabia</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Social Links */}
-          <div className="space-y-6">
-            <p className="text-xl font-semibold mb-4">Find Me Online</p>
-            <div className="flex space-x-4">
-              <a
-                href="https://github.com/Musabs2802"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="bg-primary-600 p-3 rounded-lg text-white hover:bg-primary-700 transition"
-              >
-                <Linkedin size={24} />
-              </a>
-              <a
-                href="https://www.linkedin.com/in/musab-shaikh-2802/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="bg-gray-800 p-3 rounded-lg text-white hover:bg-gray-900 transition"
-              >
-                <Github size={24} />
-              </a>
             </div>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="border-t border-gray-200 mt-16 pt-8 text-center">
-          <p className="text-gray-500 text-sm">
+        <div className="mt-12 text-center">
+          <p className="text-neutral-500 dark:text-neutral-400 text-sm">
             © 2025 Musab Shaikh. All rights reserved.
           </p>
         </div>

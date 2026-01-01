@@ -1,57 +1,94 @@
-import React from 'react';
-import { Calendar, MapPin } from 'lucide-react';
-import experienceData from '../data/experience.data';
+interface Job {
+  id: number;
+  title: string;
+  company: string;
+  location: string;
+  period: string;
+  responsibilities: string[];
+  logo: string;
+  logoColor: string;
+}
 
-const Experience: React.FC = () => {
+const jobs: Job[] = [
+  {
+    id: 1,
+    title: "Software Engineer",
+    company: "Octopusx",
+    location: "Chittagong, Bangladesh",
+    period: "Apr 2023 - Apr 2025",
+    responsibilities: [
+      "Built and maintained backend systems and project architecture using a monorepo for multiple apps.",
+      "Led front and back-end teams, handled task distribution, code reviews, and made key tech decisions.",
+      "Designed ERDs, planned flows, and built scalable database schemas for performance and reliability.",
+      "Managed 20+ projects in one codebase, keeping collaboration smooth and development consistent.",
+    ],
+    logo: "O",
+    logoColor: "bg-red-500",
+  },
+  {
+    id: 2,
+    title: "Full Stack Developer",
+    company: "Monster Studio",
+    location: "Chittagong, Bangladesh",
+    period: "Jan 2023 - Apr 2023",
+    responsibilities: [
+      "Handled MongoDB indexing, search, filter, and pagination using Atlas Search; optimized DB structure.",
+      "Integrated Cloudflare R2, Meilsearch, Mailgun, Stripe, PayPal, and real-time notifications.",
+      "Built bulk file/video upload & download, responsive dashboards, and analytics tracking.",
+    ],
+    logo: "M",
+    logoColor: "bg-green-500",
+  },
+];
+
+export default function Experience() {
   return (
-    <section id="experience" className="py-20 bg-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold text-gray-900 mb-4">Professional Experience</h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            My journey in technology spans across different domains, from building software solutions to uncovering insights from data.
-          </p>
-        </div>
-
-        <div className="relative">
-          {/* Timeline line */}
-          <div className="absolute left-4 md:left-1/2 transform md:-translate-x-1/2 h-full w-0.5 bg-blue-200"></div>
-
-          {experienceData.map((exp, index) => (
-            <div key={index} className={`relative flex items-center mb-12 ${
-              index % 2 === 0 ? 'md:flex-row' : 'md:flex-row-reverse'
-            }`}>
-              {/* Timeline dot */}
-              <div className="absolute left-4 md:left-1/2 transform md:-translate-x-1/2 w-4 h-4 bg-blue-700 rounded-full border-4 border-white shadow-lg"></div>
-
-              {/* Content */}
-              <div className={`ml-12 md:ml-0 md:w-5/12 ${index % 2 === 0 ? 'md:mr-auto md:pr-8' : 'md:ml-auto md:pl-8'}`}>
-                <div className="bg-white p-6 rounded-lg shadow-lg border border-gray-100">
-                  <div className="flex items-center text-sm text-gray-500 mb-2">
-                    <Calendar size={16} className="mr-2" />
-                    <span>{exp.period}</span>
-                    <MapPin size={16} className="ml-4 mr-2" />
-                    <span>{exp.location}</span>
+    <section className="py-16 px-4 bg-white">
+      <div className="max-w-5xl mx-auto">
+        <h2 className="text-4xl md:text-5xl font-bold text-center mb-12 text-[#1a1a1a]">
+          Where I've Worked
+        </h2>
+        <div className="space-y-5">
+          {jobs.map((job) => (
+            <div
+              key={job.id}
+              className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow"
+            >
+              <div className="flex items-start justify-between mb-5">
+                <div className="flex-1">
+                  <h3 className="text-xl font-bold text-gray-900 mb-1">
+                    {job.title}
+                  </h3>
+                  <p className="text-sm text-gray-500">{job.period}</p>
+                </div>
+                <div
+                  className={`w-11 h-11 rounded-lg ${job.logoColor} flex items-center justify-center text-white font-bold flex-shrink-0`}
+                >
+                  {job.logo}
+                </div>
+              </div>
+              <ul className="space-y-2.5 mb-5">
+                {job.responsibilities.map((responsibility, index) => (
+                  <li
+                    key={index}
+                    className="flex gap-3 text-[15px] text-gray-600 leading-relaxed"
+                  >
+                    <span className="text-gray-400 mt-0.5">•</span>
+                    <span>{responsibility}</span>
+                  </li>
+                ))}
+              </ul>
+              <div className="flex items-center gap-2.5 pt-4 border-t border-gray-100">
+                <div
+                  className={`w-6 h-6 rounded ${job.logoColor} flex items-center justify-center text-white text-xs font-bold`}
+                >
+                  {job.logo}
+                </div>
+                <div>
+                  <div className="font-semibold text-gray-900 text-sm">
+                    {job.company}
                   </div>
-                  
-                  <h3 className="text-xl font-bold text-gray-900 mb-1">{exp.title}</h3>
-                  <h4 className="text-lg text-blue-700 font-semibold mb-4">{exp.company}</h4>
-                  
-                  <ul className="space-y-2 mb-4">
-                    {exp.description.map((item, idx) => (
-                      <li key={idx} className="text-gray-700 text-sm leading-relaxed">
-                        • {item}
-                      </li>
-                    ))}
-                  </ul>
-                  
-                  <div className="flex flex-wrap gap-2">
-                    {exp.technologies.map((tech, idx) => (
-                      <span key={idx} className="px-3 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
-                        {tech}
-                      </span>
-                    ))}
-                  </div>
+                  <div className="text-xs text-gray-500">{job.location}</div>
                 </div>
               </div>
             </div>
@@ -60,6 +97,4 @@ const Experience: React.FC = () => {
       </div>
     </section>
   );
-};
-
-export default Experience;
+}

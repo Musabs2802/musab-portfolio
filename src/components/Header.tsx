@@ -31,24 +31,26 @@ const Header: React.FC = () => {
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled ? "bg-white/95 backdrop-blur-sm shadow-sm" : "bg-transparent"
+        isScrolled
+          ? "bg-white/95 dark:bg-neutral-950/95 backdrop-blur-sm shadow-sm"
+          : "bg-transparent"
       }`}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-6">
         <div className="flex justify-between items-center h-16">
-          <div className="text-xl font-bold text-primary-700 cursor-pointer">
+          <div className="text-xl font-bold text-neutral-900 dark:text-white cursor-pointer">
             <Link to="/">Musab Shaikh</Link>
           </div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex space-x-8">
+          <nav className="hidden md:flex items-center gap-1">
             {navItems.map(({ label, to }) => (
               <Link
                 key={to}
                 to={to}
-                className={`text-gray-700 hover:text-primary-700 transition-colors duration-200 capitalize ${
+                className={`px-4 py-2 rounded-lg text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-900 transition-all duration-200 capitalize text-sm font-medium ${
                   location.pathname === to
-                    ? "font-semibold text-primary-700"
+                    ? "bg-neutral-100 dark:bg-neutral-900 text-neutral-900 dark:text-white"
                     : ""
                 }`}
               >
@@ -59,7 +61,7 @@ const Header: React.FC = () => {
 
           {/* Mobile Menu Button */}
           <button
-            className="md:hidden"
+            className="md:hidden p-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-900 transition text-neutral-900 dark:text-white"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             aria-label="Toggle menu"
           >
@@ -69,12 +71,16 @@ const Header: React.FC = () => {
 
         {/* Mobile Navigation */}
         {isMenuOpen && (
-          <nav className="md:hidden py-4 bg-white border-t border-gray-100">
+          <nav className="md:hidden py-4 bg-white dark:bg-neutral-950 border-t border-neutral-200 dark:border-neutral-800">
             {navItems.map(({ label, to }) => (
               <Link
                 key={to}
                 to={to}
-                className="block w-full text-left py-2 text-gray-700 hover:text-primary-700 transition-colors duration-200 capitalize"
+                className={`block w-full text-left px-4 py-2 rounded-lg text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-900 transition-all duration-200 capitalize ${
+                  location.pathname === to
+                    ? "bg-neutral-100 dark:bg-neutral-900 text-neutral-900 dark:text-white font-medium"
+                    : ""
+                }`}
               >
                 {label}
               </Link>
