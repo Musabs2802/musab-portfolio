@@ -1,5 +1,6 @@
 import React from "react";
 import { ChevronDown } from "lucide-react";
+import Typewriter from "./Typewriter";
 
 const Hero: React.FC = () => {
   const scrollToAbout = () => {
@@ -34,7 +35,20 @@ const Hero: React.FC = () => {
 
         {/* Main headline */}
         <h1 className="font-heading text-4xl md:text-6xl font-semibold text-neutral-900 dark:text-white leading-tight mb-6">
-          I build data & software systems
+          I build{" "}
+          <span className="text-neutral-900 dark:text-white">
+            <Typewriter
+              words={[
+                "App & Websites",
+                "PowerBI & Excel solutions",
+                "AI Solutions & Systems",
+                "Automated Analysis Reports",
+              ]}
+              typingSpeed={140}
+              deletingSpeed={80}
+              pauseTime={2000}
+            />
+          </span>
           <br />
           <span className="text-neutral-500 dark:text-neutral-400">
             that actually work.
@@ -43,9 +57,8 @@ const Hero: React.FC = () => {
 
         {/* Subtext */}
         <p className="text-base md:text-lg text-neutral-600 dark:text-neutral-400 leading-relaxed max-w-2xl mx-auto mb-10">
-          From pricing optimization and demand forecasting to full-stack
-          applications, I turn complex business problems into clean,
-          production-ready solutions.
+          Building apps, AI systems, dashboards, and automation that solve
+          complex problems and improve decision-making.{" "}
         </p>
 
         {/* CTA */}

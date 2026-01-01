@@ -26,15 +26,16 @@ const About: React.FC = () => {
             </h2>
 
             <p className="text-neutral-600 dark:text-neutral-400 leading-relaxed mb-6">
-              I’m a software engineer and data scientist who enjoys building
-              systems that don’t just run — they make sense, scale well, and
-              solve real business problems.
+              I’m a software engineer and data scientist passionate about
+              building systems that don’t just run — they scale, deliver
+              insights, and solve real business challenges.
             </p>
 
             <p className="text-neutral-600 dark:text-neutral-400 leading-relaxed mb-8">
-              From full-stack applications to pricing optimization and demand
-              forecasting, I work across the stack to turn messy data and vague
-              ideas into clean, production-ready solutions.
+              From full-stack applications to AI-driven analytics, pricing
+              optimization, and demand forecasting, I transform messy data and
+              abstract ideas into clean, production-ready solutions that create
+              measurable impact.
             </p>
 
             <a
@@ -75,14 +76,16 @@ const About: React.FC = () => {
                 <BarChart3 className="w-5 h-5 text-neutral-700 dark:text-neutral-300" />
               </div>
               <h3 className="font-medium text-lg text-neutral-900 dark:text-white">
-                Data Analyst / Scientist
+                Data Analyst
               </h3>
             </div>
 
             <p className="text-neutral-600 dark:text-neutral-400 leading-relaxed">
-              I analyze complex datasets, build forecasting and pricing models,
-              and translate insights into decisions that improve revenue,
-              efficiency, and planning.
+              I’m a Power BI & Excel expert who turns complex datasets into
+              actionable insights, building forecasting, pricing, and predictive
+              models while creating dashboards that help businesses improve
+              revenue, optimize operations, and make confident data-driven
+              decisions.
             </p>
           </div>
         </div>

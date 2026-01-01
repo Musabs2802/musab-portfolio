@@ -1,45 +1,7 @@
 "use client";
 
 import { useState } from "react";
-
-interface FAQItem {
-  id: number;
-  question: string;
-  answer: string;
-}
-
-const faqs: FAQItem[] = [
-  {
-    id: 1,
-    question: "What kind of projects do you usually work on?",
-    answer:
-      "Mostly web apps—anything from dashboards to e-commerce platforms. I enjoy building both the interface and the logic behind it.",
-  },
-  {
-    id: 2,
-    question: "Do you help with project planning and architecture?",
-    answer:
-      "Yes! I can help design the system architecture, create ERDs, plan the tech stack, and structure the codebase for scalability and maintainability.",
-  },
-  {
-    id: 3,
-    question: "Can you handle both front-end and backend?",
-    answer:
-      "Absolutely. I'm comfortable working across the full stack—from building responsive UIs with React to designing REST APIs and managing databases.",
-  },
-  {
-    id: 4,
-    question: "How soon can you start?",
-    answer:
-      "I'm usually available to start within a week, depending on project requirements and my current workload. Let's discuss your timeline!",
-  },
-  {
-    id: 5,
-    question: "How do you usually work with clients or teams?",
-    answer:
-      "I prefer clear communication and regular updates. I'm comfortable with Slack, email, or video calls—whatever works best for the team.",
-  },
-];
+import faqs from "../data/faq.data";
 
 export default function FAQ() {
   const [openId, setOpenId] = useState<number | null>(1);
@@ -67,13 +29,21 @@ export default function FAQ() {
               I'm just a message away. Whether it's a bug, a collab, or just to
               say hi.
             </p>
-            <button className="w-full mb-3 px-5 py-2.5 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium flex items-center justify-center gap-2">
-              📧 Send me an email
-            </button>
-            <button className="w-full px-5 py-2.5 border border-gray-300 bg-white rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium flex items-center justify-center gap-2">
+            <a
+              href="mailto:musabs2802@gmail.com"
+              className="w-full mb-3 px-5 py-2.5 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium flex items-center justify-center gap-2"
+            >
+              ✉️ Send me an email
+            </a>
+            <a
+              href="https://wa.me/966507055745"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full px-5 py-2.5 border border-gray-300 bg-white rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium flex items-center justify-center gap-2"
+            >
               <span className="text-green-500 text-xs">●</span> Text me on
-              whatsapp
-            </button>
+              Whatsapp
+            </a>
           </div>
 
           {/* FAQ List */}
