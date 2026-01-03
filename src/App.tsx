@@ -6,12 +6,14 @@ import Work from "./pages/Works";
 import Projects from "./pages/Projects";
 import Experience from "./pages/Experience";
 import Contact from "./pages/Contact";
+import LiveChat from "./components/LiveChat";
 // import Projects, Experience, Contact pages if you create them separately
 
 function App() {
   return (
     <>
       <Header />
+      <LiveChat />
 
       <Routes>
         <Route path="/" element={<Home />} />
