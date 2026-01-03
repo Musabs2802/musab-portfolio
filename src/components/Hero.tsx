@@ -9,7 +9,7 @@ const Hero: React.FC = () => {
 
   return (
     <section
-      className="relative min-h-screen flex items-center justify-center bg-[#FAFAF8] dark:bg-neutral-950 px-6 pt-28"
+      className="relative min-h-screen flex items-center justify-center bg-[#f8f6f3] dark:bg-neutral-950 px-6 pt-28"
       style={{
         backgroundImage: `radial-gradient(circle, rgba(0,0,0,0.05) 1px, transparent 1px)`,
         backgroundSize: "24px 24px",

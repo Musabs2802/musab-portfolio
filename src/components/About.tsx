@@ -3,7 +3,7 @@ import { Code2, BarChart3 } from "lucide-react";
 
 const About: React.FC = () => {
   return (
-    <section id="about" className="bg-[#FAFAF8] dark:bg-neutral-950 px-6 py-28">
+    <section id="about" className="bg-[#f8f6f3] dark:bg-neutral-950 px-6 py-28">
       <div className="max-w-6xl mx-auto">
         {/* Top Content */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-14 items-center mb-20">

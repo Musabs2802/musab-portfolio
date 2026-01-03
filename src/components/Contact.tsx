@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 
 const Contact: React.FC = () => {
   return (
-    <section className="bg-[#FAFAF8] dark:bg-neutral-950 px-6 py-28">
+    <section className="bg-[#f8f6f3] dark:bg-neutral-950 px-6 py-28">
       <div className="max-w-4xl mx-auto">
         <div className="bg-white dark:bg-neutral-900 rounded-3xl shadow-sm p-10 md:p-14 text-center">
           <h2 className="text-4xl md:text-5xl font-bold text-neutral-900 dark:text-white mb-5">

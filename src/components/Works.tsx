@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 
 const Works: React.FC = () => {
   return (
-    <section className="bg-[#FAFAF8] dark:bg-neutral-950 px-6 py-28">
+    <section className="bg-[#f8f6f3] dark:bg-neutral-950 px-6 py-28">
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-10">
           <h2 className="text-4xl md:text-5xl font-bold text-[#1a1a1a]">

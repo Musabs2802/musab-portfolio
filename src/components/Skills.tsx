@@ -2,7 +2,7 @@ import skillCategories from "../data/skills.data";
 
 export default function Skills() {
   return (
-    <section className="bg-[#FAFAF8] dark:bg-neutral-950 px-6 py-28">
+    <section className="bg-[#f8f6f3] dark:bg-neutral-950 px-6 py-28">
       <div className="max-w-5xl mx-auto w-full">
         <h2 className="text-4xl md:text-5xl font-bold text-center mb-12 text-[#1a1a1a] dark:text-white">
           My Skills & Stack

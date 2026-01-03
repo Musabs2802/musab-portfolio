@@ -5,7 +5,7 @@ const Contact: React.FC = () => {
   return (
     <section
       id="contact"
-      className="min-h-screen flex items-center justify-center bg-[#FAFAF8] dark:bg-neutral-950 px-6 pt-28 pb-16"
+      className="min-h-screen flex items-center justify-center bg-[#f8f6f3] dark:bg-neutral-950 px-6 pt-28 pb-16"
     >
       <div className="max-w-4xl mx-auto w-full">
         {/* Header */}

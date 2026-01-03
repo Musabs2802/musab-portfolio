@@ -6,7 +6,7 @@ const Experience: React.FC = () => {
   return (
     <section
       id="experience"
-      className="min-h-screen bg-[#FAFAF8] dark:bg-neutral-950 px-6 pt-28 pb-16"
+      className="min-h-screen bg-[#f8f6f3] dark:bg-neutral-950 px-6 pt-28 pb-16"
     >
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">
