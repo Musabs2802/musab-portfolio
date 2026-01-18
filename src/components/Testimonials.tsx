@@ -4,7 +4,7 @@ import { LucideQuote } from "lucide-react";
 
 const Testimonials: React.FC = () => {
   return (
-    <section className="bg-[#FAFAF8] dark:bg-neutral-950 px-6 py-28">
+    <section className="bg-[#f8f6f3] dark:bg-neutral-950 px-6 py-28">
       <div className="max-w-6xl mx-auto">
         <h2 className="text-4xl md:text-5xl font-bold text-center mb-12 text-[#1a1a1a]">
           What They Said About Me
