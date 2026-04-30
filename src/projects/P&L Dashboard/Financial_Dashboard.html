@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Financial Dashboard — FY2022–2024</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:13.5px}
+:root{
+  --bg:#EEF2F7;--surface:#fff;--surface2:#F8FAFC;
+  --border:#CBD5E1;--border-s:#E2E8F0;
+  --b900:#0F2A5E;--b800:#1E3A8A;--b700:#1D4ED8;
+  --b600:#2563EB;--b500:#3B82F6;--b400:#60A5FA;--b300:#93C5FD;
+  --b200:#BFDBFE;--b100:#DBEAFE;--b50:#EFF6FF;
+  --text:#0F172A;--tmid:#334155;--tmuted:#64748B;--tfaint:#94A3B8;
+  --pos:#059669;--pos-bg:#ECFDF5;--neg:#DC2626;--neg-bg:#FEF2F2;
+  --warn:#D97706;
+  --sh:0 1px 3px rgba(15,42,94,.05),0 1px 2px rgba(15,42,94,.04);
+  --sh-lg:0 4px 16px rgba(15,42,94,.08);--r:8px;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,Roboto,sans-serif;
+  background:var(--bg);color:var(--text);line-height:1.5;min-height:100vh;}
+
+/* ── HEADER ── */
+.app-hdr{
+  background:linear-gradient(135deg,var(--b900) 0%,var(--b800) 55%,var(--b700) 100%);
+  padding:18px 28px;display:flex;justify-content:space-between;align-items:center;
+  flex-wrap:wrap;gap:12px;border-bottom:3px solid var(--b600);
+  box-shadow:0 4px 20px rgba(15,42,94,.28);position:relative;overflow:hidden;
+}
+.app-hdr::after{
+  content:'';position:absolute;top:-60px;right:-60px;width:200px;height:200px;
+  border-radius:50%;background:radial-gradient(circle,rgba(96,165,250,.12) 0%,transparent 70%);
+  pointer-events:none;
+}
+.hdr-title{
+  font-size:18px;font-weight:800;letter-spacing:-.3px;
+  background:linear-gradient(90deg,#fff 40%,var(--b300));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.hdr-sub{font-size:11px;color:rgba(255,255,255,.42);margin-top:2px;}
+.hdr-right{display:flex;align-items:center;gap:8px;position:relative;z-index:1;}
+.hdr-badge{font-size:11px;font-weight:600;color:rgba(255,255,255,.65);
+  background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);
+  border-radius:20px;padding:3px 12px;}
+.hdr-guide{font-size:11px;font-weight:700;color:#93C5FD;
+  background:rgba(37,99,235,.28);border:1px solid rgba(147,197,253,.25);
+  border-radius:20px;padding:3px 12px;cursor:pointer;transition:all .15s;}
+.hdr-guide:hover{background:rgba(37,99,235,.55);color:#fff;}
+
+/* ── TAB NAV ── */
+.tab-nav{
+  background:var(--surface);
+  border-bottom:2px solid var(--border-s);
+  overflow-x:auto;scrollbar-width:none;
+  box-shadow:0 2px 8px rgba(15,42,94,.05);
+}
+.tab-nav::-webkit-scrollbar{display:none;}
+.tab-nav-inner{display:flex;padding:0 22px;gap:0;flex-shrink:0;min-width:100%;}
+.tab-btn{
+  display:flex;align-items:center;gap:6px;
+  padding:0 20px;height:44px;
+  font-size:12px;font-weight:600;color:var(--tmuted);
+  background:none;border:none;cursor:pointer;white-space:nowrap;
+  border-bottom:3px solid transparent;margin-bottom:-2px;
+  transition:color .15s,border-color .15s,background .15s;letter-spacing:.1px;
+}
+.tab-btn:hover{color:var(--b700);background:var(--b50);}
+.tab-btn.active{color:var(--b700);border-bottom-color:var(--b600);background:var(--b50);}
+.tab-btn svg{width:14px;height:14px;opacity:.5;flex-shrink:0;transition:opacity .15s;}
+.tab-btn:hover svg,.tab-btn.active svg{opacity:1;}
+
+/* ── TAB→KPI SPACER ── */
+.tab-kpi-gap{height:14px;background:var(--bg);}
+
+/* ── KPI STRIP ── */
+.kpi-strip{
+  display:grid;grid-template-columns:repeat(6,1fr);
+  background:var(--surface);
+  border-bottom:1px solid var(--border-s);
+  border-radius:0;
+  box-shadow:var(--sh);
+  margin:0 16px;border-radius:var(--r);
+  overflow:hidden;
+}
+.kpi-card{
+  padding:13px 16px 11px;border-right:1px solid var(--border-s);
+  position:relative;overflow:hidden;transition:background .15s;cursor:default;
+}
+.kpi-card:last-child{border-right:none;}
+.kpi-card:hover{background:var(--b50);}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--kpi-clr,var(--b400));}
+.kpi-lbl{font-size:9.5px;font-weight:700;color:var(--tfaint);text-transform:uppercase;letter-spacing:.7px;margin-bottom:5px;}
+.kpi-val{font-size:17px;font-weight:800;color:var(--text);letter-spacing:-.2px;line-height:1.2;}
+.kpi-sub{font-size:10px;color:var(--tfaint);margin-top:2px;}
+.kpi-badge{display:inline-flex;align-items:center;gap:2px;font-size:10px;font-weight:700;
+  border-radius:20px;padding:2px 7px;margin-top:5px;}
+.bdg-up{background:var(--pos-bg);color:var(--pos);border:1px solid #6EE7B7;}
+.bdg-dn{background:var(--neg-bg);color:var(--neg);border:1px solid #FCA5A5;}
+
+/* ── MAIN ── */
+.main{padding:14px 16px 28px;max-width:1700px;margin:0 auto;}
+.kpi-row{margin-bottom:14px;}
+.tab-panel{display:none;}.tab-panel.active{display:block;}
+
+/* ── SECTION HEADER ── */
+.sec-hdr{display:flex;justify-content:space-between;align-items:center;margin:0 0 10px;}
+.sec-title{font-size:11px;font-weight:800;color:var(--b900);text-transform:uppercase;
+  letter-spacing:.7px;display:flex;align-items:center;gap:7px;}
+.sec-title::before{content:'';display:inline-block;width:3px;height:14px;
+  background:linear-gradient(180deg,var(--b600),var(--b400));border-radius:2px;flex-shrink:0;}
+.sec-note{font-size:11px;color:var(--tfaint);}
+
+/* ── CHART GRID ── */
+.cg-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+.cg-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px;}
+.cg-4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:12px;}
+.chart-card{background:#fff;border:1px solid var(--border-s);border-radius:var(--r);
+  padding:13px 14px 10px;box-shadow:var(--sh);min-width:0;}
+.chart-title{font-size:10.5px;font-weight:700;color:var(--tmid);text-transform:uppercase;
+  letter-spacing:.4px;margin-bottom:10px;display:flex;justify-content:space-between;
+  align-items:flex-start;gap:8px;flex-wrap:wrap;}
+.chart-area{width:100%;}
+.chart-area svg{display:block;width:100%;height:auto;}
+.legend{display:flex;gap:8px;flex-wrap:wrap;}
+.lg-i{display:flex;align-items:center;gap:3px;font-size:10px;color:var(--tfaint);font-weight:600;}
+.lg-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.lg-ln{width:12px;height:2px;border-radius:2px;flex-shrink:0;}
+
+/* ── RATIO CARDS ── */
+.ratio-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:12px;}
+.ratio-card{background:#fff;border:1px solid var(--border-s);border-radius:var(--r);
+  padding:12px 14px;box-shadow:var(--sh);border-top:3px solid var(--rc-clr,var(--b400));}
+.ratio-lbl{font-size:9.5px;font-weight:700;color:var(--tfaint);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;}
+.ratio-vals{display:flex;gap:10px;}
+.rv-yr{text-align:center;flex:1;}
+.rv-yr .rv{font-size:14px;font-weight:700;color:var(--text);}
+.rv-yr .rl{font-size:9px;color:var(--tfaint);margin-top:1px;}
+
+/* ── TABLE WRAPPER ── */
+.tbl-wrap{background:#fff;border:1px solid var(--border-s);border-radius:var(--r);
+  overflow:hidden;box-shadow:var(--sh-lg);margin-bottom:16px;}
+.tbl-scroll{overflow-x:auto;}
+
+/* ── TABLE BASE ── */
+.tbl{width:100%;border-collapse:collapse;font-size:12.5px;}
+
+/* Two-row thead */
+.tbl thead{position:sticky;top:0;z-index:20;}
+.tbl .th-r1 th{
+  background:var(--b900);color:rgba(255,255,255,.82);
+  padding:9px 12px;font-size:10px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.4px;white-space:nowrap;text-align:right;
+  border-right:1px solid rgba(255,255,255,.06);border-bottom:1px solid rgba(255,255,255,.08);
+}
+.tbl .th-r1 th:first-child{text-align:left;min-width:220px;position:sticky;left:0;z-index:25;background:var(--b900);}
+.tbl .th-r2 th{
+  background:var(--b800);color:rgba(255,255,255,.55);
+  padding:5px 10px;font-size:9px;font-weight:700;text-align:right;white-space:nowrap;
+  border-right:1px solid rgba(255,255,255,.05);border-bottom:2px solid var(--b600);
+}
+
+/* Year group header — clickable */
+.th-yr-grp{
+  cursor:pointer;text-align:center!important;
+  transition:background .15s;letter-spacing:.2px;
+}
+.th-yr-grp:hover{background:var(--b700)!important;}
+/* Quarter sub-header — clickable */
+.th-q{cursor:pointer;text-align:center!important;}
+.th-q:hover{background:var(--b700)!important;}
+/* Month sub-header */
+.th-m{text-align:center!important;color:rgba(255,255,255,.38)!important;font-size:8.5px!important;}
+/* Annual sub-header */
+.th-ann{text-align:center!important;}
+/* Meta (YoY/CAGR) */
+.th-meta,.tbl .th-r1 .th-meta{background:var(--b800)!important;color:rgba(255,255,255,.5)!important;
+  font-size:9px!important;text-align:center!important;}
+
+/* Expand button in header */
+.col-xbtn{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:14px;height:14px;border-radius:3px;
+  background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);
+  font-size:10px;font-weight:700;cursor:pointer;color:rgba(255,255,255,.85);
+  margin-right:4px;vertical-align:middle;transition:all .15s;
+  line-height:1;user-select:none;flex-shrink:0;
+}
+.col-xbtn.open{background:var(--b500);border-color:var(--b400);color:#fff;}
+.th-yr-grp:hover .col-xbtn{background:rgba(255,255,255,.22);}
+.col-xbtn.sm{width:12px;height:12px;font-size:9px;margin-right:3px;}
+
+/* ── DATA ROWS ── */
+.tbl td{
+  padding:7px 12px;border-bottom:1px solid var(--border-s);
+  text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;
+}
+.tbl td:first-child{
+  text-align:left;position:sticky;left:0;z-index:5;
+  background:inherit;border-right:1px solid var(--border-s);
+}
+.tbl tr.t-shdr td{
+  background:var(--b50);color:var(--b700);font-size:10px;font-weight:800;
+  text-transform:uppercase;letter-spacing:.8px;padding:7px 14px;
+  border-top:1px solid var(--b100);cursor:pointer;
+}
+.tbl tr.t-shdr:hover td{background:var(--b100);}
+.tbl tr.t-sub td{background:#fff;}
+.tbl tr.t-sub:hover td{background:var(--b50);}
+.tbl tr.t-bold td{background:var(--surface2);font-weight:700;}
+.tbl tr.t-bold:hover td{background:#EEF2F7;}
+.tbl tr.t-pct td{background:#FAFBFF;font-style:italic;}
+.tbl tr.t-total td{
+  font-weight:800;font-size:13px;
+  border-top:2px solid var(--border)!important;
+  border-bottom:2px solid var(--border)!important;
+}
+/* Row accent colours */
+.tbl tr.row-rev td{background:#FFFBEB;}
+.tbl tr.row-rev td:first-child{border-left:4px solid #F59E0B;padding-left:10px;}
+.tbl tr.row-gp td{background:var(--pos-bg);}
+.tbl tr.row-gp td:first-child{border-left:4px solid #10B981;padding-left:10px;}
+.tbl tr.row-ebitda td{background:var(--b50);}
+.tbl tr.row-ebitda td:first-child{border-left:4px solid var(--b600);padding-left:10px;}
+.tbl tr.row-ebit td{background:#F5F3FF;}
+.tbl tr.row-ebit td:first-child{border-left:4px solid #7C3AED;padding-left:10px;}
+.tbl tr.row-ni td{background:var(--pos-bg);font-size:14px;}
+.tbl tr.row-ni td:first-child{border-left:4px solid #059669;padding-left:10px;}
+
+/* Label cell styles */
+.lbl-il1{padding-left:24px!important;color:var(--tmid);}
+.lbl-pct{padding-left:22px!important;color:var(--b500)!important;font-size:11px;}
+
+/* Value cell styles */
+.nc{color:var(--text);}
+.nc_neg{color:var(--neg);}
+.nc_t{color:var(--tmid);font-size:12px;}
+.nc_dim{color:var(--tfaint);font-style:italic;text-align:center;}
+.pct_val{color:var(--b600);}
+.yoy_up{color:var(--pos);font-size:11px;font-weight:700;}
+.yoy_dn{color:var(--neg);font-size:11px;font-weight:700;}
+.cagr_up{color:var(--b600);font-size:11px;font-weight:600;}
+.cagr_dn{color:var(--warn);font-size:11px;font-weight:600;}
+
+/* Section collapse arrow */
+.sec-arr{
+  display:inline-block;font-size:9px;color:var(--b500);
+  margin-right:6px;transition:transform .2s;transform-origin:center;
+}
+
+/* ── GENERATED: column show/hide ── */
+.col-yr0-q0,.col-yr0-q0-m0,.col-yr0-q0-m1,.col-yr0-q0-m2,.col-yr0-q1,.col-yr0-q1-m3,.col-yr0-q1-m4,.col-yr0-q1-m5,.col-yr0-q2,.col-yr0-q2-m6,.col-yr0-q2-m7,.col-yr0-q2-m8,.col-yr0-q3,.col-yr0-q3-m9,.col-yr0-q3-m10,.col-yr0-q3-m11,.col-yr1-q0,.col-yr1-q0-m0,.col-yr1-q0-m1,.col-yr1-q0-m2,.col-yr1-q1,.col-yr1-q1-m3,.col-yr1-q1-m4,.col-yr1-q1-m5,.col-yr1-q2,.col-yr1-q2-m6,.col-yr1-q2-m7,.col-yr1-q2-m8,.col-yr1-q3,.col-yr1-q3-m9,.col-yr1-q3-m10,.col-yr1-q3-m11,.col-yr2-q0,.col-yr2-q0-m0,.col-yr2-q0-m1,.col-yr2-q0-m2,.col-yr2-q1,.col-yr2-q1-m3,.col-yr2-q1-m4,.col-yr2-q1-m5,.col-yr2-q2,.col-yr2-q2-m6,.col-yr2-q2-m7,.col-yr2-q2-m8,.col-yr2-q3,.col-yr2-q3-m9,.col-yr2-q3-m10,.col-yr2-q3-m11{display:none}
+.tbl.exp-yr0 .col-yr0-q0,.tbl.exp-yr0 .col-yr0-q1,.tbl.exp-yr0 .col-yr0-q2,.tbl.exp-yr0 .col-yr0-q3{display:table-cell}
+.tbl.exp-yr1 .col-yr1-q0,.tbl.exp-yr1 .col-yr1-q1,.tbl.exp-yr1 .col-yr1-q2,.tbl.exp-yr1 .col-yr1-q3{display:table-cell}
+.tbl.exp-yr2 .col-yr2-q0,.tbl.exp-yr2 .col-yr2-q1,.tbl.exp-yr2 .col-yr2-q2,.tbl.exp-yr2 .col-yr2-q3{display:table-cell}
+.tbl.exp-yr0-q0 .col-yr0-q0-m0,.tbl.exp-yr0-q0 .col-yr0-q0-m1,.tbl.exp-yr0-q0 .col-yr0-q0-m2{display:table-cell}
+.tbl.exp-yr0-q1 .col-yr0-q1-m3,.tbl.exp-yr0-q1 .col-yr0-q1-m4,.tbl.exp-yr0-q1 .col-yr0-q1-m5{display:table-cell}
+.tbl.exp-yr0-q2 .col-yr0-q2-m6,.tbl.exp-yr0-q2 .col-yr0-q2-m7,.tbl.exp-yr0-q2 .col-yr0-q2-m8{display:table-cell}
+.tbl.exp-yr0-q3 .col-yr0-q3-m9,.tbl.exp-yr0-q3 .col-yr0-q3-m10,.tbl.exp-yr0-q3 .col-yr0-q3-m11{display:table-cell}
+.tbl.exp-yr1-q0 .col-yr1-q0-m0,.tbl.exp-yr1-q0 .col-yr1-q0-m1,.tbl.exp-yr1-q0 .col-yr1-q0-m2{display:table-cell}
+.tbl.exp-yr1-q1 .col-yr1-q1-m3,.tbl.exp-yr1-q1 .col-yr1-q1-m4,.tbl.exp-yr1-q1 .col-yr1-q1-m5{display:table-cell}
+.tbl.exp-yr1-q2 .col-yr1-q2-m6,.tbl.exp-yr1-q2 .col-yr1-q2-m7,.tbl.exp-yr1-q2 .col-yr1-q2-m8{display:table-cell}
+.tbl.exp-yr1-q3 .col-yr1-q3-m9,.tbl.exp-yr1-q3 .col-yr1-q3-m10,.tbl.exp-yr1-q3 .col-yr1-q3-m11{display:table-cell}
+.tbl.exp-yr2-q0 .col-yr2-q0-m0,.tbl.exp-yr2-q0 .col-yr2-q0-m1,.tbl.exp-yr2-q0 .col-yr2-q0-m2{display:table-cell}
+.tbl.exp-yr2-q1 .col-yr2-q1-m3,.tbl.exp-yr2-q1 .col-yr2-q1-m4,.tbl.exp-yr2-q1 .col-yr2-q1-m5{display:table-cell}
+.tbl.exp-yr2-q2 .col-yr2-q2-m6,.tbl.exp-yr2-q2 .col-yr2-q2-m7,.tbl.exp-yr2-q2 .col-yr2-q2-m8{display:table-cell}
+.tbl.exp-yr2-q3 .col-yr2-q3-m9,.tbl.exp-yr2-q3 .col-yr2-q3-m10,.tbl.exp-yr2-q3 .col-yr2-q3-m11{display:table-cell}
+
+/* ── MODAL ── */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.38);z-index:500;
+  align-items:center;justify-content:center;backdrop-filter:blur(3px);}
+.modal-bg.open{display:flex;}
+.modal{background:#fff;border-radius:12px;padding:24px 26px;max-width:500px;width:92%;
+  box-shadow:0 24px 64px rgba(0,0,0,.14);max-height:88vh;overflow-y:auto;}
+.modal h2{font-size:14px;font-weight:800;color:var(--b900);margin-bottom:12px;}
+.modal-x{float:right;background:var(--surface2);border:1px solid var(--border);
+  border-radius:5px;padding:2px 9px;cursor:pointer;font-size:12px;color:var(--tmuted);}
+.modal-x:hover{background:var(--border);}
+.modal p{font-size:12px;color:var(--tmuted);line-height:1.75;margin-bottom:9px;}
+
+/* ── FOOTER ── */
+.footer{text-align:center;padding:14px;font-size:11px;color:var(--tfaint);
+  border-top:1px solid var(--border-s);background:var(--surface);margin-top:8px;}
+
+/* ── RESPONSIVE ── */
+@media(max-width:1100px){.kpi-strip{grid-template-columns:repeat(3,1fr);}}
+@media(max-width:900px){
+  .cg-2,.cg-3,.cg-4{grid-template-columns:1fr;}
+  .ratio-grid{grid-template-columns:1fr 1fr;}
+  .kpi-strip{grid-template-columns:1fr 1fr;margin:0 8px;}
+}
+@media(max-width:560px){.main{padding:10px;}}
+</style>
+</head>
+<body>
+
+<header class="app-hdr">
+  <div>
+    <div class="hdr-title">Financial Dashboard &mdash; FMCG Corp</div>
+    <div class="hdr-sub">FY2022&ndash;FY2024 &nbsp;&middot;&nbsp; USD millions &nbsp;&middot;&nbsp; Demo Data</div>
+  </div>
+  <div class="hdr-right">
+    <span class="hdr-badge">&#x1F4C5; 30 April 2026</span>
+    <button class="hdr-guide" onclick="document.getElementById('modal').classList.add('open')">&#9432; Guide</button>
+  </div>
+</header>
+
+<nav class="tab-nav">
+  <div class="tab-nav-inner">
+    <button class="tab-btn active" onclick="switchTab('pl',this)">
+      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h12a1 1 0 011 1v10a1 1 0 01-1 1H2a1 1 0 01-1-1V3a1 1 0 011-1zm1 2v8h10V4H3zm2 2h6v1H5V6zm0 2h4v1H5V8z"/></svg>
+      P&amp;L Statement
+    </button>
+    <button class="tab-btn" onclick="switchTab('cf',this)">
+      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm-.75 9.75v.75h1.5v-.75H10v-1.5H8.75V7.5h1V6h-1V5.25h-1.5V6H6v1.5h1.25v2H6v1.5h1.25z"/></svg>
+      Cash Flow
+    </button>
+    <button class="tab-btn" onclick="switchTab('bs',this)">
+      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M1 3h14v2H1V3zm0 4h6v2H1V7zm8 0h6v2H9V7zm-8 4h6v2H1v-2zm8 0h6v2H9v-2z"/></svg>
+      Balance Sheet
+    </button>
+    <button class="tab-btn" onclick="switchTab('ov',this)">
+      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M1 11l4-4 3 3 4-5 3 2V14H1v-3zm14-9a1 1 0 00-1-1H2a1 1 0 00-1 1v1h14V2z"/></svg>
+      Overview &amp; Ratios
+    </button>
+  </div>
+</nav>
+
+<div class="tab-kpi-gap"></div>
+
+<div class="main">
+  <div class="kpi-row">
+    <div class="kpi-strip">
+      <div class="kpi-card" style="--kpi-clr:#F59E0B">
+        <div class="kpi-lbl">FY2024 Revenue</div>
+        <div class="kpi-val">139.0M</div>
+        <div class="kpi-sub">Prior year: 117.2M</div>
+        <span class="kpi-badge bdg-up">▲ 18.6%</span>
+      </div>
+      <div class="kpi-card" style="--kpi-clr:#10B981">
+        <div class="kpi-lbl">Gross Profit</div>
+        <div class="kpi-val">70.5M</div>
+        <div class="kpi-sub">Margin: 50.7%</div>
+        <span class="kpi-badge bdg-up">▲ 21.6%</span>
+      </div>
+      <div class="kpi-card" style="--kpi-clr:#2563EB">
+        <div class="kpi-lbl">EBITDA</div>
+        <div class="kpi-val">31.2M</div>
+        <div class="kpi-sub">Margin: 22.4%</div>
+        <span class="kpi-badge bdg-up">▲ 27.9%</span>
+      </div>
+      <div class="kpi-card" style="--kpi-clr:#7C3AED">
+        <div class="kpi-lbl">EBIT</div>
+        <div class="kpi-val">28.3M</div>
+        <div class="kpi-sub">Margin: 20.4%</div>
+        <span class="kpi-badge bdg-up">▲ 29.2%</span>
+      </div>
+      <div class="kpi-card" style="--kpi-clr:#059669">
+        <div class="kpi-lbl">Net Income</div>
+        <div class="kpi-val">21.8M</div>
+        <div class="kpi-sub">Net margin: 15.6%</div>
+        <span class="kpi-badge bdg-up">▲ 33.8%</span>
+      </div>
+      <div class="kpi-card" style="--kpi-clr:#0EA5E9">
+        <div class="kpi-lbl">Operating Cash Flow</div>
+        <div class="kpi-val">23.7M</div>
+        <div class="kpi-sub">FCF: 11.3M</div>
+        <span class="kpi-badge bdg-up">▲ 26.9%</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════ P&L TAB ════════ -->
+  <div class="tab-panel active" id="tab-pl">
+    <div class="cg-2">
+      <div class="chart-card">
+        <div class="chart-title">Revenue vs Net Income (USD M)
+          <div class="legend">
+            <div class="lg-i"><div class="lg-dot" style="background:#F59E0B"></div>Revenue</div>
+            <div class="lg-i"><div class="lg-dot" style="background:#059669"></div>Net Income</div>
+          </div>
+        </div>
+        <div class="chart-area" id="c-rev-ni"></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Margin Trends (%)
+          <div class="legend">
+            <div class="lg-i"><div class="lg-ln" style="background:#10B981"></div>Gross</div>
+            <div class="lg-i"><div class="lg-ln" style="background:#2563EB"></div>EBITDA</div>
+            <div class="lg-i"><div class="lg-ln" style="background:#7C3AED"></div>EBIT</div>
+            <div class="lg-i"><div class="lg-ln" style="background:#059669"></div>Net</div>
+          </div>
+        </div>
+        <div class="chart-area" id="c-margins"></div>
+      </div>
+    </div>
+    <div class="cg-2">
+      <div class="chart-card">
+        <div class="chart-title">Gross Profit &amp; EBITDA (USD M)
+          <div class="legend">
+            <div class="lg-i"><div class="lg-dot" style="background:#10B981"></div>GP</div>
+            <div class="lg-i"><div class="lg-dot" style="background:#2563EB"></div>EBITDA</div>
+          </div>
+        </div>
+        <div class="chart-area" id="c-gp-eb"></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">OpEx Breakdown (USD M)
+          <div class="legend">
+            <div class="lg-i"><div class="lg-dot" style="background:#60A5FA"></div>Sales</div>
+            <div class="lg-i"><div class="lg-dot" style="background:#F59E0B"></div>Mktg</div>
+            <div class="lg-i"><div class="lg-dot" style="background:#10B981"></div>R&amp;D</div>
+            <div class="lg-i"><div class="lg-dot" style="background:#A78BFA"></div>G&amp;A</div>
+          </div>
+        </div>
+        <div class="chart-area" id="c-opex"></div>
+      </div>
+    </div>
+
+    <div class="sec-hdr">
+      <div class="sec-title">Income Statement</div>
+      <div class="sec-note">
+        USD millions &nbsp;&middot;&nbsp;
+        Click <b style="color:var(--b600)">+</b> on a year header to expand quarters &amp; months &nbsp;&middot;&nbsp;
+        Click a section header to collapse sub-items
+      </div>
+    </div>
+    <div class="tbl-wrap">
+      <div class="tbl-scroll">
+        <table class="tbl" id="pl-tbl">
+          <thead><tr class="th-r1"><th class="lbl-th" rowspan="2">Line Item</th><th id="pl-th-yr0" colspan="1" class="th-yr-grp" onclick="togglePLYear(0,event)"><span class="col-xbtn" id="pl-cbtn-yr0">+</span>FY2022</th><th id="pl-th-yr1" colspan="1" class="th-yr-grp" onclick="togglePLYear(1,event)"><span class="col-xbtn" id="pl-cbtn-yr1">+</span>FY2023</th><th id="pl-th-yr2" colspan="1" class="th-yr-grp" onclick="togglePLYear(2,event)"><span class="col-xbtn" id="pl-cbtn-yr2">+</span>FY2024</th><th rowspan="2" class="th-meta">YoY %</th><th rowspan="2" class="th-meta">CAGR</th></tr><tr class="th-r2"><th class="col-yr0-q0-m0 th-m">Jan</th><th class="col-yr0-q0-m1 th-m">Feb</th><th class="col-yr0-q0-m2 th-m">Mar</th><th class="col-yr0-q0 th-q" onclick="togglePLQtr(0,0,event)"><span class="col-xbtn sm" id="pl-cbtn-yr0-q0">+</span>Q1</th><th class="col-yr0-q1-m3 th-m">Apr</th><th class="col-yr0-q1-m4 th-m">May</th><th class="col-yr0-q1-m5 th-m">Jun</th><th class="col-yr0-q1 th-q" onclick="togglePLQtr(0,1,event)"><span class="col-xbtn sm" id="pl-cbtn-yr0-q1">+</span>Q2</th><th class="col-yr0-q2-m6 th-m">Jul</th><th class="col-yr0-q2-m7 th-m">Aug</th><th class="col-yr0-q2-m8 th-m">Sep</th><th class="col-yr0-q2 th-q" onclick="togglePLQtr(0,2,event)"><span class="col-xbtn sm" id="pl-cbtn-yr0-q2">+</span>Q3</th><th class="col-yr0-q3-m9 th-m">Oct</th><th class="col-yr0-q3-m10 th-m">Nov</th><th class="col-yr0-q3-m11 th-m">Dec</th><th class="col-yr0-q3 th-q" onclick="togglePLQtr(0,3,event)"><span class="col-xbtn sm" id="pl-cbtn-yr0-q3">+</span>Q4</th><th class="th-ann">FY22</th><th class="col-yr1-q0-m0 th-m">Jan</th><th class="col-yr1-q0-m1 th-m">Feb</th><th class="col-yr1-q0-m2 th-m">Mar</th><th class="col-yr1-q0 th-q" onclick="togglePLQtr(1,0,event)"><span class="col-xbtn sm" id="pl-cbtn-yr1-q0">+</span>Q1</th><th class="col-yr1-q1-m3 th-m">Apr</th><th class="col-yr1-q1-m4 th-m">May</th><th class="col-yr1-q1-m5 th-m">Jun</th><th class="col-yr1-q1 th-q" onclick="togglePLQtr(1,1,event)"><span class="col-xbtn sm" id="pl-cbtn-yr1-q1">+</span>Q2</th><th class="col-yr1-q2-m6 th-m">Jul</th><th class="col-yr1-q2-m7 th-m">Aug</th><th class="col-yr1-q2-m8 th-m">Sep</th><th class="col-yr1-q2 th-q" onclick="togglePLQtr(1,2,event)"><span class="col-xbtn sm" id="pl-cbtn-yr1-q2">+</span>Q3</th><th class="col-yr1-q3-m9 th-m">Oct</th><th class="col-yr1-q3-m10 th-m">Nov</th><th class="col-yr1-q3-m11 th-m">Dec</th><th class="col-yr1-q3 th-q" onclick="togglePLQtr(1,3,event)"><span class="col-xbtn sm" id="pl-cbtn-yr1-q3">+</span>Q4</th><th class="th-ann">FY23</th><th class="col-yr2-q0-m0 th-m">Jan</th><th class="col-yr2-q0-m1 th-m">Feb</th><th class="col-yr2-q0-m2 th-m">Mar</th><th class="col-yr2-q0 th-q" onclick="togglePLQtr(2,0,event)"><span class="col-xbtn sm" id="pl-cbtn-yr2-q0">+</span>Q1</th><th class="col-yr2-q1-m3 th-m">Apr</th><th class="col-yr2-q1-m4 th-m">May</th><th class="col-yr2-q1-m5 th-m">Jun</th><th class="col-yr2-q1 th-q" onclick="togglePLQtr(2,1,event)"><span class="col-xbtn sm" id="pl-cbtn-yr2-q1">+</span>Q2</th><th class="col-yr2-q2-m6 th-m">Jul</th><th class="col-yr2-q2-m7 th-m">Aug</th><th class="col-yr2-q2-m8 th-m">Sep</th><th class="col-yr2-q2 th-q" onclick="togglePLQtr(2,2,event)"><span class="col-xbtn sm" id="pl-cbtn-yr2-q2">+</span>Q3</th><th class="col-yr2-q3-m9 th-m">Oct</th><th class="col-yr2-q3-m10 th-m">Nov</th><th class="col-yr2-q3-m11 th-m">Dec</th><th class="col-yr2-q3 th-q" onclick="togglePLQtr(2,3,event)"><span class="col-xbtn sm" id="pl-cbtn-yr2-q3">+</span>Q4</th><th class="th-ann">FY24</th></tr></thead>
+          <tbody><tr class="t-shdr" onclick="toggleSec('rev',event)"><td colspan="99"><span class="sec-arr" id="sarr-rev">&#9660;</span> Revenue</td></tr>
+<tr class="t-sub" data-sec="rev"><td class="lbl lbl-il1">Product Sales</td><td class="nc nc_t col-yr0-q0-m0">6.35</td><td class="nc nc_t col-yr0-q0-m1">6.00</td><td class="nc nc_t col-yr0-q0-m2">7.23</td><td class="nc nc_t col-yr0-q0">19.58</td><td class="nc nc_t col-yr0-q1-m3">7.50</td><td class="nc nc_t col-yr0-q1-m4">7.76</td><td class="nc nc_t col-yr0-q1-m5">7.32</td><td class="nc nc_t col-yr0-q1">22.58</td><td class="nc nc_t col-yr0-q2-m6">7.06</td><td class="nc nc_t col-yr0-q2-m7">7.23</td><td class="nc nc_t col-yr0-q2-m8">7.59</td><td class="nc nc_t col-yr0-q2">21.87</td><td class="nc nc_t col-yr0-q3-m9">7.94</td><td class="nc nc_t col-yr0-q3-m10">8.11</td><td class="nc nc_t col-yr0-q3-m11">8.11</td><td class="nc nc_t col-yr0-q3">24.17</td><td class="nc">88.20</td><td class="nc nc_t col-yr1-q0-m0">7.62</td><td class="nc nc_t col-yr1-q0-m1">7.19</td><td class="nc nc_t col-yr1-q0-m2">8.68</td><td class="nc nc_t col-yr1-q0">23.49</td><td class="nc nc_t col-yr1-q1-m3">8.99</td><td class="nc nc_t col-yr1-q1-m4">9.31</td><td class="nc nc_t col-yr1-q1-m5">8.78</td><td class="nc nc_t col-yr1-q1">27.08</td><td class="nc nc_t col-yr1-q2-m6">8.46</td><td class="nc nc_t col-yr1-q2-m7">8.68</td><td class="nc nc_t col-yr1-q2-m8">9.10</td><td class="nc nc_t col-yr1-q2">26.24</td><td class="nc nc_t col-yr1-q3-m9">9.52</td><td class="nc nc_t col-yr1-q3-m10">9.73</td><td class="nc nc_t col-yr1-q3-m11">9.73</td><td class="nc nc_t col-yr1-q3">28.99</td><td class="nc">105.80</td><td class="nc nc_t col-yr2-q0-m0">8.97</td><td class="nc nc_t col-yr2-q0-m1">8.47</td><td class="nc nc_t col-yr2-q0-m2">10.22</td><td class="nc nc_t col-yr2-q0">27.66</td><td class="nc nc_t col-yr2-q1-m3">10.59</td><td class="nc nc_t col-yr2-q1-m4">10.96</td><td class="nc nc_t col-yr2-q1-m5">10.34</td><td class="nc nc_t col-yr2-q1">31.90</td><td class="nc nc_t col-yr2-q2-m6">9.97</td><td class="nc nc_t col-yr2-q2-m7">10.22</td><td class="nc nc_t col-yr2-q2-m8">10.72</td><td class="nc nc_t col-yr2-q2">30.90</td><td class="nc nc_t col-yr2-q3-m9">11.21</td><td class="nc nc_t col-yr2-q3-m10">11.46</td><td class="nc nc_t col-yr2-q3-m11">11.46</td><td class="nc nc_t col-yr2-q3">34.14</td><td class="nc">124.60</td><td class="yoy_up">▲17.8%</td><td class="cagr_up">18.9%▲</td></tr>
+<tr class="t-sub" data-sec="rev"><td class="lbl lbl-il1">Service Revenue</td><td class="nc nc_t col-yr0-q0-m0">0.53</td><td class="nc nc_t col-yr0-q0-m1">0.50</td><td class="nc nc_t col-yr0-q0-m2">0.61</td><td class="nc nc_t col-yr0-q0">1.64</td><td class="nc nc_t col-yr0-q1-m3">0.63</td><td class="nc nc_t col-yr0-q1-m4">0.65</td><td class="nc nc_t col-yr0-q1-m5">0.61</td><td class="nc nc_t col-yr0-q1">1.89</td><td class="nc nc_t col-yr0-q2-m6">0.59</td><td class="nc nc_t col-yr0-q2-m7">0.61</td><td class="nc nc_t col-yr0-q2-m8">0.64</td><td class="nc nc_t col-yr0-q2">1.84</td><td class="nc nc_t col-yr0-q3-m9">0.67</td><td class="nc nc_t col-yr0-q3-m10">0.68</td><td class="nc nc_t col-yr0-q3-m11">0.68</td><td class="nc nc_t col-yr0-q3">2.03</td><td class="nc">7.40</td><td class="nc nc_t col-yr1-q0-m0">0.67</td><td class="nc nc_t col-yr1-q0-m1">0.63</td><td class="nc nc_t col-yr1-q0-m2">0.76</td><td class="nc nc_t col-yr1-q0">2.06</td><td class="nc nc_t col-yr1-q1-m3">0.79</td><td class="nc nc_t col-yr1-q1-m4">0.82</td><td class="nc nc_t col-yr1-q1-m5">0.77</td><td class="nc nc_t col-yr1-q1">2.38</td><td class="nc nc_t col-yr1-q2-m6">0.74</td><td class="nc nc_t col-yr1-q2-m7">0.76</td><td class="nc nc_t col-yr1-q2-m8">0.80</td><td class="nc nc_t col-yr1-q2">2.31</td><td class="nc nc_t col-yr1-q3-m9">0.84</td><td class="nc nc_t col-yr1-q3-m10">0.86</td><td class="nc nc_t col-yr1-q3-m11">0.86</td><td class="nc nc_t col-yr1-q3">2.55</td><td class="nc">9.30</td><td class="nc nc_t col-yr2-q0-m0">0.85</td><td class="nc nc_t col-yr2-q0-m1">0.80</td><td class="nc nc_t col-yr2-q0-m2">0.97</td><td class="nc nc_t col-yr2-q0">2.62</td><td class="nc nc_t col-yr2-q1-m3">1.00</td><td class="nc nc_t col-yr2-q1-m4">1.04</td><td class="nc nc_t col-yr2-q1-m5">0.98</td><td class="nc nc_t col-yr2-q1">3.02</td><td class="nc nc_t col-yr2-q2-m6">0.94</td><td class="nc nc_t col-yr2-q2-m7">0.97</td><td class="nc nc_t col-yr2-q2-m8">1.01</td><td class="nc nc_t col-yr2-q2">2.93</td><td class="nc nc_t col-yr2-q3-m9">1.06</td><td class="nc nc_t col-yr2-q3-m10">1.09</td><td class="nc nc_t col-yr2-q3-m11">1.09</td><td class="nc nc_t col-yr2-q3">3.23</td><td class="nc">11.80</td><td class="yoy_up">▲26.9%</td><td class="cagr_up">26.3%▲</td></tr>
+<tr class="t-sub" data-sec="rev"><td class="lbl lbl-il1">Other Revenue</td><td class="nc nc_t col-yr0-q0-m0">0.12</td><td class="nc nc_t col-yr0-q0-m1">0.11</td><td class="nc nc_t col-yr0-q0-m2">0.13</td><td class="nc nc_t col-yr0-q0">0.36</td><td class="nc nc_t col-yr0-q1-m3">0.14</td><td class="nc nc_t col-yr0-q1-m4">0.14</td><td class="nc nc_t col-yr0-q1-m5">0.13</td><td class="nc nc_t col-yr0-q1">0.41</td><td class="nc nc_t col-yr0-q2-m6">0.13</td><td class="nc nc_t col-yr0-q2-m7">0.13</td><td class="nc nc_t col-yr0-q2-m8">0.14</td><td class="nc nc_t col-yr0-q2">0.40</td><td class="nc nc_t col-yr0-q3-m9">0.14</td><td class="nc nc_t col-yr0-q3-m10">0.15</td><td class="nc nc_t col-yr0-q3-m11">0.15</td><td class="nc nc_t col-yr0-q3">0.44</td><td class="nc">1.60</td><td class="nc nc_t col-yr1-q0-m0">0.15</td><td class="nc nc_t col-yr1-q0-m1">0.14</td><td class="nc nc_t col-yr1-q0-m2">0.17</td><td class="nc nc_t col-yr1-q0">0.47</td><td class="nc nc_t col-yr1-q1-m3">0.18</td><td class="nc nc_t col-yr1-q1-m4">0.18</td><td class="nc nc_t col-yr1-q1-m5">0.17</td><td class="nc nc_t col-yr1-q1">0.54</td><td class="nc nc_t col-yr1-q2-m6">0.17</td><td class="nc nc_t col-yr1-q2-m7">0.17</td><td class="nc nc_t col-yr1-q2-m8">0.18</td><td class="nc nc_t col-yr1-q2">0.52</td><td class="nc nc_t col-yr1-q3-m9">0.19</td><td class="nc nc_t col-yr1-q3-m10">0.19</td><td class="nc nc_t col-yr1-q3-m11">0.19</td><td class="nc nc_t col-yr1-q3">0.58</td><td class="nc">2.10</td><td class="nc nc_t col-yr2-q0-m0">0.19</td><td class="nc nc_t col-yr2-q0-m1">0.18</td><td class="nc nc_t col-yr2-q0-m2">0.21</td><td class="nc nc_t col-yr2-q0">0.58</td><td class="nc nc_t col-yr2-q1-m3">0.22</td><td class="nc nc_t col-yr2-q1-m4">0.23</td><td class="nc nc_t col-yr2-q1-m5">0.22</td><td class="nc nc_t col-yr2-q1">0.67</td><td class="nc nc_t col-yr2-q2-m6">0.21</td><td class="nc nc_t col-yr2-q2-m7">0.21</td><td class="nc nc_t col-yr2-q2-m8">0.22</td><td class="nc nc_t col-yr2-q2">0.64</td><td class="nc nc_t col-yr2-q3-m9">0.23</td><td class="nc nc_t col-yr2-q3-m10">0.24</td><td class="nc nc_t col-yr2-q3-m11">0.24</td><td class="nc nc_t col-yr2-q3">0.71</td><td class="nc">2.60</td><td class="yoy_up">▲23.8%</td><td class="cagr_up">27.5%▲</td></tr>
+<tr class="t-total row-rev"><td class="lbl">Total Revenue</td><td class="nc nc_t col-yr0-q0-m0">7.00</td><td class="nc nc_t col-yr0-q0-m1">6.61</td><td class="nc nc_t col-yr0-q0-m2">7.97</td><td class="nc nc_t col-yr0-q0">21.58</td><td class="nc nc_t col-yr0-q1-m3">8.26</td><td class="nc nc_t col-yr0-q1-m4">8.55</td><td class="nc nc_t col-yr0-q1-m5">8.07</td><td class="nc nc_t col-yr0-q1">24.88</td><td class="nc nc_t col-yr0-q2-m6">7.78</td><td class="nc nc_t col-yr0-q2-m7">7.97</td><td class="nc nc_t col-yr0-q2-m8">8.36</td><td class="nc nc_t col-yr0-q2">24.11</td><td class="nc nc_t col-yr0-q3-m9">8.75</td><td class="nc nc_t col-yr0-q3-m10">8.94</td><td class="nc nc_t col-yr0-q3-m11">8.94</td><td class="nc nc_t col-yr0-q3">26.63</td><td class="nc">97.20</td><td class="nc nc_t col-yr1-q0-m0">8.44</td><td class="nc nc_t col-yr1-q0-m1">7.97</td><td class="nc nc_t col-yr1-q0-m2">9.61</td><td class="nc nc_t col-yr1-q0">26.02</td><td class="nc nc_t col-yr1-q1-m3">9.96</td><td class="nc nc_t col-yr1-q1-m4">10.31</td><td class="nc nc_t col-yr1-q1-m5">9.73</td><td class="nc nc_t col-yr1-q1">30.00</td><td class="nc nc_t col-yr1-q2-m6">9.38</td><td class="nc nc_t col-yr1-q2-m7">9.61</td><td class="nc nc_t col-yr1-q2-m8">10.08</td><td class="nc nc_t col-yr1-q2">29.07</td><td class="nc nc_t col-yr1-q3-m9">10.55</td><td class="nc nc_t col-yr1-q3-m10">10.78</td><td class="nc nc_t col-yr1-q3-m11">10.78</td><td class="nc nc_t col-yr1-q3">32.11</td><td class="nc">117.20</td><td class="nc nc_t col-yr2-q0-m0">10.01</td><td class="nc nc_t col-yr2-q0-m1">9.45</td><td class="nc nc_t col-yr2-q0-m2">11.40</td><td class="nc nc_t col-yr2-q0">30.86</td><td class="nc nc_t col-yr2-q1-m3">11.81</td><td class="nc nc_t col-yr2-q1-m4">12.23</td><td class="nc nc_t col-yr2-q1-m5">11.54</td><td class="nc nc_t col-yr2-q1">35.58</td><td class="nc nc_t col-yr2-q2-m6">11.12</td><td class="nc nc_t col-yr2-q2-m7">11.40</td><td class="nc nc_t col-yr2-q2-m8">11.95</td><td class="nc nc_t col-yr2-q2">34.47</td><td class="nc nc_t col-yr2-q3-m9">12.51</td><td class="nc nc_t col-yr2-q3-m10">12.79</td><td class="nc nc_t col-yr2-q3-m11">12.79</td><td class="nc nc_t col-yr2-q3">38.09</td><td class="nc">139.00</td><td class="yoy_up">▲18.6%</td><td class="cagr_up">19.6%▲</td></tr>
+<tr class="t-pct"><td class="lbl lbl-pct">&#x2514; YoY Growth</td><td class="col-yr0-q0-m0 nc_dim">&mdash;</td><td class="col-yr0-q0-m1 nc_dim">&mdash;</td><td class="col-yr0-q0-m2 nc_dim">&mdash;</td><td class="col-yr0-q0 nc_dim">&mdash;</td><td class="col-yr0-q1-m3 nc_dim">&mdash;</td><td class="col-yr0-q1-m4 nc_dim">&mdash;</td><td class="col-yr0-q1-m5 nc_dim">&mdash;</td><td class="col-yr0-q1 nc_dim">&mdash;</td><td class="col-yr0-q2-m6 nc_dim">&mdash;</td><td class="col-yr0-q2-m7 nc_dim">&mdash;</td><td class="col-yr0-q2-m8 nc_dim">&mdash;</td><td class="col-yr0-q2 nc_dim">&mdash;</td><td class="col-yr0-q3-m9 nc_dim">&mdash;</td><td class="col-yr0-q3-m10 nc_dim">&mdash;</td><td class="col-yr0-q3-m11 nc_dim">&mdash;</td><td class="col-yr0-q3 nc_dim">&mdash;</td><td class="pct_val">0.0%</td><td class="col-yr1-q0-m0 nc_dim">&mdash;</td><td class="col-yr1-q0-m1 nc_dim">&mdash;</td><td class="col-yr1-q0-m2 nc_dim">&mdash;</td><td class="col-yr1-q0 nc_dim">&mdash;</td><td class="col-yr1-q1-m3 nc_dim">&mdash;</td><td class="col-yr1-q1-m4 nc_dim">&mdash;</td><td class="col-yr1-q1-m5 nc_dim">&mdash;</td><td class="col-yr1-q1 nc_dim">&mdash;</td><td class="col-yr1-q2-m6 nc_dim">&mdash;</td><td class="col-yr1-q2-m7 nc_dim">&mdash;</td><td class="col-yr1-q2-m8 nc_dim">&mdash;</td><td class="col-yr1-q2 nc_dim">&mdash;</td><td class="col-yr1-q3-m9 nc_dim">&mdash;</td><td class="col-yr1-q3-m10 nc_dim">&mdash;</td><td class="col-yr1-q3-m11 nc_dim">&mdash;</td><td class="col-yr1-q3 nc_dim">&mdash;</td><td class="pct_val">20.6%</td><td class="col-yr2-q0-m0 nc_dim">&mdash;</td><td class="col-yr2-q0-m1 nc_dim">&mdash;</td><td class="col-yr2-q0-m2 nc_dim">&mdash;</td><td class="col-yr2-q0 nc_dim">&mdash;</td><td class="col-yr2-q1-m3 nc_dim">&mdash;</td><td class="col-yr2-q1-m4 nc_dim">&mdash;</td><td class="col-yr2-q1-m5 nc_dim">&mdash;</td><td class="col-yr2-q1 nc_dim">&mdash;</td><td class="col-yr2-q2-m6 nc_dim">&mdash;</td><td class="col-yr2-q2-m7 nc_dim">&mdash;</td><td class="col-yr2-q2-m8 nc_dim">&mdash;</td><td class="col-yr2-q2 nc_dim">&mdash;</td><td class="col-yr2-q3-m9 nc_dim">&mdash;</td><td class="col-yr2-q3-m10 nc_dim">&mdash;</td><td class="col-yr2-q3-m11 nc_dim">&mdash;</td><td class="col-yr2-q3 nc_dim">&mdash;</td><td class="pct_val">18.6%</td><td class="yoy_dn" style="font-size:10.5px">▼2.0pp</td><td class="nc_dim">&mdash;</td></tr>
+<tr class="t-shdr" onclick="toggleSec('cogs',event)"><td colspan="99"><span class="sec-arr" id="sarr-cogs">&#9660;</span> Cost of Goods Sold</td></tr>
+<tr class="t-sub" data-sec="cogs"><td class="lbl lbl-il1">Direct Materials</td><td class="nc nc_t col-yr0-q0-m0">2.46</td><td class="nc nc_t col-yr0-q0-m1">2.33</td><td class="nc nc_t col-yr0-q0-m2">2.80</td><td class="nc nc_t col-yr0-q0">7.59</td><td class="nc nc_t col-yr0-q1-m3">2.91</td><td class="nc nc_t col-yr0-q1-m4">3.01</td><td class="nc nc_t col-yr0-q1-m5">2.84</td><td class="nc nc_t col-yr0-q1">8.76</td><td class="nc nc_t col-yr0-q2-m6">2.74</td><td class="nc nc_t col-yr0-q2-m7">2.80</td><td class="nc nc_t col-yr0-q2-m8">2.94</td><td class="nc nc_t col-yr0-q2">8.48</td><td class="nc nc_t col-yr0-q3-m9">3.08</td><td class="nc nc_t col-yr0-q3-m10">3.15</td><td class="nc nc_t col-yr0-q3-m11">3.15</td><td class="nc nc_t col-yr0-q3">9.37</td><td class="nc">34.20</td><td class="nc nc_t col-yr1-q0-m0">2.92</td><td class="nc nc_t col-yr1-q0-m1">2.76</td><td class="nc nc_t col-yr1-q0-m2">3.33</td><td class="nc nc_t col-yr1-q0">9.01</td><td class="nc nc_t col-yr1-q1-m3">3.45</td><td class="nc nc_t col-yr1-q1-m4">3.57</td><td class="nc nc_t col-yr1-q1-m5">3.37</td><td class="nc nc_t col-yr1-q1">10.39</td><td class="nc nc_t col-yr1-q2-m6">3.25</td><td class="nc nc_t col-yr1-q2-m7">3.33</td><td class="nc nc_t col-yr1-q2-m8">3.49</td><td class="nc nc_t col-yr1-q2">10.07</td><td class="nc nc_t col-yr1-q3-m9">3.65</td><td class="nc nc_t col-yr1-q3-m10">3.74</td><td class="nc nc_t col-yr1-q3-m11">3.74</td><td class="nc nc_t col-yr1-q3">11.12</td><td class="nc">40.60</td><td class="nc nc_t col-yr2-q0-m0">3.39</td><td class="nc nc_t col-yr2-q0-m1">3.20</td><td class="nc nc_t col-yr2-q0-m2">3.86</td><td class="nc nc_t col-yr2-q0">10.46</td><td class="nc nc_t col-yr2-q1-m3">4.00</td><td class="nc nc_t col-yr2-q1-m4">4.14</td><td class="nc nc_t col-yr2-q1-m5">3.91</td><td class="nc nc_t col-yr2-q1">12.06</td><td class="nc nc_t col-yr2-q2-m6">3.77</td><td class="nc nc_t col-yr2-q2-m7">3.86</td><td class="nc nc_t col-yr2-q2-m8">4.05</td><td class="nc nc_t col-yr2-q2">11.68</td><td class="nc nc_t col-yr2-q3-m9">4.24</td><td class="nc nc_t col-yr2-q3-m10">4.33</td><td class="nc nc_t col-yr2-q3-m11">4.33</td><td class="nc nc_t col-yr2-q3">12.91</td><td class="nc">47.10</td><td class="yoy_up">▲16.0%</td><td class="cagr_up">17.4%▲</td></tr>
+<tr class="t-sub" data-sec="cogs"><td class="lbl lbl-il1">Direct Labour</td><td class="nc nc_t col-yr0-q0-m0">0.71</td><td class="nc nc_t col-yr0-q0-m1">0.67</td><td class="nc nc_t col-yr0-q0-m2">0.80</td><td class="nc nc_t col-yr0-q0">2.18</td><td class="nc nc_t col-yr0-q1-m3">0.83</td><td class="nc nc_t col-yr0-q1-m4">0.86</td><td class="nc nc_t col-yr0-q1-m5">0.81</td><td class="nc nc_t col-yr0-q1">2.51</td><td class="nc nc_t col-yr0-q2-m6">0.78</td><td class="nc nc_t col-yr0-q2-m7">0.80</td><td class="nc nc_t col-yr0-q2-m8">0.84</td><td class="nc nc_t col-yr0-q2">2.43</td><td class="nc nc_t col-yr0-q3-m9">0.88</td><td class="nc nc_t col-yr0-q3-m10">0.90</td><td class="nc nc_t col-yr0-q3-m11">0.90</td><td class="nc nc_t col-yr0-q3">2.69</td><td class="nc">9.80</td><td class="nc nc_t col-yr1-q0-m0">0.81</td><td class="nc nc_t col-yr1-q0-m1">0.76</td><td class="nc nc_t col-yr1-q0-m2">0.92</td><td class="nc nc_t col-yr1-q0">2.49</td><td class="nc nc_t col-yr1-q1-m3">0.95</td><td class="nc nc_t col-yr1-q1-m4">0.99</td><td class="nc nc_t col-yr1-q1-m5">0.93</td><td class="nc nc_t col-yr1-q1">2.87</td><td class="nc nc_t col-yr1-q2-m6">0.90</td><td class="nc nc_t col-yr1-q2-m7">0.92</td><td class="nc nc_t col-yr1-q2-m8">0.96</td><td class="nc nc_t col-yr1-q2">2.78</td><td class="nc nc_t col-yr1-q3-m9">1.01</td><td class="nc nc_t col-yr1-q3-m10">1.03</td><td class="nc nc_t col-yr1-q3-m11">1.03</td><td class="nc nc_t col-yr1-q3">3.07</td><td class="nc">11.20</td><td class="nc nc_t col-yr2-q0-m0">0.93</td><td class="nc nc_t col-yr2-q0-m1">0.88</td><td class="nc nc_t col-yr2-q0-m2">1.06</td><td class="nc nc_t col-yr2-q0">2.86</td><td class="nc nc_t col-yr2-q1-m3">1.10</td><td class="nc nc_t col-yr2-q1-m4">1.14</td><td class="nc nc_t col-yr2-q1-m5">1.07</td><td class="nc nc_t col-yr2-q1">3.30</td><td class="nc nc_t col-yr2-q2-m6">1.03</td><td class="nc nc_t col-yr2-q2-m7">1.06</td><td class="nc nc_t col-yr2-q2-m8">1.11</td><td class="nc nc_t col-yr2-q2">3.20</td><td class="nc nc_t col-yr2-q3-m9">1.16</td><td class="nc nc_t col-yr2-q3-m10">1.19</td><td class="nc nc_t col-yr2-q3-m11">1.19</td><td class="nc nc_t col-yr2-q3">3.53</td><td class="nc">12.90</td><td class="yoy_up">▲15.2%</td><td class="cagr_up">14.7%▲</td></tr>
+<tr class="t-sub" data-sec="cogs"><td class="lbl lbl-il1">Manufacturing Overhead</td><td class="nc nc_t col-yr0-q0-m0">0.45</td><td class="nc nc_t col-yr0-q0-m1">0.43</td><td class="nc nc_t col-yr0-q0-m2">0.52</td><td class="nc nc_t col-yr0-q0">1.40</td><td class="nc nc_t col-yr0-q1-m3">0.54</td><td class="nc nc_t col-yr0-q1-m4">0.55</td><td class="nc nc_t col-yr0-q1-m5">0.52</td><td class="nc nc_t col-yr0-q1">1.61</td><td class="nc nc_t col-yr0-q2-m6">0.50</td><td class="nc nc_t col-yr0-q2-m7">0.52</td><td class="nc nc_t col-yr0-q2-m8">0.54</td><td class="nc nc_t col-yr0-q2">1.56</td><td class="nc nc_t col-yr0-q3-m9">0.57</td><td class="nc nc_t col-yr0-q3-m10">0.58</td><td class="nc nc_t col-yr0-q3-m11">0.58</td><td class="nc nc_t col-yr0-q3">1.73</td><td class="nc">6.30</td><td class="nc nc_t col-yr1-q0-m0">0.53</td><td class="nc nc_t col-yr1-q0-m1">0.50</td><td class="nc nc_t col-yr1-q0-m2">0.61</td><td class="nc nc_t col-yr1-q0">1.64</td><td class="nc nc_t col-yr1-q1-m3">0.63</td><td class="nc nc_t col-yr1-q1-m4">0.65</td><td class="nc nc_t col-yr1-q1-m5">0.61</td><td class="nc nc_t col-yr1-q1">1.89</td><td class="nc nc_t col-yr1-q2-m6">0.59</td><td class="nc nc_t col-yr1-q2-m7">0.61</td><td class="nc nc_t col-yr1-q2-m8">0.64</td><td class="nc nc_t col-yr1-q2">1.84</td><td class="nc nc_t col-yr1-q3-m9">0.67</td><td class="nc nc_t col-yr1-q3-m10">0.68</td><td class="nc nc_t col-yr1-q3-m11">0.68</td><td class="nc nc_t col-yr1-q3">2.03</td><td class="nc">7.40</td><td class="nc nc_t col-yr2-q0-m0">0.61</td><td class="nc nc_t col-yr2-q0-m1">0.58</td><td class="nc nc_t col-yr2-q0-m2">0.70</td><td class="nc nc_t col-yr2-q0">1.89</td><td class="nc nc_t col-yr2-q1-m3">0.72</td><td class="nc nc_t col-yr2-q1-m4">0.75</td><td class="nc nc_t col-yr2-q1-m5">0.71</td><td class="nc nc_t col-yr2-q1">2.18</td><td class="nc nc_t col-yr2-q2-m6">0.68</td><td class="nc nc_t col-yr2-q2-m7">0.70</td><td class="nc nc_t col-yr2-q2-m8">0.73</td><td class="nc nc_t col-yr2-q2">2.11</td><td class="nc nc_t col-yr2-q3-m9">0.77</td><td class="nc nc_t col-yr2-q3-m10">0.78</td><td class="nc nc_t col-yr2-q3-m11">0.78</td><td class="nc nc_t col-yr2-q3">2.33</td><td class="nc">8.50</td><td class="yoy_up">▲14.9%</td><td class="cagr_up">16.2%▲</td></tr>
+<tr class="t-bold"><td class="lbl">Total COGS</td><td class="nc nc_t col-yr0-q0-m0">3.62</td><td class="nc nc_t col-yr0-q0-m1">3.42</td><td class="nc nc_t col-yr0-q0-m2">4.12</td><td class="nc nc_t col-yr0-q0">11.17</td><td class="nc nc_t col-yr0-q1-m3">4.28</td><td class="nc nc_t col-yr0-q1-m4">4.43</td><td class="nc nc_t col-yr0-q1-m5">4.17</td><td class="nc nc_t col-yr0-q1">12.88</td><td class="nc nc_t col-yr0-q2-m6">4.02</td><td class="nc nc_t col-yr0-q2-m7">4.12</td><td class="nc nc_t col-yr0-q2-m8">4.33</td><td class="nc nc_t col-yr0-q2">12.47</td><td class="nc nc_t col-yr0-q3-m9">4.53</td><td class="nc nc_t col-yr0-q3-m10">4.63</td><td class="nc nc_t col-yr0-q3-m11">4.63</td><td class="nc nc_t col-yr0-q3">13.78</td><td class="nc">50.30</td><td class="nc nc_t col-yr1-q0-m0">4.26</td><td class="nc nc_t col-yr1-q0-m1">4.03</td><td class="nc nc_t col-yr1-q0-m2">4.85</td><td class="nc nc_t col-yr1-q0">13.14</td><td class="nc nc_t col-yr1-q1-m3">5.03</td><td class="nc nc_t col-yr1-q1-m4">5.21</td><td class="nc nc_t col-yr1-q1-m5">4.91</td><td class="nc nc_t col-yr1-q1">15.16</td><td class="nc nc_t col-yr1-q2-m6">4.74</td><td class="nc nc_t col-yr1-q2-m7">4.85</td><td class="nc nc_t col-yr1-q2-m8">5.09</td><td class="nc nc_t col-yr1-q2">14.68</td><td class="nc nc_t col-yr1-q3-m9">5.33</td><td class="nc nc_t col-yr1-q3-m10">5.45</td><td class="nc nc_t col-yr1-q3-m11">5.45</td><td class="nc nc_t col-yr1-q3">16.22</td><td class="nc">59.20</td><td class="nc nc_t col-yr2-q0-m0">4.93</td><td class="nc nc_t col-yr2-q0-m1">4.66</td><td class="nc nc_t col-yr2-q0-m2">5.62</td><td class="nc nc_t col-yr2-q0">15.21</td><td class="nc nc_t col-yr2-q1-m3">5.82</td><td class="nc nc_t col-yr2-q1-m4">6.03</td><td class="nc nc_t col-yr2-q1-m5">5.69</td><td class="nc nc_t col-yr2-q1">17.54</td><td class="nc nc_t col-yr2-q2-m6">5.48</td><td class="nc nc_t col-yr2-q2-m7">5.62</td><td class="nc nc_t col-yr2-q2-m8">5.89</td><td class="nc nc_t col-yr2-q2">16.99</td><td class="nc nc_t col-yr2-q3-m9">6.17</td><td class="nc nc_t col-yr2-q3-m10">6.30</td><td class="nc nc_t col-yr2-q3-m11">6.30</td><td class="nc nc_t col-yr2-q3">18.77</td><td class="nc">68.50</td><td class="yoy_up">▲15.7%</td><td class="cagr_up">16.7%▲</td></tr>
+<tr class="t-total row-gp"><td class="lbl">Gross Profit</td><td class="nc nc_t col-yr0-q0-m0">3.38</td><td class="nc nc_t col-yr0-q0-m1">3.19</td><td class="nc nc_t col-yr0-q0-m2">3.85</td><td class="nc nc_t col-yr0-q0">10.41</td><td class="nc nc_t col-yr0-q1-m3">3.99</td><td class="nc nc_t col-yr0-q1-m4">4.13</td><td class="nc nc_t col-yr0-q1-m5">3.89</td><td class="nc nc_t col-yr0-q1">12.01</td><td class="nc nc_t col-yr0-q2-m6">3.75</td><td class="nc nc_t col-yr0-q2-m7">3.85</td><td class="nc nc_t col-yr0-q2-m8">4.03</td><td class="nc nc_t col-yr0-q2">11.63</td><td class="nc nc_t col-yr0-q3-m9">4.22</td><td class="nc nc_t col-yr0-q3-m10">4.31</td><td class="nc nc_t col-yr0-q3-m11">4.31</td><td class="nc nc_t col-yr0-q3">12.85</td><td class="nc">46.90</td><td class="nc nc_t col-yr1-q0-m0">4.18</td><td class="nc nc_t col-yr1-q0-m1">3.94</td><td class="nc nc_t col-yr1-q0-m2">4.76</td><td class="nc nc_t col-yr1-q0">12.88</td><td class="nc nc_t col-yr1-q1-m3">4.93</td><td class="nc nc_t col-yr1-q1-m4">5.10</td><td class="nc nc_t col-yr1-q1-m5">4.81</td><td class="nc nc_t col-yr1-q1">14.85</td><td class="nc nc_t col-yr1-q2-m6">4.64</td><td class="nc nc_t col-yr1-q2-m7">4.76</td><td class="nc nc_t col-yr1-q2-m8">4.99</td><td class="nc nc_t col-yr1-q2">14.38</td><td class="nc nc_t col-yr1-q3-m9">5.22</td><td class="nc nc_t col-yr1-q3-m10">5.34</td><td class="nc nc_t col-yr1-q3-m11">5.34</td><td class="nc nc_t col-yr1-q3">15.89</td><td class="nc">58.00</td><td class="nc nc_t col-yr2-q0-m0">5.08</td><td class="nc nc_t col-yr2-q0-m1">4.79</td><td class="nc nc_t col-yr2-q0-m2">5.78</td><td class="nc nc_t col-yr2-q0">15.65</td><td class="nc nc_t col-yr2-q1-m3">5.99</td><td class="nc nc_t col-yr2-q1-m4">6.20</td><td class="nc nc_t col-yr2-q1-m5">5.85</td><td class="nc nc_t col-yr2-q1">18.05</td><td class="nc nc_t col-yr2-q2-m6">5.64</td><td class="nc nc_t col-yr2-q2-m7">5.78</td><td class="nc nc_t col-yr2-q2-m8">6.06</td><td class="nc nc_t col-yr2-q2">17.48</td><td class="nc nc_t col-yr2-q3-m9">6.34</td><td class="nc nc_t col-yr2-q3-m10">6.49</td><td class="nc nc_t col-yr2-q3-m11">6.49</td><td class="nc nc_t col-yr2-q3">19.32</td><td class="nc">70.50</td><td class="yoy_up">▲21.6%</td><td class="cagr_up">22.6%▲</td></tr>
+<tr class="t-pct"><td class="lbl lbl-pct">&#x2514; Gross Margin</td><td class="col-yr0-q0-m0 nc_dim">&mdash;</td><td class="col-yr0-q0-m1 nc_dim">&mdash;</td><td class="col-yr0-q0-m2 nc_dim">&mdash;</td><td class="col-yr0-q0 nc_dim">&mdash;</td><td class="col-yr0-q1-m3 nc_dim">&mdash;</td><td class="col-yr0-q1-m4 nc_dim">&mdash;</td><td class="col-yr0-q1-m5 nc_dim">&mdash;</td><td class="col-yr0-q1 nc_dim">&mdash;</td><td class="col-yr0-q2-m6 nc_dim">&mdash;</td><td class="col-yr0-q2-m7 nc_dim">&mdash;</td><td class="col-yr0-q2-m8 nc_dim">&mdash;</td><td class="col-yr0-q2 nc_dim">&mdash;</td><td class="col-yr0-q3-m9 nc_dim">&mdash;</td><td class="col-yr0-q3-m10 nc_dim">&mdash;</td><td class="col-yr0-q3-m11 nc_dim">&mdash;</td><td class="col-yr0-q3 nc_dim">&mdash;</td><td class="pct_val">48.3%</td><td class="col-yr1-q0-m0 nc_dim">&mdash;</td><td class="col-yr1-q0-m1 nc_dim">&mdash;</td><td class="col-yr1-q0-m2 nc_dim">&mdash;</td><td class="col-yr1-q0 nc_dim">&mdash;</td><td class="col-yr1-q1-m3 nc_dim">&mdash;</td><td class="col-yr1-q1-m4 nc_dim">&mdash;</td><td class="col-yr1-q1-m5 nc_dim">&mdash;</td><td class="col-yr1-q1 nc_dim">&mdash;</td><td class="col-yr1-q2-m6 nc_dim">&mdash;</td><td class="col-yr1-q2-m7 nc_dim">&mdash;</td><td class="col-yr1-q2-m8 nc_dim">&mdash;</td><td class="col-yr1-q2 nc_dim">&mdash;</td><td class="col-yr1-q3-m9 nc_dim">&mdash;</td><td class="col-yr1-q3-m10 nc_dim">&mdash;</td><td class="col-yr1-q3-m11 nc_dim">&mdash;</td><td class="col-yr1-q3 nc_dim">&mdash;</td><td class="pct_val">49.5%</td><td class="col-yr2-q0-m0 nc_dim">&mdash;</td><td class="col-yr2-q0-m1 nc_dim">&mdash;</td><td class="col-yr2-q0-m2 nc_dim">&mdash;</td><td class="col-yr2-q0 nc_dim">&mdash;</td><td class="col-yr2-q1-m3 nc_dim">&mdash;</td><td class="col-yr2-q1-m4 nc_dim">&mdash;</td><td class="col-yr2-q1-m5 nc_dim">&mdash;</td><td class="col-yr2-q1 nc_dim">&mdash;</td><td class="col-yr2-q2-m6 nc_dim">&mdash;</td><td class="col-yr2-q2-m7 nc_dim">&mdash;</td><td class="col-yr2-q2-m8 nc_dim">&mdash;</td><td class="col-yr2-q2 nc_dim">&mdash;</td><td class="col-yr2-q3-m9 nc_dim">&mdash;</td><td class="col-yr2-q3-m10 nc_dim">&mdash;</td><td class="col-yr2-q3-m11 nc_dim">&mdash;</td><td class="col-yr2-q3 nc_dim">&mdash;</td><td class="pct_val">50.7%</td><td class="yoy_up" style="font-size:10.5px">▲1.2pp</td><td class="nc_dim">&mdash;</td></tr>
+<tr class="t-shdr" onclick="toggleSec('opex',event)"><td colspan="99"><span class="sec-arr" id="sarr-opex">&#9660;</span> Operating Expenses</td></tr>
+<tr class="t-sub" data-sec="opex"><td class="lbl lbl-il1">Sales & Distribution</td><td class="nc nc_t col-yr0-q0-m0">0.81</td><td class="nc nc_t col-yr0-q0-m1">0.76</td><td class="nc nc_t col-yr0-q0-m2">0.92</td><td class="nc nc_t col-yr0-q0">2.49</td><td class="nc nc_t col-yr0-q1-m3">0.95</td><td class="nc nc_t col-yr0-q1-m4">0.99</td><td class="nc nc_t col-yr0-q1-m5">0.93</td><td class="nc nc_t col-yr0-q1">2.87</td><td class="nc nc_t col-yr0-q2-m6">0.90</td><td class="nc nc_t col-yr0-q2-m7">0.92</td><td class="nc nc_t col-yr0-q2-m8">0.96</td><td class="nc nc_t col-yr0-q2">2.78</td><td class="nc nc_t col-yr0-q3-m9">1.01</td><td class="nc nc_t col-yr0-q3-m10">1.03</td><td class="nc nc_t col-yr0-q3-m11">1.03</td><td class="nc nc_t col-yr0-q3">3.07</td><td class="nc">11.20</td><td class="nc nc_t col-yr1-q0-m0">0.96</td><td class="nc nc_t col-yr1-q0-m1">0.91</td><td class="nc nc_t col-yr1-q0-m2">1.10</td><td class="nc nc_t col-yr1-q0">2.97</td><td class="nc nc_t col-yr1-q1-m3">1.14</td><td class="nc nc_t col-yr1-q1-m4">1.18</td><td class="nc nc_t col-yr1-q1-m5">1.11</td><td class="nc nc_t col-yr1-q1">3.43</td><td class="nc nc_t col-yr1-q2-m6">1.07</td><td class="nc nc_t col-yr1-q2-m7">1.10</td><td class="nc nc_t col-yr1-q2-m8">1.15</td><td class="nc nc_t col-yr1-q2">3.32</td><td class="nc nc_t col-yr1-q3-m9">1.21</td><td class="nc nc_t col-yr1-q3-m10">1.23</td><td class="nc nc_t col-yr1-q3-m11">1.23</td><td class="nc nc_t col-yr1-q3">3.67</td><td class="nc">13.40</td><td class="nc nc_t col-yr2-q0-m0">1.12</td><td class="nc nc_t col-yr2-q0-m1">1.06</td><td class="nc nc_t col-yr2-q0-m2">1.28</td><td class="nc nc_t col-yr2-q0">3.46</td><td class="nc nc_t col-yr2-q1-m3">1.33</td><td class="nc nc_t col-yr2-q1-m4">1.37</td><td class="nc nc_t col-yr2-q1-m5">1.29</td><td class="nc nc_t col-yr2-q1">3.99</td><td class="nc nc_t col-yr2-q2-m6">1.25</td><td class="nc nc_t col-yr2-q2-m7">1.28</td><td class="nc nc_t col-yr2-q2-m8">1.34</td><td class="nc nc_t col-yr2-q2">3.87</td><td class="nc nc_t col-yr2-q3-m9">1.40</td><td class="nc nc_t col-yr2-q3-m10">1.44</td><td class="nc nc_t col-yr2-q3-m11">1.44</td><td class="nc nc_t col-yr2-q3">4.27</td><td class="nc">15.60</td><td class="yoy_up">▲16.4%</td><td class="cagr_up">18.0%▲</td></tr>
+<tr class="t-sub" data-sec="opex"><td class="lbl lbl-il1">Marketing</td><td class="nc nc_t col-yr0-q0-m0">0.49</td><td class="nc nc_t col-yr0-q0-m1">0.46</td><td class="nc nc_t col-yr0-q0-m2">0.56</td><td class="nc nc_t col-yr0-q0">1.51</td><td class="nc nc_t col-yr0-q1-m3">0.58</td><td class="nc nc_t col-yr0-q1-m4">0.60</td><td class="nc nc_t col-yr0-q1-m5">0.56</td><td class="nc nc_t col-yr0-q1">1.74</td><td class="nc nc_t col-yr0-q2-m6">0.54</td><td class="nc nc_t col-yr0-q2-m7">0.56</td><td class="nc nc_t col-yr0-q2-m8">0.58</td><td class="nc nc_t col-yr0-q2">1.69</td><td class="nc nc_t col-yr0-q3-m9">0.61</td><td class="nc nc_t col-yr0-q3-m10">0.63</td><td class="nc nc_t col-yr0-q3-m11">0.63</td><td class="nc nc_t col-yr0-q3">1.86</td><td class="nc">6.80</td><td class="nc nc_t col-yr1-q0-m0">0.59</td><td class="nc nc_t col-yr1-q0-m1">0.56</td><td class="nc nc_t col-yr1-q0-m2">0.67</td><td class="nc nc_t col-yr1-q0">1.82</td><td class="nc nc_t col-yr1-q1-m3">0.70</td><td class="nc nc_t col-yr1-q1-m4">0.72</td><td class="nc nc_t col-yr1-q1-m5">0.68</td><td class="nc nc_t col-yr1-q1">2.10</td><td class="nc nc_t col-yr1-q2-m6">0.66</td><td class="nc nc_t col-yr1-q2-m7">0.67</td><td class="nc nc_t col-yr1-q2-m8">0.71</td><td class="nc nc_t col-yr1-q2">2.03</td><td class="nc nc_t col-yr1-q3-m9">0.74</td><td class="nc nc_t col-yr1-q3-m10">0.75</td><td class="nc nc_t col-yr1-q3-m11">0.75</td><td class="nc nc_t col-yr1-q3">2.25</td><td class="nc">8.20</td><td class="nc nc_t col-yr2-q0-m0">0.70</td><td class="nc nc_t col-yr2-q0-m1">0.66</td><td class="nc nc_t col-yr2-q0-m2">0.80</td><td class="nc nc_t col-yr2-q0">2.15</td><td class="nc nc_t col-yr2-q1-m3">0.82</td><td class="nc nc_t col-yr2-q1-m4">0.85</td><td class="nc nc_t col-yr2-q1-m5">0.81</td><td class="nc nc_t col-yr2-q1">2.48</td><td class="nc nc_t col-yr2-q2-m6">0.78</td><td class="nc nc_t col-yr2-q2-m7">0.80</td><td class="nc nc_t col-yr2-q2-m8">0.83</td><td class="nc nc_t col-yr2-q2">2.41</td><td class="nc nc_t col-yr2-q3-m9">0.87</td><td class="nc nc_t col-yr2-q3-m10">0.89</td><td class="nc nc_t col-yr2-q3-m11">0.89</td><td class="nc nc_t col-yr2-q3">2.66</td><td class="nc">9.70</td><td class="yoy_up">▲18.3%</td><td class="cagr_up">19.4%▲</td></tr>
+<tr class="t-sub" data-sec="opex"><td class="lbl lbl-il1">Research & Development</td><td class="nc nc_t col-yr0-q0-m0">0.39</td><td class="nc nc_t col-yr0-q0-m1">0.37</td><td class="nc nc_t col-yr0-q0-m2">0.44</td><td class="nc nc_t col-yr0-q0">1.20</td><td class="nc nc_t col-yr0-q1-m3">0.46</td><td class="nc nc_t col-yr0-q1-m4">0.48</td><td class="nc nc_t col-yr0-q1-m5">0.45</td><td class="nc nc_t col-yr0-q1">1.38</td><td class="nc nc_t col-yr0-q2-m6">0.43</td><td class="nc nc_t col-yr0-q2-m7">0.44</td><td class="nc nc_t col-yr0-q2-m8">0.46</td><td class="nc nc_t col-yr0-q2">1.34</td><td class="nc nc_t col-yr0-q3-m9">0.49</td><td class="nc nc_t col-yr0-q3-m10">0.50</td><td class="nc nc_t col-yr0-q3-m11">0.50</td><td class="nc nc_t col-yr0-q3">1.48</td><td class="nc">5.40</td><td class="nc nc_t col-yr1-q0-m0">0.50</td><td class="nc nc_t col-yr1-q0-m1">0.47</td><td class="nc nc_t col-yr1-q0-m2">0.57</td><td class="nc nc_t col-yr1-q0">1.53</td><td class="nc nc_t col-yr1-q1-m3">0.59</td><td class="nc nc_t col-yr1-q1-m4">0.61</td><td class="nc nc_t col-yr1-q1-m5">0.57</td><td class="nc nc_t col-yr1-q1">1.77</td><td class="nc nc_t col-yr1-q2-m6">0.55</td><td class="nc nc_t col-yr1-q2-m7">0.57</td><td class="nc nc_t col-yr1-q2-m8">0.59</td><td class="nc nc_t col-yr1-q2">1.71</td><td class="nc nc_t col-yr1-q3-m9">0.62</td><td class="nc nc_t col-yr1-q3-m10">0.63</td><td class="nc nc_t col-yr1-q3-m11">0.63</td><td class="nc nc_t col-yr1-q3">1.89</td><td class="nc">6.90</td><td class="nc nc_t col-yr2-q0-m0">0.58</td><td class="nc nc_t col-yr2-q0-m1">0.55</td><td class="nc nc_t col-yr2-q0-m2">0.66</td><td class="nc nc_t col-yr2-q0">1.80</td><td class="nc nc_t col-yr2-q1-m3">0.69</td><td class="nc nc_t col-yr2-q1-m4">0.71</td><td class="nc nc_t col-yr2-q1-m5">0.67</td><td class="nc nc_t col-yr2-q1">2.07</td><td class="nc nc_t col-yr2-q2-m6">0.65</td><td class="nc nc_t col-yr2-q2-m7">0.66</td><td class="nc nc_t col-yr2-q2-m8">0.70</td><td class="nc nc_t col-yr2-q2">2.01</td><td class="nc nc_t col-yr2-q3-m9">0.73</td><td class="nc nc_t col-yr2-q3-m10">0.75</td><td class="nc nc_t col-yr2-q3-m11">0.75</td><td class="nc nc_t col-yr2-q3">2.22</td><td class="nc">8.10</td><td class="yoy_up">▲17.4%</td><td class="cagr_up">22.5%▲</td></tr>
+<tr class="t-sub" data-sec="opex"><td class="lbl lbl-il1">General & Administrative</td><td class="nc nc_t col-yr0-q0-m0">0.30</td><td class="nc nc_t col-yr0-q0-m1">0.29</td><td class="nc nc_t col-yr0-q0-m2">0.34</td><td class="nc nc_t col-yr0-q0">0.93</td><td class="nc nc_t col-yr0-q1-m3">0.36</td><td class="nc nc_t col-yr0-q1-m4">0.37</td><td class="nc nc_t col-yr0-q1-m5">0.35</td><td class="nc nc_t col-yr0-q1">1.08</td><td class="nc nc_t col-yr0-q2-m6">0.34</td><td class="nc nc_t col-yr0-q2-m7">0.34</td><td class="nc nc_t col-yr0-q2-m8">0.36</td><td class="nc nc_t col-yr0-q2">1.04</td><td class="nc nc_t col-yr0-q3-m9">0.38</td><td class="nc nc_t col-yr0-q3-m10">0.39</td><td class="nc nc_t col-yr0-q3-m11">0.39</td><td class="nc nc_t col-yr0-q3">1.15</td><td class="nc">4.20</td><td class="nc nc_t col-yr1-q0-m0">0.37</td><td class="nc nc_t col-yr1-q0-m1">0.35</td><td class="nc nc_t col-yr1-q0-m2">0.42</td><td class="nc nc_t col-yr1-q0">1.13</td><td class="nc nc_t col-yr1-q1-m3">0.43</td><td class="nc nc_t col-yr1-q1-m4">0.45</td><td class="nc nc_t col-yr1-q1-m5">0.42</td><td class="nc nc_t col-yr1-q1">1.31</td><td class="nc nc_t col-yr1-q2-m6">0.41</td><td class="nc nc_t col-yr1-q2-m7">0.42</td><td class="nc nc_t col-yr1-q2-m8">0.44</td><td class="nc nc_t col-yr1-q2">1.26</td><td class="nc nc_t col-yr1-q3-m9">0.46</td><td class="nc nc_t col-yr1-q3-m10">0.47</td><td class="nc nc_t col-yr1-q3-m11">0.47</td><td class="nc nc_t col-yr1-q3">1.40</td><td class="nc">5.10</td><td class="nc nc_t col-yr2-q0-m0">0.42</td><td class="nc nc_t col-yr2-q0-m1">0.40</td><td class="nc nc_t col-yr2-q0-m2">0.48</td><td class="nc nc_t col-yr2-q0">1.31</td><td class="nc nc_t col-yr2-q1-m3">0.50</td><td class="nc nc_t col-yr2-q1-m4">0.52</td><td class="nc nc_t col-yr2-q1-m5">0.49</td><td class="nc nc_t col-yr2-q1">1.51</td><td class="nc nc_t col-yr2-q2-m6">0.47</td><td class="nc nc_t col-yr2-q2-m7">0.48</td><td class="nc nc_t col-yr2-q2-m8">0.51</td><td class="nc nc_t col-yr2-q2">1.46</td><td class="nc nc_t col-yr2-q3-m9">0.53</td><td class="nc nc_t col-yr2-q3-m10">0.54</td><td class="nc nc_t col-yr2-q3-m11">0.54</td><td class="nc nc_t col-yr2-q3">1.62</td><td class="nc">5.90</td><td class="yoy_up">▲15.7%</td><td class="cagr_up">18.5%▲</td></tr>
+<tr class="t-bold"><td class="lbl">Total OpEx</td><td class="nc nc_t col-yr0-q0-m0">1.99</td><td class="nc nc_t col-yr0-q0-m1">1.88</td><td class="nc nc_t col-yr0-q0-m2">2.26</td><td class="nc nc_t col-yr0-q0">6.13</td><td class="nc nc_t col-yr0-q1-m3">2.35</td><td class="nc nc_t col-yr0-q1-m4">2.43</td><td class="nc nc_t col-yr0-q1-m5">2.29</td><td class="nc nc_t col-yr0-q1">7.07</td><td class="nc nc_t col-yr0-q2-m6">2.21</td><td class="nc nc_t col-yr0-q2-m7">2.26</td><td class="nc nc_t col-yr0-q2-m8">2.37</td><td class="nc nc_t col-yr0-q2">6.84</td><td class="nc nc_t col-yr0-q3-m9">2.48</td><td class="nc nc_t col-yr0-q3-m10">2.54</td><td class="nc nc_t col-yr0-q3-m11">2.54</td><td class="nc nc_t col-yr0-q3">7.56</td><td class="nc">27.60</td><td class="nc nc_t col-yr1-q0-m0">2.42</td><td class="nc nc_t col-yr1-q0-m1">2.28</td><td class="nc nc_t col-yr1-q0-m2">2.76</td><td class="nc nc_t col-yr1-q0">7.46</td><td class="nc nc_t col-yr1-q1-m3">2.86</td><td class="nc nc_t col-yr1-q1-m4">2.96</td><td class="nc nc_t col-yr1-q1-m5">2.79</td><td class="nc nc_t col-yr1-q1">8.60</td><td class="nc nc_t col-yr1-q2-m6">2.69</td><td class="nc nc_t col-yr1-q2-m7">2.76</td><td class="nc nc_t col-yr1-q2-m8">2.89</td><td class="nc nc_t col-yr1-q2">8.33</td><td class="nc nc_t col-yr1-q3-m9">3.02</td><td class="nc nc_t col-yr1-q3-m10">3.09</td><td class="nc nc_t col-yr1-q3-m11">3.09</td><td class="nc nc_t col-yr1-q3">9.21</td><td class="nc">33.60</td><td class="nc nc_t col-yr2-q0-m0">2.83</td><td class="nc nc_t col-yr2-q0-m1">2.67</td><td class="nc nc_t col-yr2-q0-m2">3.22</td><td class="nc nc_t col-yr2-q0">8.72</td><td class="nc nc_t col-yr2-q1-m3">3.34</td><td class="nc nc_t col-yr2-q1-m4">3.46</td><td class="nc nc_t col-yr2-q1-m5">3.26</td><td class="nc nc_t col-yr2-q1">10.06</td><td class="nc nc_t col-yr2-q2-m6">3.14</td><td class="nc nc_t col-yr2-q2-m7">3.22</td><td class="nc nc_t col-yr2-q2-m8">3.38</td><td class="nc nc_t col-yr2-q2">9.75</td><td class="nc nc_t col-yr2-q3-m9">3.54</td><td class="nc nc_t col-yr2-q3-m10">3.62</td><td class="nc nc_t col-yr2-q3-m11">3.62</td><td class="nc nc_t col-yr2-q3">10.77</td><td class="nc">39.30</td><td class="yoy_up">▲17.0%</td><td class="cagr_up">19.3%▲</td></tr>
+<tr class="t-total row-ebitda"><td class="lbl">EBITDA</td><td class="nc nc_t col-yr0-q0-m0">1.39</td><td class="nc nc_t col-yr0-q0-m1">1.31</td><td class="nc nc_t col-yr0-q0-m2">1.58</td><td class="nc nc_t col-yr0-q0">4.28</td><td class="nc nc_t col-yr0-q1-m3">1.64</td><td class="nc nc_t col-yr0-q1-m4">1.70</td><td class="nc nc_t col-yr0-q1-m5">1.60</td><td class="nc nc_t col-yr0-q1">4.94</td><td class="nc nc_t col-yr0-q2-m6">1.54</td><td class="nc nc_t col-yr0-q2-m7">1.58</td><td class="nc nc_t col-yr0-q2-m8">1.66</td><td class="nc nc_t col-yr0-q2">4.79</td><td class="nc nc_t col-yr0-q3-m9">1.74</td><td class="nc nc_t col-yr0-q3-m10">1.78</td><td class="nc nc_t col-yr0-q3-m11">1.78</td><td class="nc nc_t col-yr0-q3">5.29</td><td class="nc">19.30</td><td class="nc nc_t col-yr1-q0-m0">1.76</td><td class="nc nc_t col-yr1-q0-m1">1.66</td><td class="nc nc_t col-yr1-q0-m2">2.00</td><td class="nc nc_t col-yr1-q0">5.42</td><td class="nc nc_t col-yr1-q1-m3">2.07</td><td class="nc nc_t col-yr1-q1-m4">2.15</td><td class="nc nc_t col-yr1-q1-m5">2.03</td><td class="nc nc_t col-yr1-q1">6.25</td><td class="nc nc_t col-yr1-q2-m6">1.95</td><td class="nc nc_t col-yr1-q2-m7">2.00</td><td class="nc nc_t col-yr1-q2-m8">2.10</td><td class="nc nc_t col-yr1-q2">6.05</td><td class="nc nc_t col-yr1-q3-m9">2.20</td><td class="nc nc_t col-yr1-q3-m10">2.24</td><td class="nc nc_t col-yr1-q3-m11">2.24</td><td class="nc nc_t col-yr1-q3">6.69</td><td class="nc">24.40</td><td class="nc nc_t col-yr2-q0-m0">2.25</td><td class="nc nc_t col-yr2-q0-m1">2.12</td><td class="nc nc_t col-yr2-q0-m2">2.56</td><td class="nc nc_t col-yr2-q0">6.93</td><td class="nc nc_t col-yr2-q1-m3">2.65</td><td class="nc nc_t col-yr2-q1-m4">2.75</td><td class="nc nc_t col-yr2-q1-m5">2.59</td><td class="nc nc_t col-yr2-q1">7.99</td><td class="nc nc_t col-yr2-q2-m6">2.50</td><td class="nc nc_t col-yr2-q2-m7">2.56</td><td class="nc nc_t col-yr2-q2-m8">2.68</td><td class="nc nc_t col-yr2-q2">7.74</td><td class="nc nc_t col-yr2-q3-m9">2.81</td><td class="nc nc_t col-yr2-q3-m10">2.87</td><td class="nc nc_t col-yr2-q3-m11">2.87</td><td class="nc nc_t col-yr2-q3">8.55</td><td class="nc">31.20</td><td class="yoy_up">▲27.9%</td><td class="cagr_up">27.1%▲</td></tr>
+<tr class="t-pct"><td class="lbl lbl-pct">&#x2514; EBITDA Margin</td><td class="col-yr0-q0-m0 nc_dim">&mdash;</td><td class="col-yr0-q0-m1 nc_dim">&mdash;</td><td class="col-yr0-q0-m2 nc_dim">&mdash;</td><td class="col-yr0-q0 nc_dim">&mdash;</td><td class="col-yr0-q1-m3 nc_dim">&mdash;</td><td class="col-yr0-q1-m4 nc_dim">&mdash;</td><td class="col-yr0-q1-m5 nc_dim">&mdash;</td><td class="col-yr0-q1 nc_dim">&mdash;</td><td class="col-yr0-q2-m6 nc_dim">&mdash;</td><td class="col-yr0-q2-m7 nc_dim">&mdash;</td><td class="col-yr0-q2-m8 nc_dim">&mdash;</td><td class="col-yr0-q2 nc_dim">&mdash;</td><td class="col-yr0-q3-m9 nc_dim">&mdash;</td><td class="col-yr0-q3-m10 nc_dim">&mdash;</td><td class="col-yr0-q3-m11 nc_dim">&mdash;</td><td class="col-yr0-q3 nc_dim">&mdash;</td><td class="pct_val">19.9%</td><td class="col-yr1-q0-m0 nc_dim">&mdash;</td><td class="col-yr1-q0-m1 nc_dim">&mdash;</td><td class="col-yr1-q0-m2 nc_dim">&mdash;</td><td class="col-yr1-q0 nc_dim">&mdash;</td><td class="col-yr1-q1-m3 nc_dim">&mdash;</td><td class="col-yr1-q1-m4 nc_dim">&mdash;</td><td class="col-yr1-q1-m5 nc_dim">&mdash;</td><td class="col-yr1-q1 nc_dim">&mdash;</td><td class="col-yr1-q2-m6 nc_dim">&mdash;</td><td class="col-yr1-q2-m7 nc_dim">&mdash;</td><td class="col-yr1-q2-m8 nc_dim">&mdash;</td><td class="col-yr1-q2 nc_dim">&mdash;</td><td class="col-yr1-q3-m9 nc_dim">&mdash;</td><td class="col-yr1-q3-m10 nc_dim">&mdash;</td><td class="col-yr1-q3-m11 nc_dim">&mdash;</td><td class="col-yr1-q3 nc_dim">&mdash;</td><td class="pct_val">20.8%</td><td class="col-yr2-q0-m0 nc_dim">&mdash;</td><td class="col-yr2-q0-m1 nc_dim">&mdash;</td><td class="col-yr2-q0-m2 nc_dim">&mdash;</td><td class="col-yr2-q0 nc_dim">&mdash;</td><td class="col-yr2-q1-m3 nc_dim">&mdash;</td><td class="col-yr2-q1-m4 nc_dim">&mdash;</td><td class="col-yr2-q1-m5 nc_dim">&mdash;</td><td class="col-yr2-q1 nc_dim">&mdash;</td><td class="col-yr2-q2-m6 nc_dim">&mdash;</td><td class="col-yr2-q2-m7 nc_dim">&mdash;</td><td class="col-yr2-q2-m8 nc_dim">&mdash;</td><td class="col-yr2-q2 nc_dim">&mdash;</td><td class="col-yr2-q3-m9 nc_dim">&mdash;</td><td class="col-yr2-q3-m10 nc_dim">&mdash;</td><td class="col-yr2-q3-m11 nc_dim">&mdash;</td><td class="col-yr2-q3 nc_dim">&mdash;</td><td class="pct_val">22.4%</td><td class="yoy_up" style="font-size:10.5px">▲1.6pp</td><td class="nc_dim">&mdash;</td></tr>
+<tr class="t-shdr" onclick="toggleSec('belows',event)"><td colspan="99"><span class="sec-arr" id="sarr-belows">&#9660;</span> Below EBITDA</td></tr>
+<tr class="t-sub" data-sec="belows"><td class="lbl lbl-il1">Depreciation & Amortisation</td><td class="nc nc_t col-yr0-q0-m0">0.15</td><td class="nc nc_t col-yr0-q0-m1">0.14</td><td class="nc nc_t col-yr0-q0-m2">0.17</td><td class="nc nc_t col-yr0-q0">0.47</td><td class="nc nc_t col-yr0-q1-m3">0.18</td><td class="nc nc_t col-yr0-q1-m4">0.18</td><td class="nc nc_t col-yr0-q1-m5">0.17</td><td class="nc nc_t col-yr0-q1">0.54</td><td class="nc nc_t col-yr0-q2-m6">0.17</td><td class="nc nc_t col-yr0-q2-m7">0.17</td><td class="nc nc_t col-yr0-q2-m8">0.18</td><td class="nc nc_t col-yr0-q2">0.52</td><td class="nc nc_t col-yr0-q3-m9">0.19</td><td class="nc nc_t col-yr0-q3-m10">0.19</td><td class="nc nc_t col-yr0-q3-m11">0.19</td><td class="nc nc_t col-yr0-q3">0.58</td><td class="nc">2.10</td><td class="nc nc_t col-yr1-q0-m0">0.18</td><td class="nc nc_t col-yr1-q0-m1">0.17</td><td class="nc nc_t col-yr1-q0-m2">0.20</td><td class="nc nc_t col-yr1-q0">0.56</td><td class="nc nc_t col-yr1-q1-m3">0.21</td><td class="nc nc_t col-yr1-q1-m4">0.22</td><td class="nc nc_t col-yr1-q1-m5">0.21</td><td class="nc nc_t col-yr1-q1">0.64</td><td class="nc nc_t col-yr1-q2-m6">0.20</td><td class="nc nc_t col-yr1-q2-m7">0.20</td><td class="nc nc_t col-yr1-q2-m8">0.21</td><td class="nc nc_t col-yr1-q2">0.62</td><td class="nc nc_t col-yr1-q3-m9">0.23</td><td class="nc nc_t col-yr1-q3-m10">0.23</td><td class="nc nc_t col-yr1-q3-m11">0.23</td><td class="nc nc_t col-yr1-q3">0.69</td><td class="nc">2.50</td><td class="nc nc_t col-yr2-q0-m0">0.21</td><td class="nc nc_t col-yr2-q0-m1">0.20</td><td class="nc nc_t col-yr2-q0-m2">0.24</td><td class="nc nc_t col-yr2-q0">0.64</td><td class="nc nc_t col-yr2-q1-m3">0.25</td><td class="nc nc_t col-yr2-q1-m4">0.26</td><td class="nc nc_t col-yr2-q1-m5">0.24</td><td class="nc nc_t col-yr2-q1">0.74</td><td class="nc nc_t col-yr2-q2-m6">0.23</td><td class="nc nc_t col-yr2-q2-m7">0.24</td><td class="nc nc_t col-yr2-q2-m8">0.25</td><td class="nc nc_t col-yr2-q2">0.72</td><td class="nc nc_t col-yr2-q3-m9">0.26</td><td class="nc nc_t col-yr2-q3-m10">0.27</td><td class="nc nc_t col-yr2-q3-m11">0.27</td><td class="nc nc_t col-yr2-q3">0.79</td><td class="nc">2.90</td><td class="yoy_up">▲16.0%</td><td class="cagr_up">17.5%▲</td></tr>
+<tr class="t-total row-ebit"><td class="lbl">EBIT</td><td class="nc nc_t col-yr0-q0-m0">1.24</td><td class="nc nc_t col-yr0-q0-m1">1.17</td><td class="nc nc_t col-yr0-q0-m2">1.41</td><td class="nc nc_t col-yr0-q0">3.82</td><td class="nc nc_t col-yr0-q1-m3">1.46</td><td class="nc nc_t col-yr0-q1-m4">1.51</td><td class="nc nc_t col-yr0-q1-m5">1.43</td><td class="nc nc_t col-yr0-q1">4.40</td><td class="nc nc_t col-yr0-q2-m6">1.38</td><td class="nc nc_t col-yr0-q2-m7">1.41</td><td class="nc nc_t col-yr0-q2-m8">1.48</td><td class="nc nc_t col-yr0-q2">4.27</td><td class="nc nc_t col-yr0-q3-m9">1.55</td><td class="nc nc_t col-yr0-q3-m10">1.58</td><td class="nc nc_t col-yr0-q3-m11">1.58</td><td class="nc nc_t col-yr0-q3">4.71</td><td class="nc">17.20</td><td class="nc nc_t col-yr1-q0-m0">1.58</td><td class="nc nc_t col-yr1-q0-m1">1.49</td><td class="nc nc_t col-yr1-q0-m2">1.80</td><td class="nc nc_t col-yr1-q0">4.86</td><td class="nc nc_t col-yr1-q1-m3">1.86</td><td class="nc nc_t col-yr1-q1-m4">1.93</td><td class="nc nc_t col-yr1-q1-m5">1.82</td><td class="nc nc_t col-yr1-q1">5.61</td><td class="nc nc_t col-yr1-q2-m6">1.75</td><td class="nc nc_t col-yr1-q2-m7">1.80</td><td class="nc nc_t col-yr1-q2-m8">1.88</td><td class="nc nc_t col-yr1-q2">5.43</td><td class="nc nc_t col-yr1-q3-m9">1.97</td><td class="nc nc_t col-yr1-q3-m10">2.01</td><td class="nc nc_t col-yr1-q3-m11">2.01</td><td class="nc nc_t col-yr1-q3">6.00</td><td class="nc">21.90</td><td class="nc nc_t col-yr2-q0-m0">2.04</td><td class="nc nc_t col-yr2-q0-m1">1.92</td><td class="nc nc_t col-yr2-q0-m2">2.32</td><td class="nc nc_t col-yr2-q0">6.28</td><td class="nc nc_t col-yr2-q1-m3">2.41</td><td class="nc nc_t col-yr2-q1-m4">2.49</td><td class="nc nc_t col-yr2-q1-m5">2.35</td><td class="nc nc_t col-yr2-q1">7.24</td><td class="nc nc_t col-yr2-q2-m6">2.26</td><td class="nc nc_t col-yr2-q2-m7">2.32</td><td class="nc nc_t col-yr2-q2-m8">2.43</td><td class="nc nc_t col-yr2-q2">7.02</td><td class="nc nc_t col-yr2-q3-m9">2.55</td><td class="nc nc_t col-yr2-q3-m10">2.60</td><td class="nc nc_t col-yr2-q3-m11">2.60</td><td class="nc nc_t col-yr2-q3">7.75</td><td class="nc">28.30</td><td class="yoy_up">▲29.2%</td><td class="cagr_up">28.3%▲</td></tr>
+<tr class="t-pct"><td class="lbl lbl-pct">&#x2514; EBIT Margin</td><td class="col-yr0-q0-m0 nc_dim">&mdash;</td><td class="col-yr0-q0-m1 nc_dim">&mdash;</td><td class="col-yr0-q0-m2 nc_dim">&mdash;</td><td class="col-yr0-q0 nc_dim">&mdash;</td><td class="col-yr0-q1-m3 nc_dim">&mdash;</td><td class="col-yr0-q1-m4 nc_dim">&mdash;</td><td class="col-yr0-q1-m5 nc_dim">&mdash;</td><td class="col-yr0-q1 nc_dim">&mdash;</td><td class="col-yr0-q2-m6 nc_dim">&mdash;</td><td class="col-yr0-q2-m7 nc_dim">&mdash;</td><td class="col-yr0-q2-m8 nc_dim">&mdash;</td><td class="col-yr0-q2 nc_dim">&mdash;</td><td class="col-yr0-q3-m9 nc_dim">&mdash;</td><td class="col-yr0-q3-m10 nc_dim">&mdash;</td><td class="col-yr0-q3-m11 nc_dim">&mdash;</td><td class="col-yr0-q3 nc_dim">&mdash;</td><td class="pct_val">17.7%</td><td class="col-yr1-q0-m0 nc_dim">&mdash;</td><td class="col-yr1-q0-m1 nc_dim">&mdash;</td><td class="col-yr1-q0-m2 nc_dim">&mdash;</td><td class="col-yr1-q0 nc_dim">&mdash;</td><td class="col-yr1-q1-m3 nc_dim">&mdash;</td><td class="col-yr1-q1-m4 nc_dim">&mdash;</td><td class="col-yr1-q1-m5 nc_dim">&mdash;</td><td class="col-yr1-q1 nc_dim">&mdash;</td><td class="col-yr1-q2-m6 nc_dim">&mdash;</td><td class="col-yr1-q2-m7 nc_dim">&mdash;</td><td class="col-yr1-q2-m8 nc_dim">&mdash;</td><td class="col-yr1-q2 nc_dim">&mdash;</td><td class="col-yr1-q3-m9 nc_dim">&mdash;</td><td class="col-yr1-q3-m10 nc_dim">&mdash;</td><td class="col-yr1-q3-m11 nc_dim">&mdash;</td><td class="col-yr1-q3 nc_dim">&mdash;</td><td class="pct_val">18.7%</td><td class="col-yr2-q0-m0 nc_dim">&mdash;</td><td class="col-yr2-q0-m1 nc_dim">&mdash;</td><td class="col-yr2-q0-m2 nc_dim">&mdash;</td><td class="col-yr2-q0 nc_dim">&mdash;</td><td class="col-yr2-q1-m3 nc_dim">&mdash;</td><td class="col-yr2-q1-m4 nc_dim">&mdash;</td><td class="col-yr2-q1-m5 nc_dim">&mdash;</td><td class="col-yr2-q1 nc_dim">&mdash;</td><td class="col-yr2-q2-m6 nc_dim">&mdash;</td><td class="col-yr2-q2-m7 nc_dim">&mdash;</td><td class="col-yr2-q2-m8 nc_dim">&mdash;</td><td class="col-yr2-q2 nc_dim">&mdash;</td><td class="col-yr2-q3-m9 nc_dim">&mdash;</td><td class="col-yr2-q3-m10 nc_dim">&mdash;</td><td class="col-yr2-q3-m11 nc_dim">&mdash;</td><td class="col-yr2-q3 nc_dim">&mdash;</td><td class="pct_val">20.4%</td><td class="yoy_up" style="font-size:10.5px">▲1.7pp</td><td class="nc_dim">&mdash;</td></tr>
+<tr class="t-sub" data-sec="belows"><td class="lbl lbl-il1">Interest Expense</td><td class="nc nc_t col-yr0-q0-m0">0.09</td><td class="nc nc_t col-yr0-q0-m1">0.08</td><td class="nc nc_t col-yr0-q0-m2">0.10</td><td class="nc nc_t col-yr0-q0">0.27</td><td class="nc nc_t col-yr0-q1-m3">0.10</td><td class="nc nc_t col-yr0-q1-m4">0.11</td><td class="nc nc_t col-yr0-q1-m5">0.10</td><td class="nc nc_t col-yr0-q1">0.31</td><td class="nc nc_t col-yr0-q2-m6">0.10</td><td class="nc nc_t col-yr0-q2-m7">0.10</td><td class="nc nc_t col-yr0-q2-m8">0.10</td><td class="nc nc_t col-yr0-q2">0.30</td><td class="nc nc_t col-yr0-q3-m9">0.11</td><td class="nc nc_t col-yr0-q3-m10">0.11</td><td class="nc nc_t col-yr0-q3-m11">0.11</td><td class="nc nc_t col-yr0-q3">0.33</td><td class="nc">1.20</td><td class="nc nc_t col-yr1-q0-m0">0.08</td><td class="nc nc_t col-yr1-q0-m1">0.07</td><td class="nc nc_t col-yr1-q0-m2">0.09</td><td class="nc nc_t col-yr1-q0">0.23</td><td class="nc nc_t col-yr1-q1-m3">0.09</td><td class="nc nc_t col-yr1-q1-m4">0.09</td><td class="nc nc_t col-yr1-q1-m5">0.09</td><td class="nc nc_t col-yr1-q1">0.27</td><td class="nc nc_t col-yr1-q2-m6">0.08</td><td class="nc nc_t col-yr1-q2-m7">0.09</td><td class="nc nc_t col-yr1-q2-m8">0.09</td><td class="nc nc_t col-yr1-q2">0.26</td><td class="nc nc_t col-yr1-q3-m9">0.09</td><td class="nc nc_t col-yr1-q3-m10">0.10</td><td class="nc nc_t col-yr1-q3-m11">0.10</td><td class="nc nc_t col-yr1-q3">0.29</td><td class="nc">1.05</td><td class="nc nc_t col-yr2-q0-m0">0.06</td><td class="nc nc_t col-yr2-q0-m1">0.06</td><td class="nc nc_t col-yr2-q0-m2">0.07</td><td class="nc nc_t col-yr2-q0">0.20</td><td class="nc nc_t col-yr2-q1-m3">0.08</td><td class="nc nc_t col-yr2-q1-m4">0.08</td><td class="nc nc_t col-yr2-q1-m5">0.07</td><td class="nc nc_t col-yr2-q1">0.23</td><td class="nc nc_t col-yr2-q2-m6">0.07</td><td class="nc nc_t col-yr2-q2-m7">0.07</td><td class="nc nc_t col-yr2-q2-m8">0.08</td><td class="nc nc_t col-yr2-q2">0.22</td><td class="nc nc_t col-yr2-q3-m9">0.08</td><td class="nc nc_t col-yr2-q3-m10">0.08</td><td class="nc nc_t col-yr2-q3-m11">0.08</td><td class="nc nc_t col-yr2-q3">0.25</td><td class="nc">0.90</td><td class="yoy_dn">▼14.3%</td><td class="cagr_dn">13.4%▼</td></tr>
+<tr class="t-sub" data-sec="belows"><td class="lbl lbl-il1">Other Expense / (Income)</td><td class="nc nc_t col-yr0-q0-m0">0.02</td><td class="nc nc_t col-yr0-q0-m1">0.02</td><td class="nc nc_t col-yr0-q0-m2">0.03</td><td class="nc nc_t col-yr0-q0">0.07</td><td class="nc nc_t col-yr0-q1-m3">0.03</td><td class="nc nc_t col-yr0-q1-m4">0.03</td><td class="nc nc_t col-yr0-q1-m5">0.03</td><td class="nc nc_t col-yr0-q1">0.08</td><td class="nc nc_t col-yr0-q2-m6">0.03</td><td class="nc nc_t col-yr0-q2-m7">0.03</td><td class="nc nc_t col-yr0-q2-m8">0.03</td><td class="nc nc_t col-yr0-q2">0.08</td><td class="nc nc_t col-yr0-q3-m9">0.03</td><td class="nc nc_t col-yr0-q3-m10">0.03</td><td class="nc nc_t col-yr0-q3-m11">0.03</td><td class="nc nc_t col-yr0-q3">0.09</td><td class="nc">0.32</td><td class="nc nc_t col-yr1-q0-m0">0.02</td><td class="nc nc_t col-yr1-q0-m1">0.02</td><td class="nc nc_t col-yr1-q0-m2">0.02</td><td class="nc nc_t col-yr1-q0">0.06</td><td class="nc nc_t col-yr1-q1-m3">0.02</td><td class="nc nc_t col-yr1-q1-m4">0.02</td><td class="nc nc_t col-yr1-q1-m5">0.02</td><td class="nc nc_t col-yr1-q1">0.07</td><td class="nc nc_t col-yr1-q2-m6">0.02</td><td class="nc nc_t col-yr1-q2-m7">0.02</td><td class="nc nc_t col-yr1-q2-m8">0.02</td><td class="nc nc_t col-yr1-q2">0.07</td><td class="nc nc_t col-yr1-q3-m9">0.03</td><td class="nc nc_t col-yr1-q3-m10">0.03</td><td class="nc nc_t col-yr1-q3-m11">0.03</td><td class="nc nc_t col-yr1-q3">0.08</td><td class="nc">0.28</td><td class="nc nc_t col-yr2-q0-m0">0.02</td><td class="nc nc_t col-yr2-q0-m1">0.02</td><td class="nc nc_t col-yr2-q0-m2">0.02</td><td class="nc nc_t col-yr2-q0">0.05</td><td class="nc nc_t col-yr2-q1-m3">0.02</td><td class="nc nc_t col-yr2-q1-m4">0.02</td><td class="nc nc_t col-yr2-q1-m5">0.02</td><td class="nc nc_t col-yr2-q1">0.06</td><td class="nc nc_t col-yr2-q2-m6">0.02</td><td class="nc nc_t col-yr2-q2-m7">0.02</td><td class="nc nc_t col-yr2-q2-m8">0.02</td><td class="nc nc_t col-yr2-q2">0.06</td><td class="nc nc_t col-yr2-q3-m9">0.02</td><td class="nc nc_t col-yr2-q3-m10">0.02</td><td class="nc nc_t col-yr2-q3-m11">0.02</td><td class="nc nc_t col-yr2-q3">0.07</td><td class="nc">0.24</td><td class="yoy_dn">▼14.3%</td><td class="cagr_dn">13.4%▼</td></tr>
+<tr class="t-bold"><td class="lbl">Earnings Before Tax</td><td class="nc nc_t col-yr0-q0-m0">1.13</td><td class="nc nc_t col-yr0-q0-m1">1.07</td><td class="nc nc_t col-yr0-q0-m2">1.29</td><td class="nc nc_t col-yr0-q0">3.48</td><td class="nc nc_t col-yr0-q1-m3">1.33</td><td class="nc nc_t col-yr0-q1-m4">1.38</td><td class="nc nc_t col-yr0-q1-m5">1.30</td><td class="nc nc_t col-yr0-q1">4.01</td><td class="nc nc_t col-yr0-q2-m6">1.25</td><td class="nc nc_t col-yr0-q2-m7">1.29</td><td class="nc nc_t col-yr0-q2-m8">1.35</td><td class="nc nc_t col-yr0-q2">3.89</td><td class="nc nc_t col-yr0-q3-m9">1.41</td><td class="nc nc_t col-yr0-q3-m10">1.44</td><td class="nc nc_t col-yr0-q3-m11">1.44</td><td class="nc nc_t col-yr0-q3">4.30</td><td class="nc">15.68</td><td class="nc nc_t col-yr1-q0-m0">1.48</td><td class="nc nc_t col-yr1-q0-m1">1.40</td><td class="nc nc_t col-yr1-q0-m2">1.69</td><td class="nc nc_t col-yr1-q0">4.57</td><td class="nc nc_t col-yr1-q1-m3">1.75</td><td class="nc nc_t col-yr1-q1-m4">1.81</td><td class="nc nc_t col-yr1-q1-m5">1.71</td><td class="nc nc_t col-yr1-q1">5.27</td><td class="nc nc_t col-yr1-q2-m6">1.65</td><td class="nc nc_t col-yr1-q2-m7">1.69</td><td class="nc nc_t col-yr1-q2-m8">1.77</td><td class="nc nc_t col-yr1-q2">5.10</td><td class="nc nc_t col-yr1-q3-m9">1.85</td><td class="nc nc_t col-yr1-q3-m10">1.89</td><td class="nc nc_t col-yr1-q3-m11">1.89</td><td class="nc nc_t col-yr1-q3">5.64</td><td class="nc">20.57</td><td class="nc nc_t col-yr2-q0-m0">1.96</td><td class="nc nc_t col-yr2-q0-m1">1.85</td><td class="nc nc_t col-yr2-q0-m2">2.23</td><td class="nc nc_t col-yr2-q0">6.03</td><td class="nc nc_t col-yr2-q1-m3">2.31</td><td class="nc nc_t col-yr2-q1-m4">2.39</td><td class="nc nc_t col-yr2-q1-m5">2.25</td><td class="nc nc_t col-yr2-q1">6.95</td><td class="nc nc_t col-yr2-q2-m6">2.17</td><td class="nc nc_t col-yr2-q2-m7">2.23</td><td class="nc nc_t col-yr2-q2-m8">2.34</td><td class="nc nc_t col-yr2-q2">6.74</td><td class="nc nc_t col-yr2-q3-m9">2.44</td><td class="nc nc_t col-yr2-q3-m10">2.50</td><td class="nc nc_t col-yr2-q3-m11">2.50</td><td class="nc nc_t col-yr2-q3">7.44</td><td class="nc">27.16</td><td class="yoy_up">▲32.0%</td><td class="cagr_up">31.6%▲</td></tr>
+<tr class="t-sub" data-sec="belows"><td class="lbl lbl-il1">Income Tax (18%)</td><td class="nc nc_t col-yr0-q0-m0">0.25</td><td class="nc nc_t col-yr0-q0-m1">0.24</td><td class="nc nc_t col-yr0-q0-m2">0.29</td><td class="nc nc_t col-yr0-q0">0.77</td><td class="nc nc_t col-yr0-q1-m3">0.30</td><td class="nc nc_t col-yr0-q1-m4">0.31</td><td class="nc nc_t col-yr0-q1-m5">0.29</td><td class="nc nc_t col-yr0-q1">0.89</td><td class="nc nc_t col-yr0-q2-m6">0.28</td><td class="nc nc_t col-yr0-q2-m7">0.29</td><td class="nc nc_t col-yr0-q2-m8">0.30</td><td class="nc nc_t col-yr0-q2">0.87</td><td class="nc nc_t col-yr0-q3-m9">0.31</td><td class="nc nc_t col-yr0-q3-m10">0.32</td><td class="nc nc_t col-yr0-q3-m11">0.32</td><td class="nc nc_t col-yr0-q3">0.96</td><td class="nc">3.49</td><td class="nc nc_t col-yr1-q0-m0">0.31</td><td class="nc nc_t col-yr1-q0-m1">0.29</td><td class="nc nc_t col-yr1-q0-m2">0.35</td><td class="nc nc_t col-yr1-q0">0.96</td><td class="nc nc_t col-yr1-q1-m3">0.37</td><td class="nc nc_t col-yr1-q1-m4">0.38</td><td class="nc nc_t col-yr1-q1-m5">0.36</td><td class="nc nc_t col-yr1-q1">1.10</td><td class="nc nc_t col-yr1-q2-m6">0.34</td><td class="nc nc_t col-yr1-q2-m7">0.35</td><td class="nc nc_t col-yr1-q2-m8">0.37</td><td class="nc nc_t col-yr1-q2">1.07</td><td class="nc nc_t col-yr1-q3-m9">0.39</td><td class="nc nc_t col-yr1-q3-m10">0.40</td><td class="nc nc_t col-yr1-q3-m11">0.40</td><td class="nc nc_t col-yr1-q3">1.18</td><td class="nc">4.31</td><td class="nc nc_t col-yr2-q0-m0">0.39</td><td class="nc nc_t col-yr2-q0-m1">0.37</td><td class="nc nc_t col-yr2-q0-m2">0.44</td><td class="nc nc_t col-yr2-q0">1.20</td><td class="nc nc_t col-yr2-q1-m3">0.46</td><td class="nc nc_t col-yr2-q1-m4">0.48</td><td class="nc nc_t col-yr2-q1-m5">0.45</td><td class="nc nc_t col-yr2-q1">1.38</td><td class="nc nc_t col-yr2-q2-m6">0.43</td><td class="nc nc_t col-yr2-q2-m7">0.44</td><td class="nc nc_t col-yr2-q2-m8">0.47</td><td class="nc nc_t col-yr2-q2">1.34</td><td class="nc nc_t col-yr2-q3-m9">0.49</td><td class="nc nc_t col-yr2-q3-m10">0.50</td><td class="nc nc_t col-yr2-q3-m11">0.50</td><td class="nc nc_t col-yr2-q3">1.48</td><td class="nc">5.41</td><td class="yoy_up">▲25.5%</td><td class="cagr_up">24.5%▲</td></tr>
+<tr class="t-total row-ni"><td class="lbl">Net Income</td><td class="nc nc_t col-yr0-q0-m0">0.88</td><td class="nc nc_t col-yr0-q0-m1">0.83</td><td class="nc nc_t col-yr0-q0-m2">1.00</td><td class="nc nc_t col-yr0-q0">2.71</td><td class="nc nc_t col-yr0-q1-m3">1.04</td><td class="nc nc_t col-yr0-q1-m4">1.07</td><td class="nc nc_t col-yr0-q1-m5">1.01</td><td class="nc nc_t col-yr0-q1">3.12</td><td class="nc nc_t col-yr0-q2-m6">0.98</td><td class="nc nc_t col-yr0-q2-m7">1.00</td><td class="nc nc_t col-yr0-q2-m8">1.05</td><td class="nc nc_t col-yr0-q2">3.02</td><td class="nc nc_t col-yr0-q3-m9">1.10</td><td class="nc nc_t col-yr0-q3-m10">1.12</td><td class="nc nc_t col-yr0-q3-m11">1.12</td><td class="nc nc_t col-yr0-q3">3.34</td><td class="nc">12.19</td><td class="nc nc_t col-yr1-q0-m0">1.17</td><td class="nc nc_t col-yr1-q0-m1">1.11</td><td class="nc nc_t col-yr1-q0-m2">1.33</td><td class="nc nc_t col-yr1-q0">3.61</td><td class="nc nc_t col-yr1-q1-m3">1.38</td><td class="nc nc_t col-yr1-q1-m4">1.43</td><td class="nc nc_t col-yr1-q1-m5">1.35</td><td class="nc nc_t col-yr1-q1">4.16</td><td class="nc nc_t col-yr1-q2-m6">1.30</td><td class="nc nc_t col-yr1-q2-m7">1.33</td><td class="nc nc_t col-yr1-q2-m8">1.40</td><td class="nc nc_t col-yr1-q2">4.03</td><td class="nc nc_t col-yr1-q3-m9">1.46</td><td class="nc nc_t col-yr1-q3-m10">1.50</td><td class="nc nc_t col-yr1-q3-m11">1.50</td><td class="nc nc_t col-yr1-q3">4.46</td><td class="nc">16.26</td><td class="nc nc_t col-yr2-q0-m0">1.57</td><td class="nc nc_t col-yr2-q0-m1">1.48</td><td class="nc nc_t col-yr2-q0-m2">1.78</td><td class="nc nc_t col-yr2-q0">4.83</td><td class="nc nc_t col-yr2-q1-m3">1.85</td><td class="nc nc_t col-yr2-q1-m4">1.91</td><td class="nc nc_t col-yr2-q1-m5">1.81</td><td class="nc nc_t col-yr2-q1">5.57</td><td class="nc nc_t col-yr2-q2-m6">1.74</td><td class="nc nc_t col-yr2-q2-m7">1.78</td><td class="nc nc_t col-yr2-q2-m8">1.87</td><td class="nc nc_t col-yr2-q2">5.39</td><td class="nc nc_t col-yr2-q3-m9">1.96</td><td class="nc nc_t col-yr2-q3-m10">2.00</td><td class="nc nc_t col-yr2-q3-m11">2.00</td><td class="nc nc_t col-yr2-q3">5.96</td><td class="nc">21.75</td><td class="yoy_up">▲33.8%</td><td class="cagr_up">33.6%▲</td></tr>
+<tr class="t-pct"><td class="lbl lbl-pct">&#x2514; Net Margin</td><td class="col-yr0-q0-m0 nc_dim">&mdash;</td><td class="col-yr0-q0-m1 nc_dim">&mdash;</td><td class="col-yr0-q0-m2 nc_dim">&mdash;</td><td class="col-yr0-q0 nc_dim">&mdash;</td><td class="col-yr0-q1-m3 nc_dim">&mdash;</td><td class="col-yr0-q1-m4 nc_dim">&mdash;</td><td class="col-yr0-q1-m5 nc_dim">&mdash;</td><td class="col-yr0-q1 nc_dim">&mdash;</td><td class="col-yr0-q2-m6 nc_dim">&mdash;</td><td class="col-yr0-q2-m7 nc_dim">&mdash;</td><td class="col-yr0-q2-m8 nc_dim">&mdash;</td><td class="col-yr0-q2 nc_dim">&mdash;</td><td class="col-yr0-q3-m9 nc_dim">&mdash;</td><td class="col-yr0-q3-m10 nc_dim">&mdash;</td><td class="col-yr0-q3-m11 nc_dim">&mdash;</td><td class="col-yr0-q3 nc_dim">&mdash;</td><td class="pct_val">12.5%</td><td class="col-yr1-q0-m0 nc_dim">&mdash;</td><td class="col-yr1-q0-m1 nc_dim">&mdash;</td><td class="col-yr1-q0-m2 nc_dim">&mdash;</td><td class="col-yr1-q0 nc_dim">&mdash;</td><td class="col-yr1-q1-m3 nc_dim">&mdash;</td><td class="col-yr1-q1-m4 nc_dim">&mdash;</td><td class="col-yr1-q1-m5 nc_dim">&mdash;</td><td class="col-yr1-q1 nc_dim">&mdash;</td><td class="col-yr1-q2-m6 nc_dim">&mdash;</td><td class="col-yr1-q2-m7 nc_dim">&mdash;</td><td class="col-yr1-q2-m8 nc_dim">&mdash;</td><td class="col-yr1-q2 nc_dim">&mdash;</td><td class="col-yr1-q3-m9 nc_dim">&mdash;</td><td class="col-yr1-q3-m10 nc_dim">&mdash;</td><td class="col-yr1-q3-m11 nc_dim">&mdash;</td><td class="col-yr1-q3 nc_dim">&mdash;</td><td class="pct_val">13.9%</td><td class="col-yr2-q0-m0 nc_dim">&mdash;</td><td class="col-yr2-q0-m1 nc_dim">&mdash;</td><td class="col-yr2-q0-m2 nc_dim">&mdash;</td><td class="col-yr2-q0 nc_dim">&mdash;</td><td class="col-yr2-q1-m3 nc_dim">&mdash;</td><td class="col-yr2-q1-m4 nc_dim">&mdash;</td><td class="col-yr2-q1-m5 nc_dim">&mdash;</td><td class="col-yr2-q1 nc_dim">&mdash;</td><td class="col-yr2-q2-m6 nc_dim">&mdash;</td><td class="col-yr2-q2-m7 nc_dim">&mdash;</td><td class="col-yr2-q2-m8 nc_dim">&mdash;</td><td class="col-yr2-q2 nc_dim">&mdash;</td><td class="col-yr2-q3-m9 nc_dim">&mdash;</td><td class="col-yr2-q3-m10 nc_dim">&mdash;</td><td class="col-yr2-q3-m11 nc_dim">&mdash;</td><td class="col-yr2-q3 nc_dim">&mdash;</td><td class="pct_val">15.6%</td><td class="yoy_up" style="font-size:10.5px">▲1.8pp</td><td class="nc_dim">&mdash;</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════ CASH FLOW TAB ════════ -->
+  <div class="tab-panel" id="tab-cf">
+    <div class="cg-3">
+      <div class="chart-card">
+        <div class="chart-title">Operating Cash Flow (USD M)</div>
+        <div class="chart-area" id="c-cfo"></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">CF Components (USD M)
+          <div class="legend">
+            <div class="lg-i"><div class="lg-dot" style="background:#2563EB"></div>CFO</div>
+            <div class="lg-i"><div class="lg-dot" style="background:#DC2626"></div>CFI</div>
+            <div class="lg-i"><div class="lg-dot" style="background:#F59E0B"></div>CFF</div>
+          </div>
+        </div>
+        <div class="chart-area" id="c-cf-sum"></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Net Change in Cash (USD M)</div>
+        <div class="chart-area" id="c-ncf"></div>
+      </div>
+    </div>
+    <div class="sec-hdr">
+      <div class="sec-title">Cash Flow Statement</div>
+      <div class="sec-note">USD millions &nbsp;&middot;&nbsp; Indirect method &nbsp;&middot;&nbsp; Click section header to collapse</div>
+    </div>
+    <div class="tbl-wrap">
+      <div class="tbl-scroll">
+        <table class="tbl">
+          <thead><tr class="th-r1">
+            <th style="text-align:left;min-width:240px">Line Item</th>
+            <th>FY2022</th><th>FY2023</th><th>FY2024</th>
+            <th class="th-meta">YoY %</th>
+          </tr></thead>
+          <tbody><tr class="t-shdr" onclick="toggleSec('cfo',event)"><td colspan="99"><span class="sec-arr" id="sarr-cfo">&#9660;</span> Operating Activities</td></tr>
+<tr class="t-sub" data-sec="cfo"><td class="lbl lbl-il1">Net Income</td><td class="nc">15.90</td><td class="nc">19.78</td><td class="nc">24.95</td><td class="yoy_up">▲26.1%</td></tr>
+<tr class="t-sub" data-sec="cfo"><td class="lbl lbl-il1">Add: D&A</td><td class="nc">2.10</td><td class="nc">2.50</td><td class="nc">2.90</td><td class="yoy_up">▲16.0%</td></tr>
+<tr class="t-sub" data-sec="cfo"><td class="lbl lbl-il1">Change in Receivables</td><td class="nc_neg">(3.20)</td><td class="nc_neg">(3.90)</td><td class="nc_neg">(4.60)</td><td class="yoy_dn">▼17.9%</td></tr>
+<tr class="t-sub" data-sec="cfo"><td class="lbl lbl-il1">Change in Inventories</td><td class="nc_neg">(2.10)</td><td class="nc_neg">(2.40)</td><td class="nc_neg">(2.80)</td><td class="yoy_dn">▼16.7%</td></tr>
+<tr class="t-sub" data-sec="cfo"><td class="lbl lbl-il1">Change in Payables</td><td class="nc">1.80</td><td class="nc">2.10</td><td class="nc">2.50</td><td class="yoy_up">▲19.0%</td></tr>
+<tr class="t-sub" data-sec="cfo"><td class="lbl lbl-il1">Other Working Capital Adj.</td><td class="nc">0.48</td><td class="nc">0.62</td><td class="nc">0.78</td><td class="yoy_up">▲25.8%</td></tr>
+<tr class="t-total"><td class="lbl">Net Cash from Operations</td><td class="nc">14.98</td><td class="nc">18.70</td><td class="nc">23.73</td><td class="yoy_up">▲26.9%</td></tr>
+<tr class="t-shdr" onclick="toggleSec('cfi',event)"><td colspan="99"><span class="sec-arr" id="sarr-cfi">&#9660;</span> Investing Activities</td></tr>
+<tr class="t-sub" data-sec="cfi"><td class="lbl lbl-il1">Purchase of PP&E</td><td class="nc_neg">(8.40)</td><td class="nc_neg">(10.20)</td><td class="nc_neg">(12.40)</td><td class="yoy_dn">▼21.6%</td></tr>
+<tr class="t-sub" data-sec="cfi"><td class="lbl lbl-il1">Acquisitions</td><td class="nc_neg">(2.00)</td><td class="nc_neg">(3.50)</td><td class="nc_neg">(1.80)</td><td class="yoy_up">▲48.6%</td></tr>
+<tr class="t-sub" data-sec="cfi"><td class="lbl lbl-il1">Proceeds from Asset Sales</td><td class="nc">0.62</td><td class="nc">0.81</td><td class="nc">0.94</td><td class="yoy_up">▲16.0%</td></tr>
+<tr class="t-sub" data-sec="cfi"><td class="lbl lbl-il1">Purchase of Investments</td><td class="nc_neg">(1.50)</td><td class="nc_neg">(2.00)</td><td class="nc_neg">(2.40)</td><td class="yoy_dn">▼20.0%</td></tr>
+<tr class="t-total"><td class="lbl">Net Cash from Investing</td><td class="nc_neg">(11.28)</td><td class="nc_neg">(14.89)</td><td class="nc_neg">(15.66)</td><td class="yoy_dn">▼5.2%</td></tr>
+<tr class="t-shdr" onclick="toggleSec('cff',event)"><td colspan="99"><span class="sec-arr" id="sarr-cff">&#9660;</span> Financing Activities</td></tr>
+<tr class="t-sub" data-sec="cff"><td class="lbl lbl-il1">Proceeds from Borrowings</td><td class="nc">5.00</td><td class="nc">4.00</td><td class="nc">3.00</td><td class="yoy_dn">▼25.0%</td></tr>
+<tr class="t-sub" data-sec="cff"><td class="lbl lbl-il1">Repayment of Debt</td><td class="nc_neg">(4.20)</td><td class="nc_neg">(4.80)</td><td class="nc_neg">(5.40)</td><td class="yoy_dn">▼12.5%</td></tr>
+<tr class="t-sub" data-sec="cff"><td class="lbl lbl-il1">Dividends Paid</td><td class="nc_neg">(2.40)</td><td class="nc_neg">(3.10)</td><td class="nc_neg">(4.00)</td><td class="yoy_dn">▼29.0%</td></tr>
+<tr class="t-sub" data-sec="cff"><td class="lbl lbl-il1">Share Buybacks</td><td class="nc_neg">(1.00)</td><td class="nc_neg">(1.50)</td><td class="nc_neg">(2.00)</td><td class="yoy_dn">▼33.3%</td></tr>
+<tr class="t-total"><td class="lbl">Net Cash from Financing</td><td class="nc_neg">(2.60)</td><td class="nc_neg">(5.40)</td><td class="nc_neg">(8.40)</td><td class="yoy_dn">▼55.6%</td></tr>
+<tr class="t-bold"><td class="lbl">Net Change in Cash</td><td class="nc">1.10</td><td class="nc_neg">(1.59)</td><td class="nc_neg">(0.33)</td><td class="yoy_up">▲79.2%</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════ BALANCE SHEET TAB ════════ -->
+  <div class="tab-panel" id="tab-bs">
+    <div class="cg-2">
+      <div class="chart-card">
+        <div class="chart-title">Assets vs Liabilities &amp; Equity (USD M)
+          <div class="legend">
+            <div class="lg-i"><div class="lg-dot" style="background:#2563EB"></div>Assets</div>
+            <div class="lg-i"><div class="lg-dot" style="background:#DC2626"></div>Liabilities</div>
+            <div class="lg-i"><div class="lg-dot" style="background:#10B981"></div>Equity</div>
+          </div>
+        </div>
+        <div class="chart-area" id="c-bs-bar"></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Asset Composition (USD M)
+          <div class="legend">
+            <div class="lg-i"><div class="lg-dot" style="background:#60A5FA"></div>Current</div>
+            <div class="lg-i"><div class="lg-dot" style="background:#1D4ED8"></div>Non-Current</div>
+          </div>
+        </div>
+        <div class="chart-area" id="c-bs-assets"></div>
+      </div>
+    </div>
+    <div class="sec-hdr">
+      <div class="sec-title">Balance Sheet</div>
+      <div class="sec-note">USD millions &nbsp;&middot;&nbsp; Click section header to collapse</div>
+    </div>
+    <div class="tbl-wrap">
+      <div class="tbl-scroll">
+        <table class="tbl">
+          <thead><tr class="th-r1">
+            <th style="text-align:left;min-width:260px">Line Item</th>
+            <th>FY2022</th><th>FY2023</th><th>FY2024</th>
+            <th class="th-meta">YoY %</th>
+          </tr></thead>
+          <tbody><tr class="t-shdr" onclick="toggleSec('bsca',event)"><td colspan="99"><span class="sec-arr" id="sarr-bsca">&#9660;</span> Current Assets</td></tr>
+<tr class="t-sub" data-sec="bsca"><td class="lbl lbl-il1">Cash & Cash Equivalents</td><td class="nc">18.40</td><td class="nc">21.60</td><td class="nc">25.30</td><td class="yoy_up">▲17.1%</td></tr>
+<tr class="t-sub" data-sec="bsca"><td class="lbl lbl-il1">Accounts Receivable</td><td class="nc">14.20</td><td class="nc">17.10</td><td class="nc">20.70</td><td class="yoy_up">▲21.1%</td></tr>
+<tr class="t-sub" data-sec="bsca"><td class="lbl lbl-il1">Inventories</td><td class="nc">9.80</td><td class="nc">11.40</td><td class="nc">13.20</td><td class="yoy_up">▲15.8%</td></tr>
+<tr class="t-sub" data-sec="bsca"><td class="lbl lbl-il1">Prepaid Expenses & Other</td><td class="nc">2.40</td><td class="nc">2.90</td><td class="nc">3.50</td><td class="yoy_up">▲20.7%</td></tr>
+<tr class="t-total"><td class="lbl">Total Current Assets</td><td class="nc">44.80</td><td class="nc">53.00</td><td class="nc">62.70</td><td class="yoy_up">▲18.3%</td></tr>
+<tr class="t-shdr" onclick="toggleSec('bsnca',event)"><td colspan="99"><span class="sec-arr" id="sarr-bsnca">&#9660;</span> Non-Current Assets</td></tr>
+<tr class="t-sub" data-sec="bsnca"><td class="lbl lbl-il1">Property, Plant & Equipment</td><td class="nc">28.60</td><td class="nc">35.40</td><td class="nc">44.20</td><td class="yoy_up">▲24.9%</td></tr>
+<tr class="t-sub" data-sec="bsnca"><td class="lbl lbl-il1">Intangible Assets</td><td class="nc">7.20</td><td class="nc">8.40</td><td class="nc">9.80</td><td class="yoy_up">▲16.7%</td></tr>
+<tr class="t-sub" data-sec="bsnca"><td class="lbl lbl-il1">Right-of-Use Assets</td><td class="nc">4.10</td><td class="nc">4.60</td><td class="nc">5.10</td><td class="yoy_up">▲10.9%</td></tr>
+<tr class="t-sub" data-sec="bsnca"><td class="lbl lbl-il1">Long-term Investments</td><td class="nc">5.80</td><td class="nc">7.20</td><td class="nc">9.00</td><td class="yoy_up">▲25.0%</td></tr>
+<tr class="t-total"><td class="lbl">Total Non-Current Assets</td><td class="nc">45.70</td><td class="nc">55.60</td><td class="nc">68.10</td><td class="yoy_up">▲22.5%</td></tr>
+<tr class="t-bold"><td class="lbl">TOTAL ASSETS</td><td class="nc">90.50</td><td class="nc">108.60</td><td class="nc">130.80</td><td class="yoy_up">▲20.4%</td></tr>
+<tr class="t-shdr" onclick="toggleSec('bscl',event)"><td colspan="99"><span class="sec-arr" id="sarr-bscl">&#9660;</span> Current Liabilities</td></tr>
+<tr class="t-sub" data-sec="bscl"><td class="lbl lbl-il1">Accounts Payable</td><td class="nc">11.40</td><td class="nc">13.20</td><td class="nc">15.60</td><td class="yoy_up">▲18.2%</td></tr>
+<tr class="t-sub" data-sec="bscl"><td class="lbl lbl-il1">Short-term Debt</td><td class="nc">4.80</td><td class="nc">4.20</td><td class="nc">3.60</td><td class="yoy_dn">▼14.3%</td></tr>
+<tr class="t-sub" data-sec="bscl"><td class="lbl lbl-il1">Accrued Liabilities</td><td class="nc">3.20</td><td class="nc">3.80</td><td class="nc">4.40</td><td class="yoy_up">▲15.8%</td></tr>
+<tr class="t-sub" data-sec="bscl"><td class="lbl lbl-il1">Deferred Revenue</td><td class="nc">1.20</td><td class="nc">1.50</td><td class="nc">1.80</td><td class="yoy_up">▲20.0%</td></tr>
+<tr class="t-total"><td class="lbl">Total Current Liabilities</td><td class="nc">20.60</td><td class="nc">22.70</td><td class="nc">25.40</td><td class="yoy_up">▲11.9%</td></tr>
+<tr class="t-shdr" onclick="toggleSec('bsncl',event)"><td colspan="99"><span class="sec-arr" id="sarr-bsncl">&#9660;</span> Non-Current Liabilities</td></tr>
+<tr class="t-sub" data-sec="bsncl"><td class="lbl lbl-il1">Long-term Debt</td><td class="nc">18.60</td><td class="nc">17.80</td><td class="nc">15.40</td><td class="yoy_dn">▼13.5%</td></tr>
+<tr class="t-sub" data-sec="bsncl"><td class="lbl lbl-il1">Deferred Tax Liabilities</td><td class="nc">2.10</td><td class="nc">2.40</td><td class="nc">2.70</td><td class="yoy_up">▲12.5%</td></tr>
+<tr class="t-sub" data-sec="bsncl"><td class="lbl lbl-il1">Other Long-term Liabilities</td><td class="nc">1.40</td><td class="nc">1.60</td><td class="nc">1.80</td><td class="yoy_up">▲12.5%</td></tr>
+<tr class="t-total"><td class="lbl">Total Non-Current Liabilities</td><td class="nc">22.10</td><td class="nc">21.80</td><td class="nc">19.90</td><td class="yoy_dn">▼8.7%</td></tr>
+<tr class="t-bold"><td class="lbl">TOTAL LIABILITIES</td><td class="nc">42.70</td><td class="nc">44.50</td><td class="nc">45.30</td><td class="yoy_up">▲1.8%</td></tr>
+<tr class="t-shdr" onclick="toggleSec('bseq',event)"><td colspan="99"><span class="sec-arr" id="sarr-bseq">&#9660;</span> Shareholders' Equity</td></tr>
+<tr class="t-sub" data-sec="bseq"><td class="lbl lbl-il1">Share Capital</td><td class="nc">12.00</td><td class="nc">12.00</td><td class="nc">12.00</td><td class="yoy_up">▲0.0%</td></tr>
+<tr class="t-sub" data-sec="bseq"><td class="lbl lbl-il1">Retained Earnings</td><td class="nc">22.80</td><td class="nc">38.58</td><td class="nc">58.13</td><td class="yoy_up">▲50.7%</td></tr>
+<tr class="t-sub" data-sec="bseq"><td class="lbl lbl-il1">Other Reserves</td><td class="nc">3.10</td><td class="nc">3.62</td><td class="nc">4.17</td><td class="yoy_up">▲15.2%</td></tr>
+<tr class="t-bold"><td class="lbl">TOTAL EQUITY</td><td class="nc">37.90</td><td class="nc">54.20</td><td class="nc">74.30</td><td class="yoy_up">▲37.1%</td></tr>
+<tr class="t-total"><td class="lbl">TOTAL LIABILITIES & EQUITY</td><td class="nc">80.60</td><td class="nc">98.70</td><td class="nc">119.60</td><td class="yoy_up">▲21.2%</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════ OVERVIEW TAB ════════ -->
+  <div class="tab-panel" id="tab-ov">
+    <div class="sec-hdr" style="margin-bottom:10px">
+      <div class="sec-title">Key Financial Ratios</div>
+      <div class="sec-note">FY2022 &rarr; FY2024</div>
+    </div>
+    <div class="ratio-grid">
+      <div class="ratio-card" style="--rc-clr:#10B981">
+        <div class="ratio-lbl">Gross Margin</div>
+        <div class="ratio-vals"><div class="rv-yr"><div class="rv">48.3%</div><div class="rl">FY2022</div></div><div class="rv-yr"><div class="rv">49.5%</div><div class="rl">FY2023</div></div><div class="rv-yr"><div class="rv">50.7%</div><div class="rl">FY2024</div></div></div>
+      </div>
+      <div class="ratio-card" style="--rc-clr:#2563EB">
+        <div class="ratio-lbl">EBITDA Margin</div>
+        <div class="ratio-vals"><div class="rv-yr"><div class="rv">19.9%</div><div class="rl">FY2022</div></div><div class="rv-yr"><div class="rv">20.8%</div><div class="rl">FY2023</div></div><div class="rv-yr"><div class="rv">22.4%</div><div class="rl">FY2024</div></div></div>
+      </div>
+      <div class="ratio-card" style="--rc-clr:#7C3AED">
+        <div class="ratio-lbl">EBIT Margin</div>
+        <div class="ratio-vals"><div class="rv-yr"><div class="rv">17.7%</div><div class="rl">FY2022</div></div><div class="rv-yr"><div class="rv">18.7%</div><div class="rl">FY2023</div></div><div class="rv-yr"><div class="rv">20.4%</div><div class="rl">FY2024</div></div></div>
+      </div>
+      <div class="ratio-card" style="--rc-clr:#059669">
+        <div class="ratio-lbl">Net Margin</div>
+        <div class="ratio-vals"><div class="rv-yr"><div class="rv">12.5%</div><div class="rl">FY2022</div></div><div class="rv-yr"><div class="rv">13.9%</div><div class="rl">FY2023</div></div><div class="rv-yr"><div class="rv">15.6%</div><div class="rl">FY2024</div></div></div>
+      </div>
+      <div class="ratio-card" style="--rc-clr:#0EA5E9">
+        <div class="ratio-lbl">Current Ratio</div>
+        <div class="ratio-vals"><div class="rv-yr"><div class="rv">2.17x</div><div class="rl">FY2022</div></div><div class="rv-yr"><div class="rv">2.33x</div><div class="rl">FY2023</div></div><div class="rv-yr"><div class="rv">2.47x</div><div class="rl">FY2024</div></div></div>
+      </div>
+      <div class="ratio-card" style="--rc-clr:#F59E0B">
+        <div class="ratio-lbl">Debt / Equity</div>
+        <div class="ratio-vals"><div class="rv-yr"><div class="rv">1.13x</div><div class="rl">FY2022</div></div><div class="rv-yr"><div class="rv">0.82x</div><div class="rl">FY2023</div></div><div class="rv-yr"><div class="rv">0.61x</div><div class="rl">FY2024</div></div></div>
+      </div>
+      <div class="ratio-card" style="--rc-clr:#8B5CF6">
+        <div class="ratio-lbl">Return on Equity (ROE)</div>
+        <div class="ratio-vals"><div class="rv-yr"><div class="rv">32.2%</div><div class="rl">FY2022</div></div><div class="rv-yr"><div class="rv">30.0%</div><div class="rl">FY2023</div></div><div class="rv-yr"><div class="rv">29.3%</div><div class="rl">FY2024</div></div></div>
+      </div>
+      <div class="ratio-card" style="--rc-clr:#DC2626">
+        <div class="ratio-lbl">Return on Assets (ROA)</div>
+        <div class="ratio-vals"><div class="rv-yr"><div class="rv">13.5%</div><div class="rl">FY2022</div></div><div class="rv-yr"><div class="rv">15.0%</div><div class="rl">FY2023</div></div><div class="rv-yr"><div class="rv">16.6%</div><div class="rl">FY2024</div></div></div>
+      </div>
+    </div>
+    <div class="cg-2">
+      <div class="chart-card">
+        <div class="chart-title">Revenue Bridge FY2022 → FY2024 (USD M)</div>
+        <div class="chart-area" id="c-waterfall"></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Profitability Margins (%)
+          <div class="legend">
+            <div class="lg-i"><div class="lg-ln" style="background:#2563EB"></div>EBITDA</div>
+            <div class="lg-i"><div class="lg-ln" style="background:#10B981"></div>Gross</div>
+            <div class="lg-i"><div class="lg-ln" style="background:#059669"></div>Net</div>
+          </div>
+        </div>
+        <div class="chart-area" id="c-ov-margins"></div>
+      </div>
+    </div>
+    <div class="sec-hdr" style="margin-top:4px">
+      <div class="sec-title">FY2024 Budget vs Actual</div>
+    </div>
+    <div class="cg-4">
+      <div class="ratio-card" style="--rc-clr:#F59E0B">
+        <div class="ratio-lbl">Revenue</div>
+        <div style="font-size:16px;font-weight:800;margin-top:6px">139.0M</div>
+        <div style="font-size:10.5px;color:var(--tfaint);margin-top:3px">Budget: 145.9M</div>
+        <span class="kpi-badge bdg-dn">▼ 4.8% vs Bud</span>
+      </div>
+      <div class="ratio-card" style="--rc-clr:#10B981">
+        <div class="ratio-lbl">Gross Profit</div>
+        <div style="font-size:16px;font-weight:800;margin-top:6px">70.5M</div>
+        <div style="font-size:10.5px;color:var(--tfaint);margin-top:3px">Budget: 74.0M</div>
+        <span class="kpi-badge bdg-dn">▼ 4.8% vs Bud</span>
+      </div>
+      <div class="ratio-card" style="--rc-clr:#2563EB">
+        <div class="ratio-lbl">EBITDA</div>
+        <div style="font-size:16px;font-weight:800;margin-top:6px">31.2M</div>
+        <div style="font-size:10.5px;color:var(--tfaint);margin-top:3px">Budget: 32.8M</div>
+        <span class="kpi-badge bdg-dn">▼ 4.8% vs Bud</span>
+      </div>
+      <div class="ratio-card" style="--rc-clr:#059669">
+        <div class="ratio-lbl">Net Income</div>
+        <div style="font-size:16px;font-weight:800;margin-top:6px">21.8M</div>
+        <div style="font-size:10.5px;color:var(--tfaint);margin-top:3px">Budget: 22.8M</div>
+        <span class="kpi-badge bdg-dn">▼ 4.8% vs Bud</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="footer">
+  Developed by <strong>Musab Shaikh</strong> &nbsp;&middot;&nbsp; FMCG | Commercial Intelligence &nbsp;&middot;&nbsp; 2026
+</footer>
+
+<div class="modal-bg" id="modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal">
+    <button class="modal-x" onclick="document.getElementById('modal').classList.remove('open')">&#10005;</button>
+    <h2>&#9432; Dashboard Guide</h2>
+    <p><strong>P&amp;L Column Expansion:</strong> Click the <b style="color:#2563EB">+</b> button inside any year header (FY2022 / FY2023 / FY2024) to expand that year into Q1–Q4 quarterly columns. Click the <b style="color:#2563EB">+</b> on a quarter header to further expand into monthly columns (Jan–Dec). Click again (−) to collapse.</p>
+    <p><strong>P&amp;L Row Collapse:</strong> Click any blue section header (e.g. <em>Revenue</em>, <em>Cost of Goods Sold</em>) to collapse its sub-items. Click again to expand. This works on all three statements.</p>
+    <p><strong>Cash Flow:</strong> Indirect method — Operating, Investing, Financing. Parentheses = cash outflows.</p>
+    <p><strong>Balance Sheet:</strong> Assets = Liabilities + Equity across all three years with YoY movement.</p>
+    <p style="color:#94A3B8;font-size:11px">All figures are simulated demo data. Monthly seasonality uses FMCG weights that sum exactly to annual totals.</p>
+  </div>
+</div>
+
+<script>
+const D = {"years": [2022, 2023, 2024], "rev": [97200000, 117200000, 139000000], "gp": [46900000, 58000000, 70500000], "ebitda": [19300000, 24400000, 31200000], "ebit": [17200000, 21900000, 28300000], "ni": [12190000, 16260000, 21750000], "gm": [48.25, 49.49, 50.72], "ebm": [19.86, 20.82, 22.45], "eim": [17.7, 18.69, 20.36], "nim": [12.54, 13.87, 15.65], "cfo": [14980000, 18700000, 23730000], "cfi": [-11280000, -14890000, -15660000], "cff": [-2600000, -5400000, -8400000], "ncf": [1100000, -1590000, -330000], "cur_ast": [44800000, 53000000, 62700000], "nc_ast": [45700000, 55600000, 68100000], "tot_ast": [90500000, 108600000, 130800000], "cur_lia": [20600000, 22700000, 25400000], "nc_lia": [22100000, 21800000, 19900000], "tot_lia": [42700000, 44500000, 45300000], "tot_eq": [37900000, 54200000, 74300000], "curr_rat": [2.17, 2.33, 2.47], "debt_eq": [1.13, 0.82, 0.61], "roe": [32.16, 30.0, 29.27], "roa": [13.47, 14.97, 16.63], "opex_items": {"Sales & Distribution": [11200000, 13400000, 15600000], "Marketing": [6800000, 8200000, 9700000], "Research & Development": [5400000, 6900000, 8100000], "General & Administrative": [4200000, 5100000, 5900000]}, "bud": {"rev": 145950000, "gp": 74025000, "ebitda": 32760000, "ni": 22837500}};
+const M = 1000000;
+
+
+function switchTab(id, btn) {
+  document.querySelectorAll('.tab-panel').forEach(function(p){ p.classList.remove('active'); });
+  document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.remove('active'); });
+  document.getElementById('tab-' + id).classList.add('active');
+  btn.classList.add('active');
+  setTimeout(drawAllCharts, 80);
+}
+
+
+// ── P&L Column Expansion ─────────────────────────────────────────────────
+var plSt = {};
+
+function getYrSpan(yi) {
+  if (!plSt['yr' + yi]) return 1;
+  var s = 5;
+  for (var qi = 0; qi < 4; qi++) {
+    if (plSt['yr' + yi + '-q' + qi]) s += 3;
+  }
+  return s;
+}
+
+function refreshSpans() {
+  for (var yi = 0; yi < 3; yi++) {
+    var th = document.getElementById('pl-th-yr' + yi);
+    if (th) th.colSpan = getYrSpan(yi);
+  }
+}
+
+function togglePLYear(yi, e) {
+  e.stopPropagation();
+  var tbl = document.getElementById('pl-tbl');
+  if (!tbl) return;
+  var k = 'yr' + yi;
+  plSt[k] = !plSt[k];
+  var btn = document.getElementById('pl-cbtn-yr' + yi);
+  if (plSt[k]) {
+    tbl.classList.add('exp-yr' + yi);
+    if (btn) { btn.textContent = '−'; btn.classList.add('open'); }
+  } else {
+    for (var qi = 0; qi < 4; qi++) {
+      plSt['yr' + yi + '-q' + qi] = false;
+      tbl.classList.remove('exp-yr' + yi + '-q' + qi);
+      var qb = document.getElementById('pl-cbtn-yr' + yi + '-q' + qi);
+      if (qb) { qb.textContent = '+'; qb.classList.remove('open'); }
+    }
+    tbl.classList.remove('exp-yr' + yi);
+    if (btn) { btn.textContent = '+'; btn.classList.remove('open'); }
+  }
+  refreshSpans();
+}
+
+function togglePLQtr(yi, qi, e) {
+  e.stopPropagation();
+  var tbl = document.getElementById('pl-tbl');
+  if (!tbl || !plSt['yr' + yi]) return;
+  var k = 'yr' + yi + '-q' + qi;
+  plSt[k] = !plSt[k];
+  var btn = document.getElementById('pl-cbtn-yr' + yi + '-q' + qi);
+  if (plSt[k]) {
+    tbl.classList.add('exp-' + k);
+    if (btn) { btn.textContent = '−'; btn.classList.add('open'); }
+  } else {
+    tbl.classList.remove('exp-' + k);
+    if (btn) { btn.textContent = '+'; btn.classList.remove('open'); }
+  }
+  refreshSpans();
+}
+
+// ── Row Section Collapse ─────────────────────────────────────────────────
+var secSt = {};
+
+function toggleSec(secId, e) {
+  e.stopPropagation();
+  secSt[secId] = !secSt[secId];
+  var arr = document.getElementById('sarr-' + secId);
+  var collapsed = secSt[secId];
+  document.querySelectorAll('[data-sec="' + secId + '"]').forEach(function(r) {
+    r.style.display = collapsed ? 'none' : '';
+  });
+  if (arr) arr.style.transform = collapsed ? 'rotate(-90deg)' : '';
+}
+
+
+// ── SVG CHART ENGINE ─────────────────────────────────────────────────────
+var HC = 155, PAD = {l:44,r:12,t:28,b:26};
+
+function niceMax(arr) {
+  var mx = Math.max.apply(null, arr.map(Math.abs));
+  if (!mx) return 1;
+  var mag = Math.pow(10, Math.floor(Math.log10(mx)));
+  return Math.ceil(mx/mag)*mag*1.12;
+}
+function gridLines(pL,pT,iW,iH,mn,mx,fmt) {
+  var out='', steps=[0,.25,.5,.75,1];
+  steps.forEach(function(f) {
+    var v=mn+f*(mx-mn), y=(pT+iH*(1-f)).toFixed(1);
+    out+='<line x1="'+pL+'" y1="'+y+'" x2="'+(pL+iW)+'" y2="'+y+'" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="'+(f?'4,3':'0')+'"/>';
+    out+='<text x="'+(pL-4)+'" y="'+y+'" text-anchor="end" dominant-baseline="middle" fill="#94A3B8" font-size="9" font-family="system-ui">'+fmt(v)+'</text>';
+  });
+  return out;
+}
+function xLbls(pL,pT,iW,iH,n) {
+  return D.years.map(function(y,i) {
+    var cx=(pL+iW/n*(i+.5)).toFixed(1);
+    return '<text x="'+cx+'" y="'+(pT+iH+16)+'" text-anchor="middle" fill="#64748B" font-size="9.5" font-family="system-ui">'+y+'</text>';
+  }).join('');
+}
+function barChart(id,series) {
+  var el=document.getElementById(id); if(!el) return;
+  var W=el.offsetWidth||360, pL=PAD.l,pR=PAD.r,pT=PAD.t,pB=PAD.b;
+  var iW=W-pL-pR, iH=HC-pT-pB, n=D.years.length;
+  var all=series.reduce(function(a,s){return a.concat(s.vals);},[]); 
+  var mx=niceMax(all);
+  var mn=Math.min.apply(null,all.map(function(v){return Math.min(v,0);}));
+  var rng=mx-mn; var baseY=pT+iH*(1-(0-mn)/rng);
+  var fmt=function(v){return (v/M).toFixed(1);};
+  var gap=iW/n, tbw=Math.floor(gap*.68), bw=Math.max(4,Math.floor(tbw/series.length)-2);
+  var out=gridLines(pL,pT,iW,iH,mn,mx,fmt)+xLbls(pL,pT,iW,iH,n);
+  series.forEach(function(s,si) {
+    s.vals.forEach(function(v,i) {
+      var bh=Math.max(Math.abs(v)/rng*iH,2);
+      var bx=(pL+gap*i+(gap-tbw)/2+si*(bw+2)).toFixed(1);
+      var by=(v>=0?baseY-bh:baseY).toFixed(1);
+      out+='<rect x="'+bx+'" y="'+by+'" width="'+bw+'" height="'+bh.toFixed(1)+'" fill="'+s.col+'" rx="2.5" opacity=".88"><title>'+s.label+' '+D.years[i]+': '+fmt(v)+'</title></rect>';
+      if(series.length<=2) {
+        var lY=(v>=0?parseFloat(by)-5:parseFloat(by)+bh+11).toFixed(1);
+        out+='<text x="'+(parseFloat(bx)+bw/2).toFixed(1)+'" y="'+lY+'" text-anchor="middle" fill="'+s.col+'" font-size="8.5" font-weight="600" font-family="system-ui" opacity=".88">'+fmt(v)+'</text>';
+      }
+    });
+  });
+  el.innerHTML='<svg viewBox="0 0 '+W+' '+HC+'" width="'+W+'" height="'+HC+'">'+out+'</svg>';
+}
+function lineChart(id,series,pct) {
+  var el=document.getElementById(id); if(!el) return;
+  var W=el.offsetWidth||360, pL=38,pR=12,pT=28,pB=26;
+  var iW=W-pL-pR, iH=HC-pT-pB, n=D.years.length;
+  var all=series.reduce(function(a,s){return a.concat(s.vals);},[]); 
+  var mn=Math.min.apply(null,all)*.88, mx=Math.max.apply(null,all)*1.1||1;
+  var fmt=pct?function(v){return v.toFixed(1)+'%';}:function(v){return (v/M).toFixed(1);};
+  var xp=function(i){return pL+(n>1?iW/(n-1)*i:iW/2);};
+  var yp=function(v){return pT+iH-(v-mn)/(mx-mn)*iH;};
+  var out=gridLines(pL,pT,iW,iH,mn,mx,fmt)+xLbls(pL,pT,iW,iH,n);
+  series.forEach(function(s) {
+    var pts=s.vals.map(function(v,i){return {x:xp(i),y:yp(v)};}); 
+    var d=pts.map(function(p,i){return (i?'L':'M')+p.x.toFixed(1)+','+p.y.toFixed(1);}).join(' ');
+    out+='<path d="'+d+'" fill="none" stroke="'+s.col+'" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>';
+    pts.forEach(function(p,i) {
+      out+='<circle cx="'+p.x.toFixed(1)+'" cy="'+p.y.toFixed(1)+'" r="4" fill="'+s.col+'" stroke="#fff" stroke-width="2"><title>'+s.label+' '+D.years[i]+': '+fmt(s.vals[i])+'</title></circle>';
+      out+='<text x="'+p.x.toFixed(1)+'" y="'+(p.y-9).toFixed(1)+'" text-anchor="middle" fill="'+s.col+'" font-size="8.5" font-weight="600" font-family="system-ui" opacity=".9">'+fmt(s.vals[i])+'</text>';
+    });
+  });
+  el.innerHTML='<svg viewBox="0 0 '+W+' '+HC+'" width="'+W+'" height="'+HC+'">'+out+'</svg>';
+}
+function stackedBar(id,series) {
+  var el=document.getElementById(id); if(!el) return;
+  var W=el.offsetWidth||360, pL=PAD.l,pR=PAD.r,pT=PAD.t,pB=PAD.b;
+  var iW=W-pL-pR, iH=HC-pT-pB, n=D.years.length;
+  var tots=D.years.map(function(_,i){return series.reduce(function(s,r){return s+Math.abs(r.vals[i]);},0);});
+  var mx=Math.max.apply(null,tots)*1.1||1, bw=Math.floor(iW/n*.52);
+  var fmt=function(v){return (v/M).toFixed(1);};
+  var out=gridLines(pL,pT,iW,iH,0,mx,fmt)+xLbls(pL,pT,iW,iH,n);
+  D.years.forEach(function(y,i) {
+    var cx=pL+iW/n*(i+.5), base=pT+iH;
+    series.forEach(function(s) {
+      var bh=Math.max(Math.abs(s.vals[i])/mx*iH,1); base-=bh;
+      out+='<rect x="'+(cx-bw/2).toFixed(1)+'" y="'+base.toFixed(1)+'" width="'+bw+'" height="'+bh.toFixed(1)+'" fill="'+s.col+'" rx="1.5" opacity=".88"><title>'+s.label+' '+y+': '+fmt(s.vals[i])+'</title></rect>';
+    });
+  });
+  el.innerHTML='<svg viewBox="0 0 '+W+' '+HC+'" width="'+W+'" height="'+HC+'">'+out+'</svg>';
+}
+function waterfallChart(id) {
+  var el=document.getElementById(id); if(!el) return;
+  var W=el.offsetWidth||360, pH=HC+20, pL=44,pR=12,pT=28,pB=40;
+  var iW=W-pL-pR, iH=pH-pT-pB;
+  var items=[
+    {l:'FY22',v:D.rev[0],t:'abs'},
+    {l:'Δ23',v:D.rev[1]-D.rev[0],t:'d'},
+    {l:'Δ24',v:D.rev[2]-D.rev[1],t:'d'},
+    {l:'FY24',v:D.rev[2],t:'abs'}
+  ];
+  var mx=Math.max.apply(null,items.map(function(it){return Math.abs(it.v);}))*1.15||1;
+  var fmt=function(v){return (v/M).toFixed(1);};
+  var gap=iW/items.length, bw=Math.floor(gap*.56);
+  var out=gridLines(pL,pT,iW,iH,0,mx,fmt);
+  var run=0;
+  items.forEach(function(it,i) {
+    var cx=pL+gap*i+gap/2;
+    var col=it.t==='abs'?'#2563EB':(it.v>=0?'#059669':'#DC2626');
+    var bh,by;
+    if(it.t==='abs'){bh=it.v/mx*iH; by=pT+iH-bh; run=it.v;}
+    else{bh=Math.abs(it.v)/mx*iH; by=it.v>=0?pT+iH-run/mx*iH-bh:pT+iH-run/mx*iH; run+=it.v;}
+    out+='<rect x="'+(cx-bw/2).toFixed(1)+'" y="'+by.toFixed(1)+'" width="'+bw+'" height="'+Math.max(bh,2).toFixed(1)+'" fill="'+col+'" rx="2.5" opacity=".88"><title>'+it.l+': '+fmt(it.v)+'</title></rect>';
+    out+='<text x="'+cx.toFixed(1)+'" y="'+(by-5).toFixed(1)+'" text-anchor="middle" fill="'+col+'" font-size="9" font-weight="700" font-family="system-ui">'+fmt(it.v)+'</text>';
+    out+='<text x="'+cx.toFixed(1)+'" y="'+(pT+iH+20)+'" text-anchor="middle" fill="#64748B" font-size="9.5" font-family="system-ui">'+it.l+'</text>';
+  });
+  el.innerHTML='<svg viewBox="0 0 '+W+' '+pH+'" width="'+W+'" height="'+pH+'">'+out+'</svg>';
+}
+
+function drawAllCharts() {
+  barChart('c-rev-ni',[{vals:D.rev,col:'#F59E0B',label:'Revenue'},{vals:D.ni,col:'#059669',label:'Net Income'}]);
+  lineChart('c-margins',[{vals:D.gm,col:'#10B981',label:'Gross%'},{vals:D.ebm,col:'#2563EB',label:'EBITDA%'},{vals:D.eim,col:'#7C3AED',label:'EBIT%'},{vals:D.nim,col:'#059669',label:'Net%'}],true);
+  barChart('c-gp-eb',[{vals:D.gp,col:'#10B981',label:'GP'},{vals:D.ebitda,col:'#2563EB',label:'EBITDA'}]);
+  stackedBar('c-opex',[
+    {vals:D.opex_items['Sales & Distribution'],col:'#60A5FA',label:'Sales'},
+    {vals:D.opex_items['Marketing'],col:'#F59E0B',label:'Marketing'},
+    {vals:D.opex_items['Research & Development'],col:'#10B981',label:'R&D'},
+    {vals:D.opex_items['General & Administrative'],col:'#A78BFA',label:'G&A'}
+  ]);
+  barChart('c-cfo',[{vals:D.cfo,col:'#2563EB',label:'CFO'}]);
+  barChart('c-cf-sum',[{vals:D.cfo,col:'#2563EB',label:'CFO'},{vals:D.cfi,col:'#DC2626',label:'CFI'},{vals:D.cff,col:'#F59E0B',label:'CFF'}]);
+  barChart('c-ncf',[{vals:D.ncf,col:'#059669',label:'Net Cash'}]);
+  barChart('c-bs-bar',[{vals:D.tot_ast,col:'#2563EB',label:'Assets'},{vals:D.tot_lia,col:'#DC2626',label:'Liabilities'},{vals:D.tot_eq,col:'#10B981',label:'Equity'}]);
+  stackedBar('c-bs-assets',[{vals:D.cur_ast,col:'#60A5FA',label:'Current'},{vals:D.nc_ast,col:'#1D4ED8',label:'Non-Current'}]);
+  waterfallChart('c-waterfall');
+  lineChart('c-ov-margins',[{vals:D.ebm,col:'#2563EB',label:'EBITDA%'},{vals:D.gm,col:'#10B981',label:'Gross%'},{vals:D.nim,col:'#059669',label:'Net%'}],true);
+}
+
+window.addEventListener('resize', drawAllCharts);
+drawAllCharts();
+</script>
+</body>
+</html>

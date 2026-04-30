@@ -124,7 +124,7 @@ const Contact: React.FC = () => {
         {/* Footer */}
         <div className="mt-12 text-center">
           <p className="text-neutral-500 dark:text-neutral-400 text-sm">
-            © 2025 Musab Shaikh. All rights reserved.
+            © 2026 Musab Shaikh. All rights reserved.
           </p>
         </div>
       </div>

@@ -19,38 +19,56 @@ const Works: React.FC = () => {
           </Link>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {workData.slice(0, 6).map((project) => (
-            <div
-              key={project.id}
-              className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg transition-shadow group"
-            >
-              <div className="aspect-video bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
-                <img
-                  src={project.image}
-                  alt={project.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-              </div>
-              <div className="p-5">
-                <h3 className="text-lg font-bold text-gray-900 mb-2">
-                  {project.title}
-                </h3>
-                <p className="text-gray-600 mb-4 text-sm leading-relaxed">
-                  {project.description}
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {project.technologies.map((tech, index) => (
-                    <span
-                      key={index}
-                      className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-xs"
-                    >
-                      {tech}
-                    </span>
-                  ))}
+          {workData.slice(0, 6).map((project) => {
+            const card = (
+              <>
+                <div className="aspect-video bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
+                  <img
+                    src={project.image}
+                    alt={project.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
                 </div>
+                <div className="p-5">
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">
+                    {project.title}
+                  </h3>
+                  <p className="text-gray-600 mb-4 text-sm leading-relaxed line-clamp-2">
+                    {project.description}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {project.technologies.map((tech, index) => (
+                      <span
+                        key={index}
+                        className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-xs"
+                      >
+                        {tech}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </>
+            );
+
+            return project.demo ? (
+              <a
+                key={project.id}
+                href={project.demo}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg transition-shadow block"
+              >
+                {card}
+              </a>
+            ) : (
+              <div
+                key={project.id}
+                className="group bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg transition-shadow"
+              >
+                {card}
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>

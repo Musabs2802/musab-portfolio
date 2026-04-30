@@ -15,7 +15,7 @@ export interface Project {
   description: string;
   image: string;
   technologies: string[];
-  category: 'Software' | 'Data Science' | 'Analysis';
+  category: "Software" | "Data Science" | "Analysis";
   github?: string;
   demo?: string;
   highlights: string;
@@ -27,13 +27,23 @@ export interface Work {
   description: string;
   image: string;
   technologies: string[];
-  category: 'Software' | 'Data Science' | 'Analysis';
+  category: "Software" | "Data Science" | "Analysis" | "Dashboard";
   client: string;
   results: string;
+  demo?: string;
 }
 
 export interface Technology {
   name: string;
   icon: SimpleIcon;
-  category: 'Frontend' | 'Language' | 'Backend' | 'Data' | 'Visualization' | 'ML' | 'Tools' | 'Database' | 'Cloud';
+  category:
+    | "Frontend"
+    | "Language"
+    | "Backend"
+    | "Data"
+    | "Visualization"
+    | "ML"
+    | "Tools"
+    | "Database"
+    | "Cloud";
 }

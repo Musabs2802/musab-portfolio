@@ -40,8 +40,8 @@ const ProjectGrid: React.FC<ProjectGridProps> = ({ projects, isClient }) => {
                   project.category === "Software"
                     ? "bg-neutral-900 dark:bg-white text-white dark:text-neutral-900"
                     : project.category === "Data Science"
-                    ? "bg-neutral-900 dark:bg-white text-white dark:text-neutral-900"
-                    : "bg-neutral-900 dark:bg-white text-white dark:text-neutral-900"
+                      ? "bg-neutral-900 dark:bg-white text-white dark:text-neutral-900"
+                      : "bg-neutral-900 dark:bg-white text-white dark:text-neutral-900"
                 }`}
               >
                 {project.category}
@@ -112,10 +112,10 @@ const ProjectGrid: React.FC<ProjectGridProps> = ({ projects, isClient }) => {
                   href={project.demo}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center space-x-1 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors duration-200"
+                  className="flex items-center space-x-1.5 px-4 py-2 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 rounded-lg text-sm font-medium hover:opacity-80 transition-opacity"
                 >
-                  <ExternalLink size={16} />
-                  <span className="text-sm">Demo</span>
+                  <ExternalLink size={14} />
+                  <span>Live Demo</span>
                 </a>
               )}
             </div>

@@ -3,68 +3,31 @@ import { Work } from "../types";
 const workData: Work[] = [
   {
     id: 1,
-    title: "Sales Analytics Dashboard",
+    title: "P&L Dashboard",
     description:
-      "Designed and developed an advanced sales analytics dashboard using Power BI and complex DAX, delivering Coca-Cola–style sales intelligence for managers, supervisors, and leadership.",
+      "5-year expandable Profit & Loss dashboard for FMCG. Drill from annual summary to quarterly and monthly detail. Includes full income statement waterfall, margin trend charts, YoY variance analysis, and dynamic filters by Business Unit, Region, and Channel.",
     image:
-      "https://res.cloudinary.com/de75b0zis/image/upload/v1753605143/sales-dashboard-work-scr_n5uiqc.jpg",
-    technologies: ["PowerBi", "SQL", "Excel"],
-    category: "Analysis",
-    client: "Seara | KSA",
+      "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80",
+    technologies: ["Python", "HTML", "CSS", "JavaScript", "Data Viz"],
+    category: "Dashboard",
+    client: "Data Consulting Demo",
     results:
-      "Enabled data-driven decision-making across all sales tiers; improved visibility into KPIs and sales trends, reducing reporting turnaround time by 80%",
+      "Covers Revenue → Gross Profit → EBITDA → EBIT → Net Income with live filter slicing, SVG charts, CSV export, and USD/thousands or millions toggle",
+    demo: "/pl-dashboard.html",
   },
   {
     id: 2,
-    title: "Customer Propensity Model",
+    title: "Salesman Action Dashboard",
     description:
-      "Built a machine learning customer propensity model using historical sales data to predict SKU-level purchase likelihood for the following month.",
+      "Customer-level sales action dashboard for FMCG field teams. Categorises customers into Battles (acquire) and Hold Position (retain) using a propensity-style scoring model. Includes SKU portfolio drill-down, 6-month completion trend charts, and regional performance summaries.",
     image:
-      "https://res.cloudinary.com/de75b0zis/image/upload/v1753605143/customer-propensity-work-scr_oy1opg.jpg",
-    technologies: ["Python", "Machine Learning", "AWS"],
-    category: "Data Science",
-    client: "Seara | KSA",
+      "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&q=80",
+    technologies: ["Python", "HTML", "CSS", "JavaScript", "Data Viz"],
+    category: "Dashboard",
+    client: "Data Consulting Demo",
     results:
-      "Achieved ~65% prediction accuracy, enabling targeted sales campaigns and contributing to a 20% lift in monthly SKU-level sales",
-  },
-  {
-    id: 3,
-    title: "MBVS Networking App",
-    description:
-      "Designed and developed a cross-platform mobile application enabling professionals in Switzerland to network, discover services, attend events, and apply for jobs from a single platform.",
-    image:
-      "https://res.cloudinary.com/de75b0zis/image/upload/v1753605143/mbvs-networking-work-src_fdn4hj.png",
-    technologies: ["Flutter", "iOS", "Android"],
-    category: "Software",
-    client: "MBVS | Switzerland",
-    results:
-      "Adopted by Swiss professional communities; recognized for consolidating networking, services, and job discovery into a single mobile platform",
-  },
-  {
-    id: 4,
-    title: "Automation System at Al Kabeer Group",
-    description:
-      "Designed and implemented Python-based automation for sales and finance workflows at Al Kabeer Group, replacing manual reporting and enabling faster, data-driven decision-making.",
-    image:
-      "https://res.cloudinary.com/de75b0zis/image/upload/v1753605143/al-kabeer-work-scr_k0fvva.png",
-    technologies: ["Python", "Excel", "Cloud"],
-    category: "Software",
-    client: "Al Kabeer Group | UAE",
-    results:
-      "Saved 200+ man-hours monthly by automating reporting, improving accuracy and enabling real-time sales insights for faster executive decisions",
-  },
-  {
-    id: 5,
-    title: "Bubble Care Health Tech App",
-    description:
-      "Built a healthcare mobile application connecting patients and caregivers for daily activity tracking and care coordination, developed for a UK health-tech startup working alongside NHS stakeholders.",
-    image:
-      "https://res.cloudinary.com/de75b0zis/image/upload/v1753605143/tritone-health-work-scr_hwauzt.png",
-    technologies: ["Android", "iOS", "Kotlin", "Swift"],
-    category: "Software",
-    client: "Tritone Health | UK",
-    results:
-      "Improved daily activity tracking and communication between patients and caregivers; validated through pilot usage with healthcare stakeholders",
+      "Covers 6 salesmen × 50 customers × 6 months with Revenue / Qty / Tonnage metrics, searchable salesman filter, completion flags, and CSV export",
+    demo: "/salesman-action-dashboard.html",
   },
 ];
 
