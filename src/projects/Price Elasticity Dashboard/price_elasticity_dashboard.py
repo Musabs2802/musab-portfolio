@@ -1,0 +1,1329 @@
+"""
+Price Elasticity Dashboard
+- Own-price elasticity per SKU (company + competition)
+- Cross-price elasticity matrix (within company portfolio)
+- Revenue / Volume / Share simulator (drag price sliders)
+- Waterfall impact chart
+- Market share bridge
+Commercial POV: FMCG company with 5 SKUs vs 3 competitor brands
+"""
+import os, json
+
+# ─────────────────────────────────────────────────────────────────────────────
+# DATA
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Company SKUs
+OWN_SKUS = [
+    {"id": "s1", "name": "ProClean 500g",     "segment": "Core",    "base_price": 4.20,  "base_vol": 850_000,  "rrp": 4.50,  "cogs_pct": 0.42, "elasticity": -2.1},
+    {"id": "s2", "name": "ProClean 1kg",      "segment": "Core",    "base_price": 7.80,  "base_vol": 620_000,  "rrp": 8.20,  "cogs_pct": 0.40, "elasticity": -1.8},
+    {"id": "s3", "name": "ProClean Ultra 500g","segment": "Premium", "base_price": 5.90,  "base_vol": 310_000,  "rrp": 6.20,  "cogs_pct": 0.38, "elasticity": -1.4},
+    {"id": "s4", "name": "ProClean Ultra 1kg", "segment": "Premium", "base_price": 10.50, "base_vol": 195_000,  "rrp": 11.00, "cogs_pct": 0.36, "elasticity": -1.2},
+    {"id": "s5", "name": "ProClean Eco 750g",  "segment": "Eco",     "base_price": 6.60,  "base_vol": 140_000,  "rrp": 7.00,  "cogs_pct": 0.44, "elasticity": -1.6},
+]
+
+# Competitor SKUs
+COMP_SKUS = [
+    {"id": "c1", "name": "CleanMax 500g",   "brand": "CleanMax",  "base_price": 3.90,  "base_vol": 920_000,  "elasticity": -2.4},
+    {"id": "c2", "name": "CleanMax 1kg",    "brand": "CleanMax",  "base_price": 7.20,  "base_vol": 680_000,  "elasticity": -2.2},
+    {"id": "c3", "name": "PureWash 500g",   "brand": "PureWash",  "base_price": 4.50,  "base_vol": 530_000,  "elasticity": -1.9},
+    {"id": "c4", "name": "PureWash 1kg",    "brand": "PureWash",  "base_price": 8.40,  "base_vol": 390_000,  "elasticity": -1.7},
+    {"id": "c5", "name": "EcoSpark 750g",   "brand": "EcoSpark",  "base_price": 7.10,  "base_vol": 210_000,  "elasticity": -1.5},
+    {"id": "c6", "name": "ValueWash 500g",  "brand": "ValueWash", "base_price": 3.20,  "base_vol": 1_100_000,"elasticity": -2.8},
+]
+
+# Cross-price elasticity matrix (rows = own SKU affected, cols = other own SKU changing price)
+# cross[i][j] = % change in vol of SKU i when SKU j price changes 1%
+# Positive = substitutes (if j gets more expensive, i gains volume)
+CROSS = [
+# s1     s2     s3     s4     s5
+  [0,    +0.35, +0.20, +0.08, +0.12],  # s1
+  [+0.30, 0,   +0.15, +0.18, +0.10],  # s2
+  [+0.22,+0.18,  0,   +0.42, +0.14],  # s3
+  [+0.10,+0.20, +0.38,  0,   +0.08],  # s4
+  [+0.14,+0.12, +0.16, +0.09,  0  ],  # s5
+]
+
+# Company cross-to-competitor elasticity (effect on own SKU from competitor price change)
+# comp_cross[i][j] = effect on own SKU i vol when competitor SKU j price changes 1%
+COMP_CROSS = [
+# c1     c2     c3     c4     c5     c6
+  [+0.28,+0.10, +0.18, +0.06, +0.05, +0.32],  # s1 most affected by c1, c6
+  [+0.10,+0.30, +0.08, +0.22, +0.05, +0.12],  # s2
+  [+0.12,+0.06, +0.20, +0.08, +0.08, +0.08],  # s3
+  [+0.06,+0.12, +0.08, +0.18, +0.06, +0.04],  # s4
+  [+0.05,+0.04, +0.06, +0.04, +0.22, +0.06],  # s5
+]
+
+# ─────────────────────────────────────────────────────────────────────────────
+# JSON payload
+# ─────────────────────────────────────────────────────────────────────────────
+DATA = {
+    "own": OWN_SKUS,
+    "comp": COMP_SKUS,
+    "cross": CROSS,
+    "comp_cross": COMP_CROSS,
+}
+
+DATA_JSON = json.dumps(DATA)
+
+# ─────────────────────────────────────────────────────────────────────────────
+# HTML
+# ─────────────────────────────────────────────────────────────────────────────
+HTML = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Price Elasticity Dashboard</title>
+<style>
+*,*::before,*::after{{box-sizing:border-box;margin:0;padding:0}}
+html{{font-size:13.5px}}
+:root{{
+  --bg:#F5F3FF;--surface:#fff;--surface2:#FAF9FF;--surface3:#F0EEFF;
+  --border:#DDD6FE;--border-s:#EDE9FE;
+  --p950:#1E0063;--p900:#2D0089;--p800:#3B00B9;--p700:#5B21B6;
+  --p600:#7C3AED;--p500:#8B5CF6;--p400:#A78BFA;--p300:#C4B5FD;
+  --p200:#DDD6FE;--p100:#EDE9FE;--p50:#F5F3FF;
+  --acc:#7C3AED;--acc-l:#A78BFA;
+  --pos:#059669;--pos-bg:#ECFDF5;--neg:#DC2626;--neg-bg:#FFF0F0;
+  --warn:#D97706;--warn-bg:#FFFBEB;
+  --text:#1E1B4B;--tmid:#4338CA;--tmuted:#6D6A8A;--tfaint:#A8A4C8;
+  --sh:0 1px 4px rgba(30,0,99,.07);
+  --sh-lg:0 4px 20px rgba(30,0,99,.10);
+  --r:10px;
+}}
+body{{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,sans-serif;
+  background:var(--bg);color:var(--text);line-height:1.5;min-height:100vh;}}
+
+/* ── HEADER ── */
+.hdr{{
+  background:linear-gradient(135deg,var(--p950) 0%,var(--p800) 55%,var(--p600) 100%);
+  padding:20px 28px;display:flex;justify-content:space-between;align-items:center;
+  flex-wrap:wrap;gap:12px;border-bottom:3px solid var(--p600);
+  box-shadow:0 4px 24px rgba(30,0,99,.30);
+}}
+.hdr-title{{font-size:18px;font-weight:800;letter-spacing:-.3px;
+  background:linear-gradient(90deg,#fff 40%,var(--p300));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}}
+.hdr-sub{{font-size:11px;color:rgba(255,255,255,.40);margin-top:2px;}}
+.hdr-badges{{display:flex;gap:7px;align-items:center;flex-wrap:wrap;}}
+.hdr-badge{{font-size:10.5px;font-weight:600;color:rgba(255,255,255,.60);
+  background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.14);
+  border-radius:20px;padding:3px 12px;}}
+.hdr-badge.acc{{color:var(--p200);background:rgba(139,92,246,.28);border-color:rgba(196,181,253,.25);}}
+
+/* ── NAV TABS ── */
+.tab-nav{{background:var(--surface);border-bottom:2px solid var(--border-s);
+  overflow-x:auto;scrollbar-width:none;box-shadow:0 2px 8px rgba(30,0,99,.05);}}
+.tab-nav::-webkit-scrollbar{{display:none;}}
+.tab-inner{{display:flex;padding:0 22px;min-width:100%;}}
+.tab-btn{{display:flex;align-items:center;gap:6px;padding:0 18px;height:44px;
+  font-size:12px;font-weight:600;color:var(--tmuted);background:none;border:none;
+  cursor:pointer;white-space:nowrap;border-bottom:3px solid transparent;
+  margin-bottom:-2px;transition:color .15s,border-color .15s,background .15s;letter-spacing:.1px;}}
+.tab-btn:hover{{color:var(--p600);background:var(--p50);}}
+.tab-btn.active{{color:var(--p600);border-bottom-color:var(--p500);background:var(--p50);}}
+.tab-btn svg{{width:14px;height:14px;opacity:.5;flex-shrink:0;transition:opacity .15s;}}
+.tab-btn:hover svg,.tab-btn.active svg{{opacity:1;}}
+.tab-kpi-gap{{height:14px;background:var(--bg);}}
+
+/* ── KPI STRIP ── */
+.kpi-strip{{display:grid;grid-template-columns:repeat(5,1fr);
+  background:var(--surface);margin:0 16px;border-radius:var(--r);
+  overflow:hidden;box-shadow:var(--sh-lg);border:1px solid var(--border-s);
+  margin-bottom:16px;}}
+.kpi-card{{padding:13px 16px 11px;border-right:1px solid var(--border-s);
+  position:relative;overflow:hidden;cursor:default;transition:background .15s;}}
+.kpi-card:last-child{{border-right:none;}}
+.kpi-card:hover{{background:var(--p50);}}
+.kpi-card::before{{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--kpi-clr,var(--p400));}}
+.kpi-lbl{{font-size:9.5px;font-weight:700;color:var(--tfaint);text-transform:uppercase;letter-spacing:.7px;margin-bottom:5px;}}
+.kpi-val{{font-size:17px;font-weight:800;color:var(--text);letter-spacing:-.2px;}}
+.kpi-sub{{font-size:10px;color:var(--tfaint);margin-top:2px;}}
+.kpi-badge{{display:inline-flex;align-items:center;gap:2px;font-size:10px;font-weight:700;
+  border-radius:20px;padding:2px 7px;margin-top:5px;}}
+.bdg-pos{{background:var(--pos-bg);color:var(--pos);border:1px solid #6EE7B7;}}
+.bdg-neg{{background:var(--neg-bg);color:var(--neg);border:1px solid #FCA5A5;}}
+.bdg-warn{{background:var(--warn-bg);color:var(--warn);border:1px solid #FDE68A;}}
+.bdg-neutral{{background:var(--p100);color:var(--p600);border:1px solid var(--p200);}}
+
+/* ── MAIN ── */
+.main{{padding:0 16px 28px;max-width:1700px;margin:0 auto;}}
+.tab-panel{{display:none;}}.tab-panel.active{{display:block;}}
+
+/* ── PAGE TITLE ROW ── */
+.page-hdr{{display:flex;justify-content:space-between;align-items:center;
+  margin-bottom:14px;padding-top:2px;}}
+.page-title{{font-size:11px;font-weight:800;color:var(--p800);text-transform:uppercase;
+  letter-spacing:.7px;display:flex;align-items:center;gap:7px;}}
+.page-title::before{{content:'';display:inline-block;width:3px;height:14px;
+  background:linear-gradient(180deg,var(--p500),var(--p300));border-radius:2px;flex-shrink:0;}}
+.page-note{{font-size:11px;color:var(--tfaint);}}
+
+/* ── GRID HELPERS ── */
+.g2{{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}}
+.g3{{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px;}}
+.g12{{display:grid;grid-template-columns:1fr 2fr;gap:14px;margin-bottom:14px;}}
+.g21{{display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:14px;}}
+.g1{{margin-bottom:14px;}}
+
+/* ── CARD ── */
+.card{{background:var(--surface);border:1px solid var(--border-s);border-radius:var(--r);
+  padding:16px;box-shadow:var(--sh);min-width:0;}}
+.card-title{{font-size:10.5px;font-weight:700;color:var(--tmuted);text-transform:uppercase;
+  letter-spacing:.4px;margin-bottom:12px;display:flex;justify-content:space-between;
+  align-items:flex-start;gap:8px;flex-wrap:wrap;border-bottom:1px solid var(--border-s);
+  padding-bottom:10px;}}
+.card-title-txt{{display:flex;align-items:center;gap:6px;}}
+.card-title-txt::before{{content:'';width:3px;height:11px;border-radius:2px;
+  background:var(--p500);display:inline-block;flex-shrink:0;}}
+
+/* ── CHART AREA ── */
+.chart-area{{width:100%;}}
+.chart-area svg{{display:block;width:100%;height:auto;}}
+.legend{{display:flex;gap:8px;flex-wrap:wrap;}}
+.lg-i{{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--tfaint);font-weight:600;}}
+.lg-dot{{width:8px;height:8px;border-radius:50%;flex-shrink:0;}}
+.lg-sq{{width:10px;height:10px;border-radius:2px;flex-shrink:0;}}
+.lg-ln{{width:14px;height:2px;border-radius:2px;flex-shrink:0;}}
+
+/* ── ELASTICITY TABLE ── */
+.el-tbl{{width:100%;border-collapse:collapse;font-size:12px;}}
+.el-tbl th{{background:var(--p800);color:rgba(255,255,255,.8);padding:8px 12px;
+  font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;
+  text-align:left;white-space:nowrap;border-right:1px solid rgba(255,255,255,.07);}}
+.el-tbl th:last-child{{border-right:none;}}
+.el-tbl td{{padding:8px 12px;border-bottom:1px solid var(--border-s);
+  white-space:nowrap;}}
+.el-tbl tr:last-child td{{border-bottom:none;}}
+.el-tbl tr:hover td{{background:var(--p50);}}
+.el-tbl .sku-nm{{font-weight:600;color:var(--text);}}
+.el-tbl .seg-tag{{display:inline-block;font-size:9px;font-weight:700;
+  border-radius:20px;padding:1px 7px;}}
+.seg-core{{background:#EFF6FF;color:#1D4ED8;border:1px solid #BFDBFE;}}
+.seg-prem{{background:var(--p100);color:var(--p600);border:1px solid var(--p200);}}
+.seg-eco{{background:#ECFDF5;color:#059669;border:1px solid #6EE7B7;}}
+.el-val{{font-weight:700;text-align:right;}}
+.el-val.elastic{{color:var(--neg);}}
+.el-val.inelastic{{color:var(--pos);}}
+.el-val.mod{{color:var(--warn);}}
+.el-bar-wrap{{min-width:90px;}}
+.el-bar-bg{{background:var(--p100);border-radius:4px;height:6px;overflow:hidden;}}
+.el-bar-fill{{height:100%;border-radius:4px;}}
+.price-cell{{font-weight:600;color:var(--p700);text-align:right;}}
+.vol-cell{{text-align:right;color:var(--tmuted);}}
+.rev-cell{{font-weight:600;text-align:right;}}
+
+/* ── CROSS MATRIX ── */
+.mx-wrap{{overflow-x:auto;}}
+.cross-tbl{{border-collapse:collapse;font-size:11px;}}
+.cross-tbl th{{
+  background:var(--p800);color:rgba(255,255,255,.72);
+  padding:7px 10px;font-size:9px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.3px;white-space:nowrap;text-align:center;
+  border-right:1px solid rgba(255,255,255,.07);
+}}
+.cross-tbl th:first-child{{text-align:left;min-width:160px;}}
+.cross-tbl .ct-row-hdr{{
+  background:var(--surface2);font-weight:700;color:var(--p700);
+  padding:8px 12px;font-size:10.5px;border-right:1px solid var(--border);
+  border-bottom:1px solid var(--border-s);white-space:nowrap;text-align:left;
+}}
+.cross-tbl td{{padding:0;border-right:1px solid var(--border-s);border-bottom:1px solid var(--border-s);}}
+.cross-tbl td:first-child{{border-right:1px solid var(--border);}}
+.cross-tbl tr:last-child td{{border-bottom:none;}}
+.ct-cell{{
+  width:90px;height:44px;display:flex;align-items:center;justify-content:center;
+  font-size:11.5px;font-weight:700;cursor:default;transition:filter .15s;
+}}
+.ct-cell:hover{{filter:brightness(.92);}}
+.ct-self{{background:var(--p800)!important;color:rgba(255,255,255,.3)!important;font-size:10px!important;}}
+
+/* ── SIMULATOR ── */
+.sim-grid{{display:grid;grid-template-columns:1fr 1.8fr;gap:14px;margin-bottom:14px;}}
+.slider-panel{{background:var(--surface);border:1px solid var(--border-s);
+  border-radius:var(--r);padding:16px;box-shadow:var(--sh);}}
+.sim-title{{font-size:10.5px;font-weight:700;color:var(--tmuted);
+  text-transform:uppercase;letter-spacing:.4px;margin-bottom:14px;
+  border-bottom:1px solid var(--border-s);padding-bottom:10px;
+  display:flex;align-items:center;gap:6px;}}
+.sim-title::before{{content:'';width:3px;height:11px;border-radius:2px;
+  background:var(--p500);display:inline-block;flex-shrink:0;}}
+.sku-slider{{margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border-s);}}
+.sku-slider:last-child{{border-bottom:none;margin-bottom:0;padding-bottom:0;}}
+.sku-slider-top{{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:8px;flex-wrap:wrap;}}
+.sku-slider-name{{font-size:11.5px;font-weight:700;color:var(--text);}}
+.sku-slider-meta{{font-size:10px;color:var(--tfaint);}}
+.slider-row{{display:flex;align-items:center;gap:10px;}}
+.slider-lbl{{font-size:9.5px;color:var(--tfaint);font-weight:600;width:28px;text-align:right;flex-shrink:0;}}
+input[type=range]{{
+  flex:1;height:4px;border-radius:4px;cursor:pointer;
+  accent-color:var(--p500);background:var(--p200);outline:none;
+  -webkit-appearance:none;appearance:none;
+}}
+input[type=range]::-webkit-slider-thumb{{
+  -webkit-appearance:none;width:16px;height:16px;border-radius:50%;
+  background:var(--p600);border:2px solid #fff;
+  box-shadow:0 0 0 2px var(--p300),0 2px 6px rgba(124,58,237,.3);cursor:pointer;
+}}
+.slider-val{{font-size:12px;font-weight:700;color:var(--p700);width:42px;text-align:left;flex-shrink:0;}}
+.sim-impact{{display:flex;gap:6px;margin-top:7px;flex-wrap:wrap;}}
+.sim-pill{{font-size:10px;font-weight:700;border-radius:20px;padding:2px 9px;}}
+.sim-pill.pos{{background:var(--pos-bg);color:var(--pos);border:1px solid #6EE7B7;}}
+.sim-pill.neg{{background:var(--neg-bg);color:var(--neg);border:1px solid #FCA5A5;}}
+.sim-pill.warn{{background:var(--warn-bg);color:var(--warn);border:1px solid #FDE68A;}}
+.sim-pill.neu{{background:var(--p100);color:var(--p600);border:1px solid var(--p200);}}
+.reset-btn{{
+  margin-top:14px;width:100%;padding:8px;
+  background:var(--p100);border:1px solid var(--p200);border-radius:7px;
+  font-size:11.5px;font-weight:700;color:var(--p700);cursor:pointer;
+  transition:all .15s;
+}}
+.reset-btn:hover{{background:var(--p200);color:var(--p800);}}
+
+/* ── IMPACT TABLE ── */
+.imp-tbl{{width:100%;border-collapse:collapse;font-size:12px;}}
+.imp-tbl th{{background:var(--p800);color:rgba(255,255,255,.78);padding:8px 12px;
+  font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;
+  text-align:left;white-space:nowrap;}}
+.imp-tbl th:not(:first-child){{text-align:right;}}
+.imp-tbl td{{padding:9px 12px;border-bottom:1px solid var(--border-s);vertical-align:middle;}}
+.imp-tbl tr:last-child td{{border-bottom:none;font-weight:800;background:var(--p50);}}
+.imp-tbl tr:not(:last-child):hover td{{background:var(--p50);}}
+.imp-tbl td:not(:first-child){{text-align:right;white-space:nowrap;}}
+.imp-tbl .sku-nm{{font-weight:600;}}
+.delta-pos{{color:var(--pos);font-weight:700;}}
+.delta-neg{{color:var(--neg);font-weight:700;}}
+.delta-neu{{color:var(--tmuted);}}
+
+/* ── COMP TABLE ── */
+.comp-tbl{{width:100%;border-collapse:collapse;font-size:12px;}}
+.comp-tbl th{{background:var(--p800);color:rgba(255,255,255,.78);padding:8px 12px;
+  font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;
+  text-align:left;white-space:nowrap;border-right:1px solid rgba(255,255,255,.07);}}
+.comp-tbl td{{padding:8px 12px;border-bottom:1px solid var(--border-s);white-space:nowrap;}}
+.comp-tbl tr:not(:last-child):hover td{{background:var(--p50);}}
+.comp-tbl td:not(:first-child){{text-align:right;}}
+.brand-tag{{font-size:9px;font-weight:700;border-radius:20px;padding:1px 7px;}}
+
+/* ── INSIGHT PILLS ── */
+.insight-row{{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;}}
+.insight-card{{background:var(--surface);border:1px solid var(--border-s);
+  border-radius:var(--r);padding:11px 14px;display:flex;align-items:flex-start;
+  gap:10px;flex:1;min-width:220px;box-shadow:var(--sh);}}
+.insight-icon{{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;
+  justify-content:center;flex-shrink:0;font-size:15px;}}
+.insight-txt strong{{font-size:11.5px;font-weight:700;color:var(--text);display:block;margin-bottom:2px;}}
+.insight-txt span{{font-size:10.5px;color:var(--tmuted);line-height:1.5;}}
+
+/* ── TOOLTIP ── */
+.tt{{position:fixed;pointer-events:none;background:var(--p900);color:#fff;
+  font-size:11px;padding:6px 10px;border-radius:7px;opacity:0;transition:opacity .1s;
+  z-index:999;max-width:220px;line-height:1.5;font-weight:600;white-space:nowrap;
+  box-shadow:0 4px 16px rgba(30,0,99,.25);}}
+.tt.vis{{opacity:1;}}
+
+/* ── FOOTER ── */
+.footer{{text-align:center;padding:14px;font-size:11px;color:var(--tfaint);
+  border-top:1px solid var(--border-s);background:var(--surface);margin-top:8px;}}
+
+/* ── RESPONSIVE ── */
+@media(max-width:1100px){{.kpi-strip{{grid-template-columns:repeat(3,1fr);}}}}
+@media(max-width:900px){{
+  .g2,.g3,.g12,.g21,.sim-grid{{grid-template-columns:1fr;}}
+  .kpi-strip{{grid-template-columns:1fr 1fr;margin:0 8px;}}
+}}
+</style>
+</head>
+<body>
+
+<div class="tt" id="tt"></div>
+
+<header class="hdr">
+  <div>
+    <div class="hdr-title">Price Elasticity Dashboard</div>
+    <div class="hdr-sub">ProClean FMCG Portfolio &nbsp;&middot;&nbsp; Own-Price &amp; Cross-Price Analysis &nbsp;&middot;&nbsp; vs Competition</div>
+  </div>
+  <div class="hdr-badges">
+    <span class="hdr-badge acc">&#9650; Commercial Intelligence</span>
+    <span class="hdr-badge">5 Own SKUs &nbsp;&middot;&nbsp; 6 Comp SKUs</span>
+    <span class="hdr-badge">Demo Data</span>
+  </div>
+</header>
+
+<nav class="tab-nav">
+  <div class="tab-inner">
+    <button class="tab-btn active" onclick="switchTab('overview',this)">
+      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M1 11l4-4 3 3 4-5 3 2V14H1v-3z"/><path d="M15 2a1 1 0 00-1-1H2a1 1 0 00-1 1v1h14V2z"/></svg>
+      Overview
+    </button>
+    <button class="tab-btn" onclick="switchTab('elasticity',this)">
+      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 14V8l3-3 3 3 3-5 3 3v8H2z"/></svg>
+      Elasticity Analysis
+    </button>
+    <button class="tab-btn" onclick="switchTab('cross',this)">
+      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M1 1h6v6H1V1zm8 0h6v6H9V1zm-8 8h6v6H1V9zm8 0h6v6H9V9z"/></svg>
+      Cross-Elasticity Matrix
+    </button>
+    <button class="tab-btn" onclick="switchTab('simulator',this)">
+      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M4 3h8a1 1 0 011 1v8a1 1 0 01-1 1H4a1 1 0 01-1-1V4a1 1 0 011-1zm3 3v4m2-4v4M5 9h6"/></svg>
+      Price Simulator
+    </button>
+    <button class="tab-btn" onclick="switchTab('competition',this)">
+      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1l2 5h5l-4 3 1.5 5L8 11l-4.5 3L5 9 1 6h5z"/></svg>
+      vs Competition
+    </button>
+  </div>
+</nav>
+<div class="tab-kpi-gap"></div>
+
+<div class="main">
+  <!-- KPI STRIP -->
+  <div class="kpi-strip" id="kpi-strip">
+    <div class="kpi-card" style="--kpi-clr:#7C3AED">
+      <div class="kpi-lbl">Portfolio Avg Elasticity</div>
+      <div class="kpi-val" id="kpi-avg-el">&mdash;</div>
+      <div class="kpi-sub">Own-price (volume)</div>
+      <span class="kpi-badge bdg-warn" id="kpi-el-tag">Loading…</span>
+    </div>
+    <div class="kpi-card" style="--kpi-clr:#8B5CF6">
+      <div class="kpi-lbl">Total Portfolio Revenue</div>
+      <div class="kpi-val" id="kpi-tot-rev">&mdash;</div>
+      <div class="kpi-sub">Base scenario</div>
+    </div>
+    <div class="kpi-card" style="--kpi-clr:#A78BFA">
+      <div class="kpi-lbl">Total Volume (Units)</div>
+      <div class="kpi-val" id="kpi-tot-vol">&mdash;</div>
+      <div class="kpi-sub">Sum across 5 SKUs</div>
+    </div>
+    <div class="kpi-card" style="--kpi-clr:#6D28D9">
+      <div class="kpi-lbl">Gross Profit (est.)</div>
+      <div class="kpi-val" id="kpi-tot-gp">&mdash;</div>
+      <div class="kpi-sub">Post COGS</div>
+    </div>
+    <div class="kpi-card" style="--kpi-clr:#C4B5FD">
+      <div class="kpi-lbl">Vs Competition Avg</div>
+      <div class="kpi-val" id="kpi-vs-comp">&mdash;</div>
+      <div class="kpi-sub">Own avg price premium</div>
+      <span class="kpi-badge bdg-neutral" id="kpi-vs-comp-tag">vs market</span>
+    </div>
+  </div>
+
+  <!-- ═══════════════ OVERVIEW TAB ═══════════════ -->
+  <div class="tab-panel active" id="tab-overview">
+    <div class="insight-row" id="insight-row"></div>
+    <div class="g2">
+      <div class="card">
+        <div class="card-title"><div class="card-title-txt">Own-Price Elasticity by SKU</div>
+          <div class="legend">
+            <div class="lg-i"><div class="lg-sq" style="background:#DC2626"></div>Highly Elastic (&lt;-2)</div>
+            <div class="lg-i"><div class="lg-sq" style="background:#D97706"></div>Moderately</div>
+            <div class="lg-i"><div class="lg-sq" style="background:#059669"></div>Inelastic</div>
+          </div>
+        </div>
+        <div class="chart-area" id="c-elasticity-bar"></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><div class="card-title-txt">Revenue Contribution (Base)</div></div>
+        <div class="chart-area" id="c-rev-donut"></div>
+      </div>
+    </div>
+    <div class="g2">
+      <div class="card">
+        <div class="card-title"><div class="card-title-txt">Price vs Elasticity Scatter</div>
+          <div class="legend">
+            <div class="lg-i"><div class="lg-dot" style="background:#7C3AED"></div>Own SKU</div>
+            <div class="lg-i"><div class="lg-dot" style="background:#94A3B8"></div>Competitor</div>
+          </div>
+        </div>
+        <div class="chart-area" id="c-scatter"></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><div class="card-title-txt">Gross Profit Pool by SKU</div></div>
+        <div class="chart-area" id="c-gp-bar"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ ELASTICITY TAB ═══════════════ -->
+  <div class="tab-panel" id="tab-elasticity">
+    <div class="page-hdr">
+      <div class="page-title">Own-Price Elasticity Deep Dive</div>
+      <div class="page-note">Elasticity = % change in volume / % change in price</div>
+    </div>
+    <div class="g2">
+      <div class="card">
+        <div class="card-title"><div class="card-title-txt">Price-Response Curves</div>
+          <div class="legend" id="prc-legend"></div>
+        </div>
+        <div class="chart-area" id="c-price-curves"></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><div class="card-title-txt">Revenue Optimisation Curve</div>
+          <div class="legend" id="rev-opt-legend"></div>
+        </div>
+        <div class="chart-area" id="c-rev-opt"></div>
+      </div>
+    </div>
+    <div class="g1">
+      <div class="card">
+        <div class="card-title"><div class="card-title-txt">Own SKU Detail Table</div></div>
+        <div style="overflow-x:auto">
+          <table class="el-tbl" id="own-sku-tbl">
+            <thead><tr>
+              <th>SKU</th><th>Segment</th><th>Base Price</th><th>RRP</th>
+              <th>Base Volume</th><th>Base Revenue</th><th>Base GP</th>
+              <th>Elasticity</th><th>Classification</th><th>Opt. Price</th><th>Opt. Revenue</th>
+            </tr></thead>
+            <tbody id="own-sku-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ CROSS-ELASTICITY TAB ═══════════════ -->
+  <div class="tab-panel" id="tab-cross">
+    <div class="page-hdr">
+      <div class="page-title">Cross-Price Elasticity Matrix</div>
+      <div class="page-note">Positive = substitutes (vol of row SKU ▲ when col SKU price ▲) &nbsp;&middot;&nbsp; Darker cell = stronger cross effect</div>
+    </div>
+    <div class="g1">
+      <div class="card">
+        <div class="card-title">
+          <div class="card-title-txt">Own Portfolio Cross-Elasticity</div>
+          <div class="legend">
+            <div class="lg-i"><div class="lg-sq" style="background:#7C3AED;opacity:.9"></div>Strong sub (&gt;0.35)</div>
+            <div class="lg-i"><div class="lg-sq" style="background:#A78BFA;opacity:.7"></div>Moderate</div>
+            <div class="lg-i"><div class="lg-sq" style="background:#DDD6FE;opacity:.9"></div>Weak</div>
+            <div class="lg-i"><div class="lg-sq" style="background:#1E0063"></div>Self</div>
+          </div>
+        </div>
+        <div class="mx-wrap" id="cross-matrix-wrap"></div>
+      </div>
+    </div>
+    <div class="g2">
+      <div class="card">
+        <div class="card-title"><div class="card-title-txt">Cannibalisation Risk Heatmap</div></div>
+        <div class="chart-area" id="c-cannib"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">
+          <div class="card-title-txt">Cross-Elasticity vs Competitor Impact</div>
+          <div class="legend">
+            <div class="lg-i"><div class="lg-dot" style="background:#7C3AED"></div>Own-to-own</div>
+            <div class="lg-i"><div class="lg-dot" style="background:#DC2626"></div>Comp-to-own</div>
+          </div>
+        </div>
+        <div class="chart-area" id="c-comp-cross"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ SIMULATOR TAB ═══════════════ -->
+  <div class="tab-panel" id="tab-simulator">
+    <div class="page-hdr">
+      <div class="page-title">Price Simulator</div>
+      <div class="page-note">Drag sliders to simulate price changes &nbsp;&middot;&nbsp; Cross-elasticity effects auto-calculated</div>
+    </div>
+    <div class="sim-grid">
+      <div class="slider-panel">
+        <div class="sim-title">Price Change Inputs</div>
+        <div id="slider-container"></div>
+        <button class="reset-btn" onclick="resetSim()">&#8635; Reset to Base Prices</button>
+      </div>
+      <div>
+        <div class="card" style="margin-bottom:14px">
+          <div class="card-title"><div class="card-title-txt">Portfolio Impact Summary</div></div>
+          <div class="chart-area" id="c-waterfall"></div>
+        </div>
+        <div class="card">
+          <div class="card-title"><div class="card-title-txt">SKU-Level Impact</div></div>
+          <div style="overflow-x:auto"><table class="imp-tbl" id="imp-tbl">
+            <thead><tr>
+              <th>SKU</th><th>Base Price</th><th>New Price</th><th>Price Δ%</th>
+              <th>Vol Δ%</th><th>Revenue Δ%</th><th>GP Δ%</th><th>Cross Effect</th>
+            </tr></thead>
+            <tbody id="imp-tbl-body"></tbody>
+          </table></div>
+        </div>
+      </div>
+    </div>
+    <div class="g3">
+      <div class="card">
+        <div class="card-title"><div class="card-title-txt">Revenue: Base vs Simulated</div></div>
+        <div class="chart-area" id="c-sim-rev"></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><div class="card-title-txt">Volume: Base vs Simulated</div></div>
+        <div class="chart-area" id="c-sim-vol"></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><div class="card-title-txt">Gross Profit: Base vs Simulated</div></div>
+        <div class="chart-area" id="c-sim-gp"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ COMPETITION TAB ═══════════════ -->
+  <div class="tab-panel" id="tab-competition">
+    <div class="page-hdr">
+      <div class="page-title">Competitive Landscape</div>
+      <div class="page-note">Price-value positioning vs 4 competitor brands</div>
+    </div>
+    <div class="g2">
+      <div class="card">
+        <div class="card-title"><div class="card-title-txt">Price Positioning Map</div>
+          <div class="legend">
+            <div class="lg-i"><div class="lg-dot" style="background:#7C3AED"></div>ProClean (own)</div>
+            <div class="lg-i"><div class="lg-dot" style="background:#F59E0B"></div>CleanMax</div>
+            <div class="lg-i"><div class="lg-dot" style="background:#10B981"></div>PureWash</div>
+            <div class="lg-i"><div class="lg-dot" style="background:#0EA5E9"></div>EcoSpark</div>
+            <div class="lg-i"><div class="lg-dot" style="background:#94A3B8"></div>ValueWash</div>
+          </div>
+        </div>
+        <div class="chart-area" id="c-price-pos"></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><div class="card-title-txt">Volume Share (Base)</div></div>
+        <div class="chart-area" id="c-mkt-share"></div>
+      </div>
+    </div>
+    <div class="g1">
+      <div class="card">
+        <div class="card-title"><div class="card-title-txt">Full Competitive SKU Table</div></div>
+        <div style="overflow-x:auto">
+          <table class="comp-tbl" id="comp-sku-tbl">
+            <thead><tr>
+              <th>Brand</th><th>SKU</th><th>Price</th><th>Volume</th>
+              <th>Est. Revenue</th><th>Elasticity</th><th>Price vs ProClean Avg</th>
+            </tr></thead>
+            <tbody id="comp-tbl-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="g2">
+      <div class="card">
+        <div class="card-title"><div class="card-title-txt">Elasticity Comparison: Own vs Comp</div></div>
+        <div class="chart-area" id="c-el-comp"></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><div class="card-title-txt">Competitor Cross-Effect on Own Portfolio</div>
+          <div class="legend" id="comp-cross-legend"></div>
+        </div>
+        <div class="chart-area" id="c-comp-effect"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="footer">
+  Developed by <strong>Musab Shaikh</strong> &nbsp;&middot;&nbsp; Commercial Intelligence &middot; Price Elasticity &nbsp;&middot;&nbsp; 2025
+</footer>
+
+<script>
+const D = {DATA_JSON};
+const M = 1000000;
+const SKU_COLORS = ['#7C3AED','#A78BFA','#5B21B6','#C4B5FD','#4C1D95'];
+const COMP_COLORS = {{'CleanMax':'#F59E0B','PureWash':'#10B981','EcoSpark':'#0EA5E9','ValueWash':'#94A3B8'}};
+const SEG_CLS = {{'Core':'seg-core','Premium':'seg-prem','Eco':'seg-eco'}};
+
+// ── SIM STATE ───────────────────────────────────────────────────────────────
+var simPrices = D.own.map(function(s){{ return s.base_price; }});
+
+// ── UTILS ───────────────────────────────────────────────────────────────────
+function fm(v,dp){{ return (v>=0?'':'-')+'$'+Math.abs(v).toFixed(dp??2); }}
+function fv(v){{ return v>=1e6?(v/M).toFixed(2)+'M':v>=1000?(v/1000).toFixed(0)+'K':v.toFixed(0); }}
+function pct(v){{ return (v>=0?'+':'')+v.toFixed(1)+'%'; }}
+function cls_delta(v){{ return v>0.5?'delta-pos':v<-0.5?'delta-neg':'delta-neu'; }}
+
+function tooltip(el, txt) {{
+  el.addEventListener('mouseenter', function(e) {{
+    var t = document.getElementById('tt');
+    t.textContent = txt; t.classList.add('vis');
+  }});
+  el.addEventListener('mousemove', function(e) {{
+    var t = document.getElementById('tt');
+    t.style.left = (e.clientX+12)+'px'; t.style.top = (e.clientY-28)+'px';
+  }});
+  el.addEventListener('mouseleave', function() {{
+    document.getElementById('tt').classList.remove('vis');
+  }});
+}}
+
+function elClass(e){{
+  if(e <= -2) return 'elastic';
+  if(e >= -1.5) return 'inelastic';
+  return 'mod';
+}}
+function elLabel(e){{
+  if(e <= -2) return 'Highly Elastic';
+  if(e >= -1.5) return 'Inelastic';
+  return 'Moderately Elastic';
+}}
+function elColor(e){{
+  if(e <= -2) return '#DC2626';
+  if(e >= -1.5) return '#059669';
+  return '#D97706';
+}}
+
+// Optimal price for max revenue: dR/dp=0 → p_opt = -1/(2*e/p_base * (1/p_base)) → simplified: p_opt = p_base * (e/(e+1)) * -1
+function optPrice(s){{
+  // Revenue = p * V0 * (p/p0)^e  → dR/dp=0 gives p_opt = p0 * e/(e+1) (negative e)
+  // For linear approx: p_opt where MR=0: p_opt = p_base/(1 + 1/|e|)
+  return s.base_price / (1 + 1/Math.abs(s.elasticity));
+}}
+function volAt(s, price){{
+  return s.base_vol * Math.pow(price/s.base_price, s.elasticity);
+}}
+
+// ── TAB SWITCH ───────────────────────────────────────────────────────────────
+function switchTab(id, btn){{
+  document.querySelectorAll('.tab-panel').forEach(function(p){{ p.classList.remove('active'); }});
+  document.querySelectorAll('.tab-btn').forEach(function(b){{ b.classList.remove('active'); }});
+  document.getElementById('tab-'+id).classList.add('active');
+  btn.classList.add('active');
+  setTimeout(drawAll, 80);
+}}
+
+// ── KPI ─────────────────────────────────────────────────────────────────────
+function renderKPIs(){{
+  var avgEl = D.own.reduce(function(a,s){{return a+s.elasticity;}},0)/D.own.length;
+  var totRev = D.own.reduce(function(a,s){{return a+s.base_price*s.base_vol;}},0);
+  var totVol = D.own.reduce(function(a,s){{return a+s.base_vol;}},0);
+  var totGP  = D.own.reduce(function(a,s){{return a+s.base_price*s.base_vol*(1-s.cogs_pct);}},0);
+  var ownAvgP = D.own.reduce(function(a,s){{return a+s.base_price;}},0)/D.own.length;
+  var compAvgP= D.comp.reduce(function(a,s){{return a+s.base_price;}},0)/D.comp.length;
+  var prem = (ownAvgP-compAvgP)/compAvgP*100;
+
+  document.getElementById('kpi-avg-el').textContent = avgEl.toFixed(2);
+  document.getElementById('kpi-el-tag').textContent = elLabel(avgEl);
+  document.getElementById('kpi-el-tag').className = 'kpi-badge ' + (avgEl<=-2?'bdg-neg':avgEl>=-1.5?'bdg-pos':'bdg-warn');
+  document.getElementById('kpi-tot-rev').textContent = '$'+fv(totRev);
+  document.getElementById('kpi-tot-vol').textContent = fv(totVol);
+  document.getElementById('kpi-tot-gp').textContent  = '$'+fv(totGP);
+  document.getElementById('kpi-vs-comp').textContent = pct(prem);
+  document.getElementById('kpi-vs-comp-tag').textContent = prem>0?'Price Premium':'Below Market';
+  document.getElementById('kpi-vs-comp-tag').className = 'kpi-badge '+(prem>0?'bdg-warn':'bdg-pos');
+}}
+
+// ── INSIGHTS ────────────────────────────────────────────────────────────────
+function renderInsights(){{
+  var most_el = D.own.reduce(function(a,s){{return s.elasticity < a.elasticity ? s : a;}});
+  var least_el = D.own.reduce(function(a,s){{return s.elasticity > a.elasticity ? s : a;}});
+  var best_rev = D.own.reduce(function(a,s){{
+    var op=optPrice(s); return optPrice(s)>s.base_price?s:a;
+  }}, D.own[0]);
+  var max_cross = 0; var mc_i=-1, mc_j=-1;
+  D.cross.forEach(function(row,i){{
+    row.forEach(function(v,j){{
+      if(i!==j && v>max_cross){{ max_cross=v; mc_i=i; mc_j=j; }}
+    }});
+  }});
+
+  var items = [
+    {{icon:'⚡',bg:'#FEF2F2',txt:'<strong>Highest elasticity risk:</strong> <span>'+most_el.name+' ('+most_el.elasticity.toFixed(1)+') — 1% price rise drops volume by '+Math.abs(most_el.elasticity).toFixed(1)+'%</span>'}},
+    {{icon:'🛡️',bg:'#F0FDF4',txt:'<strong>Most price-resilient SKU:</strong> <span>'+least_el.name+' ('+least_el.elasticity.toFixed(1)+') — strong brand/value anchor</span>'}},
+    {{icon:'💰',bg:'#F5F3FF',txt:'<strong>Revenue upside via price:</strong> <span>'+D.own[0].name+' — marginal price increase may increase revenue (test curve)</span>'}},
+    {{icon:'🔄',bg:'#FFFBEB',txt:'<strong>Cannibalisation alert:</strong> <span>'+D.own[mc_i].name+' vs '+D.own[mc_j].name+' cross-elasticity '+max_cross.toFixed(2)+' — portfolio risk</span>'}},
+  ];
+  var html = items.map(function(it){{
+    return '<div class="insight-card"><div class="insight-icon" style="background:'+it.bg+'">'+it.icon+'</div>'
+      +'<div class="insight-txt">'+it.txt+'</div></div>';
+  }}).join('');
+  document.getElementById('insight-row').innerHTML = html;
+}}
+
+// ── OWN SKU TABLE ────────────────────────────────────────────────────────────
+function renderOwnSkuTable(){{
+  var rows = D.own.map(function(s){{
+    var rev = s.base_price*s.base_vol;
+    var gp  = rev*(1-s.cogs_pct);
+    var op  = optPrice(s);
+    var ov  = volAt(s,op);
+    var ore = op*ov;
+    var revDelta = (ore-rev)/rev*100;
+    return '<tr>'
+      +'<td class="sku-nm">'+s.name+'</td>'
+      +'<td><span class="seg-tag '+SEG_CLS[s.segment]+'">'+s.segment+'</span></td>'
+      +'<td class="price-cell">$'+s.base_price.toFixed(2)+'</td>'
+      +'<td class="price-cell" style="color:var(--tmuted)">$'+s.rrp.toFixed(2)+'</td>'
+      +'<td class="vol-cell">'+fv(s.base_vol)+'</td>'
+      +'<td class="rev-cell">$'+fv(rev)+'</td>'
+      +'<td class="rev-cell" style="color:var(--pos)">$'+fv(gp)+'</td>'
+      +'<td class="el-val '+elClass(s.elasticity)+'">'+s.elasticity.toFixed(1)+'</td>'
+      +'<td><span style="font-size:10px;font-weight:700;color:'+elColor(s.elasticity)+'">'+elLabel(s.elasticity)+'</span></td>'
+      +'<td class="price-cell" style="color:var(--pos)">$'+op.toFixed(2)+'</td>'
+      +'<td><span class="'+cls_delta(revDelta)+'" style="font-weight:700">'+pct(revDelta)+'</span></td>'
+      +'</tr>';
+  }}).join('');
+  document.getElementById('own-sku-body').innerHTML = rows;
+}}
+
+// ── CROSS MATRIX TABLE ──────────────────────────────────────────────────────
+function renderCrossMatrix(){{
+  var names = D.own.map(function(s){{ return s.name.replace('ProClean ',''); }});
+  var html = '<table class="cross-tbl">';
+  html += '<thead><tr><th>SKU affected &#x2193; &nbsp;/ Price change &#x2192;</th>';
+  names.forEach(function(n){{ html += '<th>'+n+'</th>'; }});
+  html += '</tr></thead><tbody>';
+  D.cross.forEach(function(row, i){{
+    html += '<tr><td class="ct-row-hdr">'+D.own[i].name.replace('ProClean ','')+'</td>';
+    row.forEach(function(v, j){{
+      if(i===j){{
+        html += '<td><div class="ct-cell ct-self" style="background:#1E0063;color:rgba(255,255,255,.3)">Own</div></td>';
+      }} else {{
+        var intensity = Math.min(v/0.45, 1);
+        var r=124+Math.round((50-124)*intensity), g=58+Math.round((0-58)*intensity), b=237+Math.round((99-237)*intensity);
+        // purple gradient: light p200 → dark p800
+        var bg = v>=0.35?'#5B21B6':v>=0.20?'#7C3AED':v>=0.10?'#A78BFA':'#DDD6FE';
+        var fg = v>=0.20?'#fff':v>=0.10?'#4C1D95':'#6D28D9';
+        html += '<td><div class="ct-cell" style="background:'+bg+';color:'+fg+'">'+v.toFixed(2)+'</div></td>';
+      }}
+    }});
+    html += '</tr>';
+  }});
+  html += '</tbody></table>';
+  document.getElementById('cross-matrix-wrap').innerHTML = html;
+}}
+
+// ── COMP TABLE ───────────────────────────────────────────────────────────────
+function renderCompTable(){{
+  var ownAvgP = D.own.reduce(function(a,s){{return a+s.base_price;}},0)/D.own.length;
+  var rows = D.comp.map(function(s){{
+    var rev = s.base_price*s.base_vol;
+    var diff = (s.base_price-ownAvgP)/ownAvgP*100;
+    var bc = COMP_COLORS[s.brand]||'#94A3B8';
+    return '<tr>'
+      +'<td><span class="brand-tag" style="background:'+bc+'22;color:'+bc+';border:1px solid '+bc+'44">'+s.brand+'</span></td>'
+      +'<td class="sku-nm">'+s.name+'</td>'
+      +'<td class="price-cell">$'+s.base_price.toFixed(2)+'</td>'
+      +'<td style="text-align:right;color:var(--tmuted)">'+fv(s.base_vol)+'</td>'
+      +'<td class="rev-cell">$'+fv(rev)+'</td>'
+      +'<td class="el-val '+elClass(s.elasticity)+'">'+s.elasticity.toFixed(1)+'</td>'
+      +'<td class="'+(diff>0?'delta-pos':'delta-neg')+'" style="text-align:right">'+pct(diff)+'</td>'
+      +'</tr>';
+  }}).join('');
+  document.getElementById('comp-tbl-body').innerHTML = rows;
+}}
+
+// ── SIMULATOR ───────────────────────────────────────────────────────────────
+function buildSliders(){{
+  var html = D.own.map(function(s,i){{
+    var min = +(s.base_price*0.7).toFixed(2);
+    var max = +(s.base_price*1.3).toFixed(2);
+    return '<div class="sku-slider" id="sl-wrap-'+i+'">'
+      +'<div class="sku-slider-top">'
+      +'<div><div class="sku-slider-name">'+s.name+'</div>'
+      +'<div class="sku-slider-meta"><span class="seg-tag '+SEG_CLS[s.segment]+'">'+s.segment+'</span> &nbsp; Base: $'+s.base_price.toFixed(2)+'</div></div>'
+      +'<div id="sl-pills-'+i+'" class="sim-impact"></div>'
+      +'</div>'
+      +'<div class="slider-row">'
+      +'<span class="slider-lbl">$'+min.toFixed(2)+'</span>'
+      +'<input type="range" id="sl-'+i+'" min="'+min+'" max="'+max+'" step="0.01" value="'+s.base_price+'" oninput="simUpdate()">'
+      +'<span class="slider-lbl">$'+max.toFixed(2)+'</span>'
+      +'<span class="slider-val" id="slv-'+i+'">$'+s.base_price.toFixed(2)+'</span>'
+      +'</div></div>';
+  }}).join('');
+  document.getElementById('slider-container').innerHTML = html;
+}}
+
+function simUpdate(){{
+  simPrices = D.own.map(function(s,i){{
+    var v = parseFloat(document.getElementById('sl-'+i).value);
+    document.getElementById('slv-'+i).textContent = '$'+v.toFixed(2);
+    return v;
+  }});
+  renderSimPills();
+  renderImpactTable();
+  drawSimCharts();
+}}
+
+function simResults(){{
+  return D.own.map(function(s,i){{
+    var pChg = (simPrices[i]-s.base_price)/s.base_price;
+    // own price effect
+    var ownVolChg = s.elasticity * pChg;
+    // cross effect from other own SKU price changes
+    var crossVolChg = 0;
+    D.own.forEach(function(_,j){{
+      if(j!==i){{
+        var otherPChg = (simPrices[j]-D.own[j].base_price)/D.own[j].base_price;
+        crossVolChg += D.cross[i][j] * otherPChg;
+      }}
+    }});
+    var totVolChg = ownVolChg + crossVolChg;
+    var newVol = s.base_vol * (1 + totVolChg);
+    var baseRev = s.base_price * s.base_vol;
+    var newRev  = simPrices[i] * newVol;
+    var baseGP  = baseRev * (1 - s.cogs_pct);
+    var newGP   = newRev  * (1 - s.cogs_pct);
+    return {{
+      s:s, idx:i,
+      pChg:pChg*100, ownVolChg:ownVolChg*100, crossVolChg:crossVolChg*100,
+      totVolChg:totVolChg*100,
+      baseRev:baseRev, newRev:newRev,
+      baseGP:baseGP, newGP:newGP,
+      revChg:(newRev-baseRev)/baseRev*100,
+      gpChg:(newGP-baseGP)/baseGP*100,
+    }};
+  }});
+}}
+
+function renderSimPills(){{
+  var res = simResults();
+  res.forEach(function(r){{
+    var pChg = r.pChg;
+    var pills = '';
+    if(Math.abs(pChg)>0.1){{
+      pills += '<span class="sim-pill '+(r.revChg>=0?'pos':'neg')+'">Rev '+pct(r.revChg)+'</span>';
+      pills += '<span class="sim-pill '+(r.totVolChg>=0?'pos':'neg')+'">Vol '+pct(r.totVolChg)+'</span>';
+      if(Math.abs(r.crossVolChg)>0.1){{
+        pills += '<span class="sim-pill warn">Cross '+pct(r.crossVolChg)+'</span>';
+      }}
+    }} else {{
+      pills = '<span class="sim-pill neu">No change</span>';
+    }}
+    var el = document.getElementById('sl-pills-'+r.idx);
+    if(el) el.innerHTML = pills;
+  }});
+}}
+
+function renderImpactTable(){{
+  var res = simResults();
+  var totBaseRev=0,totNewRev=0,totBaseGP=0,totNewGP=0;
+  var rows = res.map(function(r){{
+    totBaseRev+=r.baseRev; totNewRev+=r.newRev;
+    totBaseGP+=r.baseGP;   totNewGP+=r.newGP;
+    return '<tr>'
+      +'<td class="sku-nm">'+r.s.name+'</td>'
+      +'<td style="text-align:right">$'+r.s.base_price.toFixed(2)+'</td>'
+      +'<td style="text-align:right;font-weight:700;color:var(--p700)">$'+simPrices[r.idx].toFixed(2)+'</td>'
+      +'<td class="'+cls_delta(r.pChg)+'">'+pct(r.pChg)+'</td>'
+      +'<td class="'+cls_delta(r.totVolChg)+'">'+pct(r.totVolChg)+'</td>'
+      +'<td class="'+cls_delta(r.revChg)+'">'+pct(r.revChg)+'</td>'
+      +'<td class="'+cls_delta(r.gpChg)+'">'+pct(r.gpChg)+'</td>'
+      +'<td class="'+(r.crossVolChg>0.1?'delta-pos':r.crossVolChg<-0.1?'delta-neg':'delta-neu')+'" style="font-size:11px">'
+      +(Math.abs(r.crossVolChg)>0.1?pct(r.crossVolChg):'—')+'</td>'
+      +'</tr>';
+  }}).join('');
+  var totRevChg = (totNewRev-totBaseRev)/totBaseRev*100;
+  var totGPChg  = (totNewGP-totBaseGP)/totBaseGP*100;
+  rows += '<tr><td><strong>Portfolio Total</strong></td><td></td><td></td><td></td><td></td>'
+    +'<td class="'+cls_delta(totRevChg)+'"><strong>'+pct(totRevChg)+'</strong></td>'
+    +'<td class="'+cls_delta(totGPChg)+'"><strong>'+pct(totGPChg)+'</strong></td><td></td></tr>';
+  document.getElementById('imp-tbl-body').innerHTML = rows;
+}}
+
+function resetSim(){{
+  D.own.forEach(function(s,i){{
+    document.getElementById('sl-'+i).value = s.base_price;
+    document.getElementById('slv-'+i).textContent = '$'+s.base_price.toFixed(2);
+    simPrices[i] = s.base_price;
+  }});
+  renderSimPills(); renderImpactTable(); drawSimCharts();
+}}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SVG CHART ENGINE
+// ─────────────────────────────────────────────────────────────────────────────
+var HC = 170, PAD = {{l:46,r:12,t:24,b:28}};
+
+function niceMax(arr,pad){{
+  var mx=Math.max.apply(null,arr.map(Math.abs)); if(!mx) return 1;
+  var mag=Math.pow(10,Math.floor(Math.log10(mx)));
+  return Math.ceil(mx/mag)*mag*(pad||1.12);
+}}
+function gl(pL,pT,iW,iH,mn,mx,fmt){{
+  var out='', steps=[0,.25,.5,.75,1];
+  steps.forEach(function(f){{
+    var v=mn+f*(mx-mn), y=(pT+iH*(1-f)).toFixed(1);
+    out+='<line x1="'+pL+'" y1="'+y+'" x2="'+(pL+iW)+'" y2="'+y+'" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="'+(f?'4,3':'0')+'"/>';
+    out+='<text x="'+(pL-4)+'" y="'+y+'" text-anchor="end" dominant-baseline="middle" fill="#A8A4C8" font-size="9" font-family="system-ui">'+fmt(v)+'</text>';
+  }});
+  return out;
+}}
+function xl(pL,pT,iW,iH,labels){{
+  return labels.map(function(lb,i){{
+    var cx=(pL+iW/labels.length*(i+.5)).toFixed(1);
+    return '<text x="'+cx+'" y="'+(pT+iH+16)+'" text-anchor="middle" fill="#6D6A8A" font-size="9.5" font-family="system-ui">'+lb+'</text>';
+  }}).join('');
+}}
+
+function hBarChart(id, labels, vals, colors, fmtFn, h){{
+  var el=document.getElementById(id); if(!el) return;
+  var W=el.offsetWidth||400;
+  var H=h||(labels.length*30+40);
+  var pL=130, pR=50, pT=16, pB=14;
+  var iW=W-pL-pR, iH=H-pT-pB;
+  var mx=niceMax(vals.map(Math.abs));
+  var rowH = iH/labels.length;
+  var fmt=fmtFn||function(v){{return v.toFixed(1);}};
+  var out='';
+  // vertical grid
+  [0,.25,.5,.75,1].forEach(function(f){{
+    var x=(pL+iW*f).toFixed(1);
+    out+='<line x1="'+x+'" y1="'+pT+'" x2="'+x+'" y2="'+(pT+iH)+'" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4,3"/>';
+    out+='<text x="'+x+'" y="'+(pT+iH+12)+'" text-anchor="middle" fill="#A8A4C8" font-size="8.5" font-family="system-ui">'+fmt(f*mx)+'</text>';
+  }});
+  labels.forEach(function(lb,i){{
+    var v=Math.abs(vals[i]), bw=v/mx*iW;
+    var y=pT+rowH*i, bh=Math.min(rowH-6,20);
+    var by=y+(rowH-bh)/2;
+    out+='<text x="'+(pL-6)+'" y="'+(by+bh/2)+'" text-anchor="end" dominant-baseline="middle" fill="#4338CA" font-size="10" font-weight="600" font-family="system-ui">'+lb+'</text>';
+    out+='<rect x="'+pL+'" y="'+by.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+bh+'" fill="'+colors[i%colors.length]+'" rx="3" opacity=".85"/>';
+    out+='<text x="'+(pL+bw+4)+'" y="'+(by+bh/2)+'" dominant-baseline="middle" fill="'+colors[i%colors.length]+'" font-size="9.5" font-weight="700" font-family="system-ui">'+fmt(vals[i])+'</text>';
+  }});
+  el.innerHTML='<svg viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'">'+out+'</svg>';
+}}
+
+function barChart(id, labels, series, H){{
+  var el=document.getElementById(id); if(!el) return;
+  var W=el.offsetWidth||400, h=H||HC;
+  var pL=PAD.l,pR=PAD.r,pT=PAD.t,pB=PAD.b;
+  var iW=W-pL-pR, iH=h-pT-pB, n=labels.length;
+  var all=series.reduce(function(a,s){{return a.concat(s.vals);}}, []);
+  var mn=Math.min.apply(null,[0].concat(all)); var mx=niceMax(all.map(Math.abs));
+  var rng=mx-mn; var baseY=(pT+iH*(1-(-mn)/rng)).toFixed(1);
+  var fmt=function(v){{return v>=1e6?(v/M).toFixed(1)+'M':v>=1000?(v/1000).toFixed(0)+'K':v.toFixed(1);}};
+  var gap=iW/n, tbw=Math.floor(gap*.72), bw=Math.max(4,Math.floor(tbw/series.length)-2);
+  var out=gl(pL,pT,iW,iH,mn,mx,fmt)+xl(pL,pT,iW,iH,labels);
+  out+='<line x1="'+pL+'" y1="'+baseY+'" x2="'+(pL+iW)+'" y2="'+baseY+'" stroke="#CBD5E1" stroke-width="1.2"/>';
+  series.forEach(function(s,si){{
+    s.vals.forEach(function(v,i){{
+      var bh=Math.max(Math.abs(v)/rng*iH,2);
+      var bx=(pL+gap*i+(gap-tbw)/2+si*(bw+2)).toFixed(1);
+      var by=(v>=0?parseFloat(baseY)-bh:parseFloat(baseY)).toFixed(1);
+      out+='<rect x="'+bx+'" y="'+by+'" width="'+bw+'" height="'+bh.toFixed(1)+'" fill="'+s.col+'" rx="2.5" opacity=".87"><title>'+labels[i]+' '+s.label+': '+fmt(v)+'</title></rect>';
+    }});
+  }});
+  el.innerHTML='<svg viewBox="0 0 '+W+' '+h+'" width="'+W+'" height="'+h+'">'+out+'</svg>';
+}}
+
+function lineChart(id, labels, series, H, pct){{
+  var el=document.getElementById(id); if(!el) return;
+  var W=el.offsetWidth||400, h=H||HC;
+  var pL=PAD.l,pR=PAD.r,pT=PAD.t,pB=PAD.b;
+  var iW=W-pL-pR, iH=h-pT-pB, n=labels.length;
+  var all=series.reduce(function(a,s){{return a.concat(s.vals);}}, []);
+  var mn=Math.min.apply(null,all)*0.9, mx=Math.max.apply(null,all)*1.1||1;
+  var rng=mx-mn;
+  var xp=function(i){{return pL+(n>1?iW/(n-1)*i:iW/2);}};
+  var yp=function(v){{return pT+iH-(v-mn)/rng*iH;}};
+  var fmt=pct?function(v){{return v.toFixed(1)+'%';}}:function(v){{return v>=1e6?(v/M).toFixed(1)+'M':v.toFixed(1);}};
+  var out=gl(pL,pT,iW,iH,mn,mx,fmt)+xl(pL,pT,iW,iH,labels);
+  series.forEach(function(s){{
+    var pts=s.vals.map(function(v,i){{return {{x:xp(i),y:yp(v)}};}});
+    var d=pts.map(function(p,i){{return (i?'L':'M')+p.x.toFixed(1)+','+p.y.toFixed(1);}}).join(' ');
+    out+='<path d="'+d+'" fill="none" stroke="'+s.col+'" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" opacity=".9"/>';
+    pts.forEach(function(p,i){{
+      out+='<circle cx="'+p.x.toFixed(1)+'" cy="'+p.y.toFixed(1)+'" r="4" fill="'+s.col+'" stroke="#fff" stroke-width="1.8"/>';
+    }});
+  }});
+  el.innerHTML='<svg viewBox="0 0 '+W+' '+h+'" width="'+W+'" height="'+h+'">'+out+'</svg>';
+}}
+
+function donutChart(id, labels, vals, colors){{
+  var el=document.getElementById(id); if(!el) return;
+  var W=el.offsetWidth||400, H=HC+30;
+  var cx=W/2, cy=H/2, R=Math.min(cx,cy)-24, ri=R*0.55;
+  var total=vals.reduce(function(a,v){{return a+v;}},0);
+  var out=''; var ang=-Math.PI/2;
+  vals.forEach(function(v,i){{
+    var sweep=v/total*2*Math.PI, ea=ang+sweep;
+    var x1=cx+R*Math.cos(ang),y1=cy+R*Math.sin(ang);
+    var x2=cx+R*Math.cos(ea), y2=cy+R*Math.sin(ea);
+    var ix1=cx+ri*Math.cos(ang),iy1=cy+ri*Math.sin(ang);
+    var ix2=cx+ri*Math.cos(ea), iy2=cy+ri*Math.sin(ea);
+    var lf=sweep>Math.PI?1:0;
+    out+='<path d="M '+ix1.toFixed(1)+' '+iy1.toFixed(1)+' L '+x1.toFixed(1)+' '+y1.toFixed(1)
+      +' A '+R+' '+R+' 0 '+lf+' 1 '+x2.toFixed(1)+' '+y2.toFixed(1)
+      +' L '+ix2.toFixed(1)+' '+iy2.toFixed(1)
+      +' A '+ri+' '+ri+' 0 '+lf+' 0 '+ix1.toFixed(1)+' '+iy1.toFixed(1)+' Z"'
+      +' fill="'+colors[i%colors.length]+'" opacity=".88">'
+      +'<title>'+labels[i]+': '+(v/total*100).toFixed(1)+'%</title></path>';
+    // label
+    var midA=ang+sweep/2, lR=R*1.12;
+    var lx=(cx+lR*Math.cos(midA)).toFixed(1), ly=(cy+lR*Math.sin(midA)).toFixed(1);
+    if(sweep>0.3){{
+      out+='<text x="'+lx+'" y="'+ly+'" text-anchor="middle" dominant-baseline="middle" fill="'+colors[i%colors.length]+'" font-size="9" font-weight="700" font-family="system-ui">'+(v/total*100).toFixed(1)+'%</text>';
+    }}
+    ang=ea;
+  }});
+  out+='<text x="'+cx+'" y="'+(cy-7)+'" text-anchor="middle" fill="#1E1B4B" font-size="13" font-weight="800" font-family="system-ui">$'+fv(vals.reduce(function(a,v){{return a+v;}},0))+'</text>';
+  out+='<text x="'+cx+'" y="'+(cy+10)+'" text-anchor="middle" fill="#A8A4C8" font-size="9" font-family="system-ui">Total Revenue</text>';
+  // legend below
+  var legY=H-14; var legX=W/2-labels.length*38/2;
+  labels.forEach(function(lb,i){{
+    out+='<rect x="'+(legX+i*80)+'" y="'+(legY-7)+'" width="8" height="8" rx="2" fill="'+colors[i%colors.length]+'"/>';
+    out+='<text x="'+(legX+i*80+11)+'" y="'+legY+'" fill="#6D6A8A" font-size="9" font-family="system-ui">'+lb.replace('ProClean ','')+'</text>';
+  }});
+  el.innerHTML='<svg viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'">'+out+'</svg>';
+}}
+
+function scatterChart(id, ownData, compData){{
+  var el=document.getElementById(id); if(!el) return;
+  var W=el.offsetWidth||400, H=HC+30;
+  var pL=46,pR=16,pT=20,pB=28;
+  var iW=W-pL-pR, iH=H-pT-pB;
+  var allP=ownData.concat(compData).map(function(d){{return d.p;}});
+  var allE=ownData.concat(compData).map(function(d){{return d.e;}});
+  var minP=Math.min.apply(null,allP)*0.9, maxP=Math.max.apply(null,allP)*1.05;
+  var minE=Math.min.apply(null,allE)*1.1, maxE=0.1;
+  var xp=function(p){{return pL+(p-minP)/(maxP-minP)*iW;}};
+  var yp=function(e){{return pT+(e-maxE)/(minE-maxE)*iH;}};
+  var out='';
+  // grid
+  [0,.25,.5,.75,1].forEach(function(f){{
+    var y=(pT+iH*f).toFixed(1), ev=(maxE+(minE-maxE)*f).toFixed(1);
+    out+='<line x1="'+pL+'" y1="'+y+'" x2="'+(pL+iW)+'" y2="'+y+'" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4,3"/>';
+    out+='<text x="'+(pL-4)+'" y="'+y+'" text-anchor="end" dominant-baseline="middle" fill="#A8A4C8" font-size="9" font-family="system-ui">'+ev+'</text>';
+  }});
+  [0,.25,.5,.75,1].forEach(function(f){{
+    var x=(pL+iW*f).toFixed(1), pv=(minP+(maxP-minP)*f).toFixed(2);
+    out+='<text x="'+x+'" y="'+(pT+iH+14)+'" text-anchor="middle" fill="#A8A4C8" font-size="8.5" font-family="system-ui">$'+pv+'</text>';
+  }});
+  // axis labels
+  out+='<text x="'+(pL+iW/2)+'" y="'+(pT+iH+26)+'" text-anchor="middle" fill="#6D6A8A" font-size="9.5" font-family="system-ui">Price ($)</text>';
+  out+='<text x="10" y="'+(pT+iH/2)+'" text-anchor="middle" dominant-baseline="middle" fill="#6D6A8A" font-size="9.5" font-family="system-ui" transform="rotate(-90,10,'+(pT+iH/2)+')">Elasticity</text>';
+
+  compData.forEach(function(d){{
+    var cx=xp(d.p).toFixed(1), cy=yp(d.e).toFixed(1);
+    out+='<circle cx="'+cx+'" cy="'+cy+'" r="5" fill="#94A3B8" opacity=".6"><title>'+d.name+' | Price: $'+d.p.toFixed(2)+' | Elasticity: '+d.e.toFixed(1)+'</title></circle>';
+  }});
+  ownData.forEach(function(d,i){{
+    var cx=xp(d.p).toFixed(1), cy=yp(d.e).toFixed(1);
+    out+='<circle cx="'+cx+'" cy="'+cy+'" r="7" fill="'+SKU_COLORS[i]+'" stroke="#fff" stroke-width="1.8" opacity=".9"><title>'+d.name+' | Price: $'+d.p.toFixed(2)+' | Elasticity: '+d.e.toFixed(1)+'</title></circle>';
+    out+='<text x="'+(parseFloat(cx)+9)+'" y="'+cy+'" dominant-baseline="middle" fill="'+SKU_COLORS[i]+'" font-size="8.5" font-weight="700" font-family="system-ui">'+d.name.replace('ProClean ','')+'</text>';
+  }});
+  el.innerHTML='<svg viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'">'+out+'</svg>';
+}}
+
+function waterfallSim(id){{
+  var res = simResults();
+  var el=document.getElementById(id); if(!el) return;
+  var W=el.offsetWidth||400, H=HC+20;
+  var pL=46,pR=16,pT=20,pB=36;
+  var iW=W-pL-pR, iH=H-pT-pB;
+  var baseRevTot = res.reduce(function(a,r){{return a+r.baseRev;}},0);
+  var items=[{{l:'Base',v:baseRevTot,t:'abs'}}];
+  res.forEach(function(r){{
+    items.push({{l:r.s.name.replace('ProClean ',''),v:r.newRev-r.baseRev,t:'d'}});
+  }});
+  items.push({{l:'Simulated',v:res.reduce(function(a,r){{return a+r.newRev;}},0),t:'abs'}});
+  var maxV=Math.max.apply(null,items.map(function(it){{return Math.abs(it.v);}}))*1.15||1;
+  var fmt=function(v){{return '$'+fv(v);}};
+  var gap=iW/items.length, bw=Math.floor(gap*.55);
+  var out='';
+  [0,.25,.5,.75,1].forEach(function(f){{
+    var y=(pT+iH*(1-f)).toFixed(1);
+    out+='<line x1="'+pL+'" y1="'+y+'" x2="'+(pL+iW)+'" y2="'+y+'" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4,3"/>';
+    out+='<text x="'+(pL-4)+'" y="'+y+'" text-anchor="end" dominant-baseline="middle" fill="#A8A4C8" font-size="9" font-family="system-ui">'+fmt(f*maxV)+'</text>';
+  }});
+  var run=0;
+  items.forEach(function(it,i){{
+    var cx=pL+gap*i+gap/2;
+    var col=it.t==='abs'?'#7C3AED':(it.v>=0?'#059669':'#DC2626');
+    var bh,by;
+    if(it.t==='abs'){{bh=it.v/maxV*iH; by=pT+iH-bh; run=it.v;}}
+    else{{bh=Math.abs(it.v)/maxV*iH; by=it.v>=0?pT+iH-run/maxV*iH-bh:pT+iH-run/maxV*iH; run+=it.v;}}
+    out+='<rect x="'+(cx-bw/2).toFixed(1)+'" y="'+by.toFixed(1)+'" width="'+bw+'" height="'+Math.max(bh,2).toFixed(1)+'" fill="'+col+'" rx="2.5" opacity=".88"/>';
+    out+='<text x="'+cx.toFixed(1)+'" y="'+(by-4).toFixed(1)+'" text-anchor="middle" fill="'+col+'" font-size="9" font-weight="700" font-family="system-ui">'+fmt(it.v)+'</text>';
+    out+='<text x="'+cx.toFixed(1)+'" y="'+(pT+iH+14)+'" text-anchor="middle" fill="#6D6A8A" font-size="8.5" font-family="system-ui">'+it.l+'</text>';
+    if(i<items.length-1){{
+      var nx=pL+gap*(i+1)+gap/2;
+      var lnY=(it.t==='abs'?by:(it.v>=0?by:by+Math.max(bh,2))).toFixed(1);
+      out+='<line x1="'+(cx+bw/2).toFixed(1)+'" y1="'+lnY+'" x2="'+(nx-bw/2).toFixed(1)+'" y2="'+lnY+'" stroke="#CBD5E1" stroke-width="1" stroke-dasharray="4,2"/>';
+    }}
+  }});
+  el.innerHTML='<svg viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'">'+out+'</svg>';
+}}
+
+function heatmap(id, rowLabels, colLabels, data, colorFn){{
+  var el=document.getElementById(id); if(!el) return;
+  var W=el.offsetWidth||400;
+  var cellW=Math.floor((W-120)/(colLabels.length||1)), cellH=32;
+  var H=rowLabels.length*cellH+60;
+  var pL=120, pT=36;
+  var out='';
+  colLabels.forEach(function(lb,j){{
+    out+='<text x="'+(pL+cellW*j+cellW/2)+'" y="18" text-anchor="middle" fill="#4338CA" font-size="9.5" font-weight="600" font-family="system-ui">'+lb+'</text>';
+  }});
+  rowLabels.forEach(function(lb,i){{
+    out+='<text x="'+(pL-6)+'" y="'+(pT+cellH*i+cellH/2)+'" text-anchor="end" dominant-baseline="middle" fill="#4338CA" font-size="10" font-weight="600" font-family="system-ui">'+lb+'</text>';
+    colLabels.forEach(function(lb2,j){{
+      var v=data[i][j];
+      var fill=colorFn(v,i,j);
+      var fx=(pL+cellW*j).toFixed(1), fy=(pT+cellH*i).toFixed(1);
+      out+='<rect x="'+fx+'" y="'+fy+'" width="'+(cellW-2)+'" height="'+(cellH-2)+'" fill="'+fill+'" rx="2"/>';
+      out+='<text x="'+(parseFloat(fx)+cellW/2)+'" y="'+(parseFloat(fy)+cellH/2)+'" text-anchor="middle" dominant-baseline="middle" fill="'+(v>0.25?'#fff':'#4C1D95')+'" font-size="10" font-weight="700" font-family="system-ui">'+v.toFixed(2)+'</text>';
+    }});
+  }});
+  el.innerHTML='<svg viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'">'+out+'</svg>';
+}}
+
+// ── CHART RENDERERS ──────────────────────────────────────────────────────────
+function drawOverview(){{
+  var names = D.own.map(function(s){{ return s.name.replace('ProClean ',''); }});
+  var revs  = D.own.map(function(s){{ return s.base_price*s.base_vol; }});
+  var els   = D.own.map(function(s){{ return Math.abs(s.elasticity); }});
+  var gps   = D.own.map(function(s){{ return s.base_price*s.base_vol*(1-s.cogs_pct); }});
+  var elColors = D.own.map(function(s){{ return elColor(s.elasticity); }});
+
+  // Elasticity bar (horizontal)
+  hBarChart('c-elasticity-bar', names, els, elColors, function(v){{ return v.toFixed(2); }}, names.length*36+50);
+
+  // Revenue donut
+  donutChart('c-rev-donut', D.own.map(function(s){{return s.name;}}), revs, SKU_COLORS);
+
+  // Scatter
+  var own = D.own.map(function(s){{return {{p:s.base_price,e:s.elasticity,name:s.name}};}});
+  var comp = D.comp.map(function(s){{return {{p:s.base_price,e:s.elasticity,name:s.name}};}});
+  scatterChart('c-scatter', own, comp);
+
+  // GP bar
+  hBarChart('c-gp-bar', names, gps, SKU_COLORS, function(v){{return '$'+fv(v);}}, names.length*36+50);
+}}
+
+function drawElasticity(){{
+  // Price-response curves: volume index vs price index for each SKU
+  var steps=11, pivots=Array.from({{length:steps}},function(_,i){{return 0.7+i*0.06;}});
+  var pLabels=pivots.map(function(p){{return (p*100-100).toFixed(0)+'%';}});
+
+  var allSeries=D.own.map(function(s,i){{
+    return {{
+      label:s.name.replace('ProClean ',''),
+      col:SKU_COLORS[i],
+      vals:pivots.map(function(p){{return s.base_vol*Math.pow(p,s.elasticity)/s.base_vol*100;}})
+    }};
+  }});
+  lineChart('c-price-curves', pLabels, allSeries, HC+20, false);
+  var legendHtml=allSeries.map(function(s){{
+    return '<div class="lg-i"><div class="lg-ln" style="background:'+s.col+'"></div>'+s.label+'</div>';
+  }}).join('');
+  document.getElementById('prc-legend').innerHTML=legendHtml;
+
+  // Revenue opt curve: revenue index vs price for each SKU
+  var revSeries=D.own.map(function(s,i){{
+    return {{
+      label:s.name.replace('ProClean ',''),
+      col:SKU_COLORS[i],
+      vals:pivots.map(function(p){{
+        var vol=s.base_vol*Math.pow(p,s.elasticity);
+        return p*s.base_price*vol/(s.base_price*s.base_vol)*100;
+      }})
+    }};
+  }});
+  lineChart('c-rev-opt', pLabels, revSeries, HC+20, false);
+  document.getElementById('rev-opt-legend').innerHTML=legendHtml;
+}}
+
+function drawCross(){{
+  var names=D.own.map(function(s){{return s.name.replace('ProClean ','');}});
+
+  // Cannibalisation heatmap (cross own-to-own)
+  heatmap('c-cannib', names, names, D.cross, function(v,i,j){{
+    if(i===j) return '#1E0063';
+    var t=Math.min(v/0.45,1);
+    return 'rgba(124,58,237,'+((0.15+t*0.75).toFixed(2))+')';
+  }});
+
+  // Competitor cross effect grouped bar
+  var compNames=D.comp.map(function(c){{return c.name.replace(' ','\\n');}});
+  var ownSeries=D.own.map(function(s,i){{
+    return {{
+      label:s.name.replace('ProClean ',''),col:SKU_COLORS[i],
+      vals:D.comp_cross[i]
+    }};
+  }});
+  barChart('c-comp-cross', D.comp.map(function(c){{return c.name.split(' ')[0];}}), ownSeries);
+}}
+
+function drawSimCharts(){{
+  var res=simResults();
+  var names=D.own.map(function(s){{return s.name.replace('ProClean ','');}});
+  var baseRevs=res.map(function(r){{return r.baseRev;}});
+  var newRevs=res.map(function(r){{return r.newRev;}});
+  var baseVols=D.own.map(function(s){{return s.base_vol;}});
+  var newVols=res.map(function(r){{return r.s.base_vol*(1+r.totVolChg/100);}});
+  var baseGPs=res.map(function(r){{return r.baseGP;}});
+  var newGPs=res.map(function(r){{return r.newGP;}});
+
+  barChart('c-sim-rev',names,[{{vals:baseRevs,col:'#DDD6FE',label:'Base'}},{{vals:newRevs,col:'#7C3AED',label:'Sim'}}]);
+  barChart('c-sim-vol',names,[{{vals:baseVols,col:'#DDD6FE',label:'Base'}},{{vals:newVols,col:'#5B21B6',label:'Sim'}}]);
+  barChart('c-sim-gp',names,[{{vals:baseGPs,col:'#DDD6FE',label:'Base'}},{{vals:newGPs,col:'#A78BFA',label:'Sim'}}]);
+  waterfallSim('c-waterfall');
+}}
+
+function drawCompetition(){{
+  // Price positioning bar
+  var allSkus=[].concat(
+    D.own.map(function(s){{return {{name:s.name.replace('ProClean','Own'),p:s.base_price,col:'#7C3AED',vol:s.base_vol}}}}),
+    D.comp.map(function(s){{return {{name:s.name,p:s.base_price,col:COMP_COLORS[s.brand]||'#94A3B8',vol:s.base_vol}}}})
+  );
+  allSkus.sort(function(a,b){{return a.p-b.p;}});
+  hBarChart('c-price-pos',
+    allSkus.map(function(s){{return s.name.replace('ProClean ','').split(' ')[0]+' '+s.name.split(' ').pop();}}),
+    allSkus.map(function(s){{return s.p;}}),
+    allSkus.map(function(s){{return s.col;}}),
+    function(v){{return '$'+v.toFixed(2);}},
+    allSkus.length*28+50
+  );
+
+  // Market share donut
+  var allNames=[].concat(D.own.map(function(s){{return s.name.replace('ProClean ','');}}), D.comp.map(function(s){{return s.name;}}));
+  var allVols=[].concat(D.own.map(function(s){{return s.base_vol;}}), D.comp.map(function(s){{return s.base_vol;}}));
+  var allColors=[].concat(SKU_COLORS, D.comp.map(function(s){{return COMP_COLORS[s.brand]||'#94A3B8';}}));
+  donutChart('c-mkt-share',allNames,allVols,allColors);
+
+  // Elasticity comparison all SKUs
+  var allElNames=[].concat(D.own.map(function(s){{return s.name.replace('ProClean ','');}}), D.comp.map(function(s){{return s.name;}}));
+  var allEls=[].concat(D.own.map(function(s){{return Math.abs(s.elasticity);}}), D.comp.map(function(s){{return Math.abs(s.elasticity);}}));
+  var allElCols=[].concat(SKU_COLORS, D.comp.map(function(s){{return COMP_COLORS[s.brand]||'#94A3B8';}}));
+  hBarChart('c-el-comp',allElNames,allEls,allElCols,function(v){{return v.toFixed(2);}},allElNames.length*26+50);
+
+  // Comp cross effect on own — avg for each comp brand
+  var avgCompEffect=D.comp.map(function(_,j){{
+    return D.own.reduce(function(a,_,i){{return a+D.comp_cross[i][j];}},0)/D.own.length;
+  }});
+  var compLegend=D.comp.map(function(c){{
+    var col=COMP_COLORS[c.brand]||'#94A3B8';
+    return '<div class="lg-i"><div class="lg-dot" style="background:'+col+'"></div>'+c.brand+'</div>';
+  }}).join('');
+  document.getElementById('comp-cross-legend').innerHTML=compLegend;
+  barChart('c-comp-effect',
+    D.comp.map(function(c){{return c.name.split(' ')[0];}}),
+    [{{vals:avgCompEffect,col:'#DC2626',label:'Avg cross effect on own portfolio'}}]
+  );
+}}
+
+function drawAll(){{
+  drawOverview();
+  drawElasticity();
+  drawCross();
+  drawSimCharts();
+  drawCompetition();
+}}
+
+// ── INIT ─────────────────────────────────────────────────────────────────────
+renderKPIs();
+renderInsights();
+renderOwnSkuTable();
+renderCrossMatrix();
+renderCompTable();
+buildSliders();
+renderSimPills();
+renderImpactTable();
+
+window.addEventListener('resize', drawAll);
+drawAll();
+</script>
+</body>
+</html>"""
+
+out = os.path.join(os.path.dirname(os.path.abspath(__file__)), "Price_Elasticity_Dashboard.html")
+with open(out, "w", encoding="utf-8") as f:
+    f.write(HTML)
+print(f"Done!  {os.path.getsize(out)//1024} KB  -> {out}")
