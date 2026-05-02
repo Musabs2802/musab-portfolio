@@ -71,6 +71,20 @@ const workData: Work[] = [
       "5 SKUs · 24-month actuals · 3-month forecast · MAPE / MAE / RMSE accuracy panel · Residual scatter · Method comparison · Scenario planner with live volume reforecast",
     demo: "/demand-forecasting-dashboard.html",
   },
+  {
+    id: 6,
+    title: "Distribution & SKU Availability Dashboard",
+    description:
+      "End-to-end distribution intelligence for a 5-SKU FMCG portfolio across 6 channels and 120 outlets. Tracks Numeric Distribution (ND%), Weighted Distribution (WD%), Out-of-Stock rates, and SKU range compliance over 6 rolling months. Includes per-channel and per-SKU drill-downs, an OOS heatmap, and a Gap Analyser showing uncovered outlets vs target.",
+    image:
+      "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&q=80",
+    technologies: ["Python", "HTML", "CSS", "JavaScript", "Data Viz"],
+    category: "Dashboard",
+    client: "Data Consulting Demo",
+    results:
+      "5 SKUs · 6 channels · 120 outlets · ND% / WD% / OOS% metrics · SKU × Channel heatmaps · Coverage score vs target · Gap analyser with outlet-level breakdown",
+    demo: "/distribution-dashboard.html",
+  },
 ];
 
 export default workData;
