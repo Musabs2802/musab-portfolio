@@ -85,6 +85,20 @@ const workData: Work[] = [
       "5 SKUs · 6 channels · 120 outlets · ND% / WD% / OOS% metrics · SKU × Channel heatmaps · Coverage score vs target · Gap analyser with outlet-level breakdown",
     demo: "/distribution-dashboard.html",
   },
+  {
+    id: 7,
+    title: "Customer Profitability Dashboard",
+    description:
+      "Full customer-level P&L for a 30-customer FMCG portfolio across 4 channels. Tracks Revenue, COGS, Gross Profit, Trade Spend, Logistics, and Net Contribution Margin per customer over 6 rolling months. Includes a revenue vs CM% scatter plot, customer tier classification (A/B/C), per-customer P&L waterfall with SKU mix donut, channel benchmarking, and a Pareto 80/20 analysis.",
+    image:
+      "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&q=80",
+    technologies: ["Python", "HTML", "CSS", "JavaScript", "Data Viz"],
+    category: "Dashboard",
+    client: "Data Consulting Demo",
+    results:
+      "30 customers · 4 channels · Revenue / GP / Trade / Logistics / Net CM waterfall · Tier A/B/C classification · Pareto cumulative curves · Channel cost structure breakdown",
+    demo: "/customer-profitability-dashboard.html",
+  },
 ];
 
 export default workData;
