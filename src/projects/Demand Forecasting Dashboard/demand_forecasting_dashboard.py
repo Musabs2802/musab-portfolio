@@ -1,0 +1,1219 @@
+"""
+Demand Forecasting Dashboard
+- 5-SKU FMCG portfolio, 24 months of actuals (Jan 2024 – Dec 2025)
+- 3-month forward forecast (Jan–Mar 2026) per SKU using simple linear trend + seasonality index
+- Methods compared: Naïve, Moving Average, Linear Trend, Seasonal Index
+- Tabs: Overview, Forecast vs Actual, By SKU, Forecast Accuracy, Scenario Planner
+"""
+import os, json, math
+
+# ─────────────────────────────────────────────────────────────────────────────
+# DATA
+# ─────────────────────────────────────────────────────────────────────────────
+
+MONTHS_HIST = [
+    "Jan-24","Feb-24","Mar-24","Apr-24","May-24","Jun-24",
+    "Jul-24","Aug-24","Sep-24","Oct-24","Nov-24","Dec-24",
+    "Jan-25","Feb-25","Mar-25","Apr-25","May-25","Jun-25",
+    "Jul-25","Aug-25","Sep-25","Oct-25","Nov-25","Dec-25",
+]
+MONTHS_FC = ["Jan-26","Feb-26","Mar-26"]
+ALL_MONTHS = MONTHS_HIST + MONTHS_FC  # 27 labels
+
+SKUS = [
+    {"id":"s1","name":"ProClean 500g",    "segment":"Core",    "color":"#2563EB"},
+    {"id":"s2","name":"ProClean 1kg",     "segment":"Core",    "color":"#7C3AED"},
+    {"id":"s3","name":"ProClean Ultra 500g","segment":"Premium","color":"#059669"},
+    {"id":"s4","name":"ProClean Ultra 1kg","segment":"Premium","color":"#D97706"},
+    {"id":"s5","name":"ProClean Eco 750g", "segment":"Eco",    "color":"#DC2626"},
+]
+
+# 24 months of actuals (volume in cases)
+RAW_ACTUALS = {
+    "s1": [
+        52200,49100,58400,56700,61300,63800,
+        66200,64500,70100,67800,73400,79200,
+        55000,51800,62100,60400,65900,68700,
+        71000,69200,75600,72800,78900,85300,
+    ],
+    "s2": [
+        34100,32400,37800,36500,39200,41000,
+        42300,41500,45200,43800,47600,51400,
+        36200,33900,39800,38600,42100,44300,
+        45600,44100,48700,46900,51200,55800,
+    ],
+    "s3": [
+        18700,17500,20400,19800,21600,22800,
+        23500,22900,25200,24100,26400,28600,
+        19800,18600,21800,21100,23200,24600,
+        25400,24700,27300,26000,28500,31000,
+    ],
+    "s4": [
+        11200,10500,12400,11900,13100,13800,
+        14200,13800,15300,14700,16100,17400,
+        11900,11200,13200,12700,14000,14800,
+        15200,14700,16400,15800,17300,18900,
+    ],
+    "s5": [
+        8400, 7900, 9100, 8800, 9600,10100,
+        10400,10100,11200,10700,11800,12700,
+        8900, 8400, 9700, 9400,10300,10800,
+        11100,10800,12000,11500,12600,13700,
+    ],
+}
+
+def seasonal_indices(actuals):
+    """12-period seasonal indices from 2 years of data."""
+    si = []
+    for m in range(12):
+        avg_m = (actuals[m] + actuals[m+12]) / 2
+        overall_avg = sum(actuals) / len(actuals)
+        si.append(avg_m / overall_avg if overall_avg else 1.0)
+    return si
+
+def linear_trend(actuals):
+    """Returns (slope, intercept) for 1-indexed t."""
+    n = len(actuals)
+    t_vals = list(range(1, n+1))
+    t_mean = sum(t_vals) / n
+    y_mean = sum(actuals) / n
+    num = sum((t_vals[i]-t_mean)*(actuals[i]-y_mean) for i in range(n))
+    den = sum((t-t_mean)**2 for t in t_vals)
+    slope = num/den if den else 0
+    intercept = y_mean - slope * t_mean
+    return slope, intercept
+
+def build_sku_data(sku_id, actuals):
+    n = len(actuals)  # 24
+    si = seasonal_indices(actuals)
+    slope, intercept = linear_trend(actuals)
+
+    # In-sample fitted values (trend × seasonal)
+    overall_avg = sum(actuals) / n
+    fitted = []
+    for t in range(1, n+1):
+        trend_val = intercept + slope * t
+        month_idx = (t-1) % 12
+        fitted.append(round(trend_val * si[month_idx], 0))
+
+    # 3-month forecast
+    forecast = []
+    for t in range(n+1, n+4):
+        month_idx = (t-1) % 12
+        trend_val = intercept + slope * t
+        forecast.append(round(trend_val * si[month_idx], 0))
+
+    # Naïve (same month last year)
+    naive_fc = [actuals[12], actuals[13], actuals[14]]  # Jan-25, Feb-25, Mar-25 → shifted
+
+    # 3-period moving average for last actual and forecast seed
+    ma3_fc = [
+        round(sum(actuals[-3:])/3, 0),
+        round(sum(actuals[-2:]+[forecast[0]])/3, 0),
+        round(sum([actuals[-1]]+forecast[:2])/3, 0),
+    ]
+
+    # Accuracy metrics (MAPE, MAE, RMSE on fitted vs actuals)
+    errors = [actuals[i] - fitted[i] for i in range(n)]
+    mape = sum(abs(errors[i]/actuals[i]) for i in range(n) if actuals[i]) / n * 100
+    mae  = sum(abs(e) for e in errors) / n
+    rmse = math.sqrt(sum(e**2 for e in errors) / n)
+    bias = sum(errors) / n
+
+    return {
+        "id": sku_id,
+        "actuals": actuals,
+        "fitted": fitted,
+        "forecast_trend": forecast,
+        "forecast_naive": naive_fc,
+        "forecast_ma3":   ma3_fc,
+        "mape": round(mape, 2),
+        "mae":  round(mae, 1),
+        "rmse": round(rmse, 1),
+        "bias": round(bias, 1),
+        "slope": round(slope, 2),
+    }
+
+SKU_DATA = {sid: build_sku_data(sid, RAW_ACTUALS[sid]) for sid in RAW_ACTUALS}
+
+# Portfolio totals per month
+portfolio_actuals = [sum(RAW_ACTUALS[s][m] for s in RAW_ACTUALS) for m in range(24)]
+portfolio_forecast = [
+    sum(SKU_DATA[s]["forecast_trend"][f] for s in SKU_DATA) for f in range(3)
+]
+
+DATA = {
+    "skus": SKUS,
+    "months_hist": MONTHS_HIST,
+    "months_fc":   MONTHS_FC,
+    "all_months":  ALL_MONTHS,
+    "sku_data":    SKU_DATA,
+    "portfolio_actuals":  portfolio_actuals,
+    "portfolio_forecast": portfolio_forecast,
+}
+DATA_JSON = json.dumps(DATA)
+
+# ─────────────────────────────────────────────────────────────────────────────
+# HTML
+# ─────────────────────────────────────────────────────────────────────────────
+HTML = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Demand Forecasting Dashboard</title>
+<style>
+*,*::before,*::after{{box-sizing:border-box;margin:0;padding:0}}
+html{{font-size:13.5px}}
+:root{{
+  --bg:#EFF6FF;--surface:#fff;--surface2:#F8FAFF;--surface3:#EFF6FF;
+  --border:#BFDBFE;--border-s:#DBEAFE;
+  --b950:#172554;--b900:#1E3A8A;--b800:#1D4ED8;--b700:#2563EB;
+  --b600:#3B82F6;--b500:#60A5FA;--b400:#93C5FD;--b300:#BFDBFE;
+  --b200:#DBEAFE;--b100:#EFF6FF;
+  --acc:#2563EB;--acc-l:#93C5FD;
+  --pos:#059669;--pos-bg:#ECFDF5;
+  --neg:#DC2626;--neg-bg:#FFF0F0;
+  --warn:#D97706;--warn-bg:#FFFBEB;
+  --text:#172554;--tmid:#1E3A8A;--tmuted:#3B5BA5;--tfaint:#7B92C0;
+  --sh:0 1px 4px rgba(23,37,84,.07);--sh-lg:0 4px 20px rgba(23,37,84,.10);
+  --r:10px;
+}}
+body{{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,sans-serif;
+  background:var(--bg);color:var(--text);line-height:1.5;min-height:100vh;}}
+
+/* HEADER */
+.hdr{{
+  background:linear-gradient(135deg,var(--b950) 0%,var(--b800) 55%,var(--b600) 100%);
+  padding:20px 28px;display:flex;justify-content:space-between;align-items:center;
+  flex-wrap:wrap;gap:12px;border-bottom:3px solid var(--b600);
+  box-shadow:0 4px 24px rgba(23,37,84,.35);
+}}
+.hdr-title{{font-size:18px;font-weight:800;letter-spacing:-.3px;
+  background:linear-gradient(90deg,#fff 40%,var(--b300));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}}
+.hdr-sub{{font-size:11px;color:rgba(255,255,255,.40);margin-top:2px;}}
+.hdr-badges{{display:flex;gap:7px;align-items:center;flex-wrap:wrap;}}
+.hdr-badge{{font-size:10.5px;font-weight:600;color:rgba(255,255,255,.60);
+  background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.14);
+  border-radius:20px;padding:3px 12px;}}
+.hdr-badge.acc{{color:var(--b300);background:rgba(59,130,246,.28);border-color:rgba(147,197,253,.25);}}
+
+/* NAV TABS */
+.tab-nav{{background:var(--surface);border-bottom:2px solid var(--border-s);
+  overflow-x:auto;scrollbar-width:none;box-shadow:0 2px 8px rgba(23,37,84,.05);}}
+.tab-nav::-webkit-scrollbar{{display:none;}}
+.tab-inner{{display:flex;padding:0 22px;min-width:100%;}}
+.tab-btn{{display:flex;align-items:center;gap:6px;padding:0 18px;height:44px;
+  font-size:12px;font-weight:600;color:var(--tmuted);background:none;border:none;
+  cursor:pointer;white-space:nowrap;border-bottom:3px solid transparent;
+  margin-bottom:-2px;transition:color .15s,border-color .15s,background .15s;letter-spacing:.1px;}}
+.tab-btn:hover{{color:var(--b700);background:var(--b100);}}
+.tab-btn.active{{color:var(--b700);border-bottom-color:var(--b600);background:var(--b100);}}
+.tab-btn svg{{width:14px;height:14px;opacity:.5;flex-shrink:0;transition:opacity .15s;}}
+.tab-btn:hover svg,.tab-btn.active svg{{opacity:1;}}
+.tab-kpi-gap{{height:14px;background:var(--bg);}}
+
+/* KPI STRIP */
+.kpi-strip{{display:grid;grid-template-columns:repeat(6,1fr);
+  background:var(--surface);margin:0 16px;border-radius:var(--r);
+  overflow:hidden;box-shadow:var(--sh-lg);border:1px solid var(--border-s);
+  margin-bottom:16px;}}
+.kpi-card{{padding:13px 16px 11px;border-right:1px solid var(--border-s);
+  position:relative;overflow:hidden;cursor:default;transition:background .15s;}}
+.kpi-card:last-child{{border-right:none;}}
+.kpi-card:hover{{background:var(--b100);}}
+.kpi-card::before{{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--kpi-clr,var(--b400));}}
+.kpi-lbl{{font-size:9.5px;font-weight:700;color:var(--tfaint);text-transform:uppercase;letter-spacing:.7px;margin-bottom:5px;}}
+.kpi-val{{font-size:17px;font-weight:800;color:var(--text);letter-spacing:-.2px;}}
+.kpi-sub{{font-size:10px;color:var(--tfaint);margin-top:2px;}}
+.kpi-badge{{display:inline-flex;align-items:center;gap:2px;font-size:10px;font-weight:700;
+  border-radius:20px;padding:2px 7px;margin-top:5px;}}
+.bdg-pos{{background:var(--pos-bg);color:var(--pos);border:1px solid #6EE7B7;}}
+.bdg-neg{{background:var(--neg-bg);color:var(--neg);border:1px solid #FCA5A5;}}
+.bdg-warn{{background:var(--warn-bg);color:var(--warn);border:1px solid #FDE68A;}}
+.bdg-blue{{background:#EFF6FF;color:#1D4ED8;border:1px solid #BFDBFE;}}
+
+/* MAIN */
+.main{{padding:0 16px 28px;max-width:1700px;margin:0 auto;}}
+.tab-panel{{display:none;}}.tab-panel.active{{display:block;}}
+.page-hdr{{display:flex;justify-content:space-between;align-items:center;
+  margin-bottom:14px;padding-top:2px;}}
+.page-title{{font-size:11px;font-weight:800;color:var(--b800);text-transform:uppercase;
+  letter-spacing:.7px;display:flex;align-items:center;gap:7px;}}
+.page-title::before{{content:'';display:inline-block;width:3px;height:14px;
+  background:linear-gradient(180deg,var(--b600),var(--b400));border-radius:2px;flex-shrink:0;}}
+.page-note{{font-size:11px;color:var(--tfaint);}}
+
+/* GRID */
+.g2{{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}}
+.g3{{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px;}}
+.g12{{display:grid;grid-template-columns:1fr 2fr;gap:14px;margin-bottom:14px;}}
+.g21{{display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:14px;}}
+.g1{{margin-bottom:14px;}}
+
+/* CARD */
+.card{{background:var(--surface);border:1px solid var(--border-s);border-radius:var(--r);
+  padding:16px;box-shadow:var(--sh);min-width:0;}}
+.card-title{{font-size:10.5px;font-weight:700;color:var(--tmuted);text-transform:uppercase;
+  letter-spacing:.4px;margin-bottom:12px;display:flex;justify-content:space-between;
+  align-items:flex-start;gap:8px;flex-wrap:wrap;border-bottom:1px solid var(--border-s);
+  padding-bottom:10px;}}
+.card-title-txt{{display:flex;align-items:center;gap:6px;}}
+.card-title-txt::before{{content:'';width:3px;height:11px;border-radius:2px;
+  background:var(--b600);display:inline-block;flex-shrink:0;}}
+
+/* CHART */
+.chart-area{{width:100%;}}
+.chart-area svg{{display:block;width:100%;height:auto;}}
+.legend{{display:flex;gap:8px;flex-wrap:wrap;}}
+.lg-i{{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--tfaint);font-weight:600;}}
+.lg-dot{{width:8px;height:8px;border-radius:50%;flex-shrink:0;}}
+.lg-sq{{width:10px;height:10px;border-radius:2px;flex-shrink:0;}}
+.lg-ln{{width:16px;height:2px;border-radius:2px;flex-shrink:0;}}
+.lg-dash{{width:16px;height:2px;border-radius:2px;flex-shrink:0;border-top:2px dashed;}}
+
+/* TABLES */
+.data-tbl{{width:100%;border-collapse:collapse;font-size:12px;}}
+.data-tbl th{{background:var(--b800);color:rgba(255,255,255,.82);padding:8px 12px;
+  font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;
+  text-align:left;white-space:nowrap;border-right:1px solid rgba(255,255,255,.07);}}
+.data-tbl th:last-child{{border-right:none;}}
+.data-tbl td{{padding:8px 12px;border-bottom:1px solid var(--border-s);white-space:nowrap;vertical-align:middle;}}
+.data-tbl tr:last-child td{{border-bottom:none;}}
+.data-tbl tr:hover td{{background:var(--b100);}}
+.data-tbl th:not(:first-child),.data-tbl td:not(:first-child){{text-align:right;}}
+.data-tbl td:first-child{{text-align:left;}}
+.bold-row td{{font-weight:800;background:var(--b100)!important;}}
+.seg-tag{{display:inline-block;font-size:9px;font-weight:700;border-radius:20px;padding:1px 7px;}}
+.seg-core{{background:#EFF6FF;color:#1D4ED8;border:1px solid #BFDBFE;}}
+.seg-prem{{background:#F5F3FF;color:#7C3AED;border:1px solid #DDD6FE;}}
+.seg-eco{{background:#ECFDF5;color:#059669;border:1px solid #6EE7B7;}}
+.pos-val{{color:var(--pos);font-weight:700;}}
+.neg-val{{color:var(--neg);font-weight:700;}}
+.warn-val{{color:var(--warn);font-weight:700;}}
+.fc-badge{{display:inline-block;font-size:9px;font-weight:700;border-radius:3px;padding:1px 5px;
+  background:#EFF6FF;color:#1D4ED8;border:1px solid #BFDBFE;}}
+
+/* ACCURACY METER */
+.acc-bar-wrap{{display:flex;align-items:center;gap:6px;min-width:110px;}}
+.acc-bg{{flex:1;height:6px;background:var(--border-s);border-radius:3px;overflow:hidden;}}
+.acc-fill{{height:100%;border-radius:3px;}}
+
+/* SCENARIO */
+.sc-grid{{display:grid;grid-template-columns:1.1fr 1fr;gap:14px;margin-bottom:14px;}}
+.sc-panel{{background:var(--surface);border:1px solid var(--border-s);border-radius:var(--r);padding:16px;box-shadow:var(--sh);}}
+.sc-title{{font-size:10.5px;font-weight:700;color:var(--tmuted);text-transform:uppercase;
+  letter-spacing:.4px;margin-bottom:14px;border-bottom:1px solid var(--border-s);padding-bottom:10px;
+  display:flex;align-items:center;gap:6px;}}
+.sc-title::before{{content:'';width:3px;height:11px;border-radius:2px;background:var(--b600);display:inline-block;flex-shrink:0;}}
+.sc-row{{margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border-s);}}
+.sc-row:last-child{{border-bottom:none;margin-bottom:0;padding-bottom:0;}}
+.sc-row-top{{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:8px;flex-wrap:wrap;}}
+.sc-sku-name{{font-size:11.5px;font-weight:700;color:var(--text);}}
+.sc-lbl-row{{display:flex;align-items:center;gap:10px;}}
+.sc-lbl{{font-size:9.5px;color:var(--tfaint);font-weight:600;white-space:nowrap;}}
+input[type=range]{{
+  flex:1;height:4px;border-radius:4px;cursor:pointer;
+  accent-color:var(--b700);background:var(--b300);outline:none;
+  -webkit-appearance:none;appearance:none;
+}}
+input[type=range]::-webkit-slider-thumb{{
+  -webkit-appearance:none;width:16px;height:16px;border-radius:50%;
+  background:var(--b700);border:2px solid #fff;
+  box-shadow:0 0 0 2px var(--b400),0 2px 6px rgba(37,99,235,.3);cursor:pointer;
+}}
+.sc-val{{font-size:12px;font-weight:700;color:var(--b700);width:52px;text-align:left;flex-shrink:0;}}
+.reset-btn{{
+  margin-top:14px;width:100%;padding:8px;
+  background:var(--b100);border:1px solid var(--b300);border-radius:7px;
+  font-size:11.5px;font-weight:700;color:var(--b700);cursor:pointer;
+  transition:all .15s;
+}}
+.reset-btn:hover{{background:var(--b200);color:var(--b800);}}
+
+/* INSIGHT PILLS */
+.insight-row{{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;}}
+.insight-card{{background:var(--surface);border:1px solid var(--border-s);
+  border-radius:var(--r);padding:11px 14px;display:flex;align-items:flex-start;
+  gap:10px;flex:1;min-width:220px;box-shadow:var(--sh);}}
+.insight-icon{{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;
+  justify-content:center;flex-shrink:0;font-size:15px;}}
+.insight-txt strong{{font-size:11.5px;font-weight:700;color:var(--text);display:block;margin-bottom:2px;}}
+.insight-txt span{{font-size:10.5px;color:var(--tmuted);line-height:1.5;}}
+
+/* TOOLTIP */
+.tt{{position:fixed;pointer-events:none;background:var(--b900);color:#fff;
+  font-size:11px;padding:6px 10px;border-radius:7px;opacity:0;transition:opacity .1s;
+  z-index:999;max-width:240px;line-height:1.5;font-weight:600;
+  box-shadow:0 4px 16px rgba(23,37,84,.25);}}
+.tt.vis{{opacity:1;}}
+
+/* FOOTER */
+.footer{{text-align:center;padding:14px;font-size:11px;color:var(--tfaint);
+  border-top:1px solid var(--border-s);background:var(--surface);margin-top:8px;}}
+
+@media(max-width:1200px){{.kpi-strip{{grid-template-columns:repeat(3,1fr);}}}}
+@media(max-width:900px){{
+  .g2,.g3,.g12,.g21,.sc-grid{{grid-template-columns:1fr;}}
+  .kpi-strip{{grid-template-columns:1fr 1fr;margin:0 8px;}}
+}}
+</style>
+</head>
+<body>
+
+<div class="tt" id="tt"></div>
+
+<header class="hdr">
+  <div>
+    <div class="hdr-title">Demand Forecasting Dashboard</div>
+    <div class="hdr-sub">ProClean FMCG Portfolio &nbsp;&middot;&nbsp; 5 SKUs &middot; 24 Months Actuals &middot; 3-Month Ahead Forecast &nbsp;&middot;&nbsp; Jan 2024 – Mar 2026</div>
+  </div>
+  <div class="hdr-badges">
+    <span class="hdr-badge acc">&#9650; Forecasting Intelligence</span>
+    <span class="hdr-badge">Trend + Seasonality Model</span>
+    <span class="hdr-badge">Demo Data</span>
+  </div>
+</header>
+
+<nav class="tab-nav">
+  <div class="tab-inner">
+    <button class="tab-btn active" onclick="switchTab('overview',this)">
+      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M1 11l4-4 3 3 4-5 3 2V14H1v-3z"/></svg>
+      Overview
+    </button>
+    <button class="tab-btn" onclick="switchTab('forecast',this)">
+      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M1 13L5 8l3 2 4-6 3 3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Forecast vs Actual
+    </button>
+    <button class="tab-btn" onclick="switchTab('sku',this)">
+      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 12h3V6H2v6zm4 0h3V4H6v8zm4 0h3V8h-3v4z"/></svg>
+      By SKU
+    </button>
+    <button class="tab-btn" onclick="switchTab('accuracy',this)">
+      <svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M5 8l2 2 4-4"/></svg>
+      Forecast Accuracy
+    </button>
+    <button class="tab-btn" onclick="switchTab('scenario',this)">
+      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 8h4l2-5 2 10 2-6 2 1" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Scenario Planner
+    </button>
+  </div>
+</nav>
+<div class="tab-kpi-gap"></div>
+
+<div class="main">
+
+  <div class="kpi-strip" id="kpi-strip"></div>
+
+  <!-- ═══ OVERVIEW ═══ -->
+  <div class="tab-panel active" id="tab-overview">
+    <div class="insight-row" id="insight-row"></div>
+    <div class="g1">
+      <div class="card">
+        <div class="card-title">
+          <div class="card-title-txt">Portfolio Volume — Actuals &amp; Forecast</div>
+          <div class="legend">
+            <div class="lg-i"><div class="lg-sq" style="background:#2563EB;opacity:.8"></div>Actual</div>
+            <div class="lg-i"><div class="lg-dash" style="border-color:#F59E0B"></div>Forecast</div>
+            <div class="lg-i"><div class="lg-ln" style="background:#94A3B8;opacity:.5"></div>Confidence Band</div>
+          </div>
+        </div>
+        <div class="chart-area" id="c-portfolio"></div>
+      </div>
+    </div>
+    <div class="g2">
+      <div class="card">
+        <div class="card-title"><div class="card-title-txt">Volume Share by SKU (Last 3 Months)</div></div>
+        <div class="chart-area" id="c-share"></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><div class="card-title-txt">YoY Growth by SKU (2024 vs 2025)</div></div>
+        <div class="chart-area" id="c-yoy"></div>
+      </div>
+    </div>
+    <div class="g1">
+      <div class="card">
+        <div class="card-title"><div class="card-title-txt">3-Month Forecast Summary</div>
+          <span class="fc-badge">Jan–Mar 2026</span>
+        </div>
+        <div id="fc-summary-table"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ FORECAST vs ACTUAL ═══ -->
+  <div class="tab-panel" id="tab-forecast">
+    <div class="page-hdr">
+      <div class="page-title">Forecast vs Actual — All SKUs</div>
+      <div class="page-note">Shaded region = ±10% confidence band</div>
+    </div>
+    <div id="fc-vs-act-charts"></div>
+  </div>
+
+  <!-- ═══ BY SKU ═══ -->
+  <div class="tab-panel" id="tab-sku">
+    <div class="page-hdr">
+      <div class="page-title">SKU-Level Demand Detail</div>
+    </div>
+    <div class="g2" id="sku-trend-charts"></div>
+    <div class="g1">
+      <div class="card">
+        <div class="card-title"><div class="card-title-txt">Monthly Actuals by SKU</div></div>
+        <div id="sku-monthly-table"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ ACCURACY ═══ -->
+  <div class="tab-panel" id="tab-accuracy">
+    <div class="page-hdr">
+      <div class="page-title">Forecast Accuracy Metrics</div>
+      <div class="page-note">In-sample fit of Trend×Seasonality model</div>
+    </div>
+    <div class="g2">
+      <div class="card">
+        <div class="card-title"><div class="card-title-txt">MAPE by SKU (Lower = Better)</div></div>
+        <div class="chart-area" id="c-mape"></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><div class="card-title-txt">RMSE by SKU</div></div>
+        <div class="chart-area" id="c-rmse"></div>
+      </div>
+    </div>
+    <div class="g2">
+      <div class="card">
+        <div class="card-title"><div class="card-title-txt">Residual Distribution (Fitted − Actual)</div></div>
+        <div class="chart-area" id="c-residuals"></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><div class="card-title-txt">Method Comparison: Jan-26 Forecast</div></div>
+        <div class="chart-area" id="c-methods"></div>
+      </div>
+    </div>
+    <div class="g1">
+      <div class="card">
+        <div class="card-title"><div class="card-title-txt">Accuracy Summary Table</div></div>
+        <div id="accuracy-table"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ SCENARIO PLANNER ═══ -->
+  <div class="tab-panel" id="tab-scenario">
+    <div class="page-hdr">
+      <div class="page-title">Scenario Planner — Adjust Demand Drivers</div>
+      <div class="page-note">Apply growth multipliers per SKU; projected Q1-2026 volume recalculates live</div>
+    </div>
+    <div class="sc-grid">
+      <div class="sc-panel">
+        <div class="sc-title">Growth Assumption by SKU</div>
+        <div id="sc-sliders"></div>
+        <button class="reset-btn" onclick="resetScenario()">&#8635; Reset to Base Forecast</button>
+      </div>
+      <div class="card" style="margin-bottom:0">
+        <div class="card-title"><div class="card-title-txt">Scenario vs Base Forecast — Q1 2026 Volume</div></div>
+        <div class="chart-area" id="c-scenario"></div>
+      </div>
+    </div>
+    <div class="g1">
+      <div class="card">
+        <div class="card-title"><div class="card-title-txt">Scenario Output — Q1 2026 by SKU</div></div>
+        <div id="sc-table"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+<div class="footer">Developed by <strong>Musab Shaikh</strong> &nbsp;&bull;&nbsp; JBS | Seara | Commercial Intelligence &nbsp;&bull;&nbsp; 2026</div>
+
+<script>
+// ─── DATA ───
+const D = {DATA_JSON};
+const SKUS = D.skus;
+const MONTHS_HIST = D.months_hist;
+const MONTHS_FC   = D.months_fc;
+const ALL_MONTHS  = D.all_months;
+const SD = D.sku_data;
+const PORT_ACT = D.portfolio_actuals;
+const PORT_FC  = D.portfolio_forecast;
+const N_HIST = MONTHS_HIST.length; // 24
+
+// ─── HELPERS ───
+const $  = id => document.getElementById(id);
+const fV = v => v>=1e6?(v/1e6).toFixed(2)+'M':v>=1e3?(v/1e3).toFixed(0)+'K':v.toFixed(0);
+const fP = (v,d=1) => (v>=0?'+':'')+v.toFixed(d)+'%';
+const fPabs = (v,d=1) => v.toFixed(d)+'%';
+const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
+const skuColor = id => SKUS.find(s=>s.id===id)?.color||'#94A3B8';
+const skuName  = id => SKUS.find(s=>s.id===id)?.name||id;
+const skuSeg   = id => SKUS.find(s=>s.id===id)?.segment||'';
+const segClass = s => ({{Core:'seg-core',Premium:'seg-prem',Eco:'seg-eco'}})[s]||'';
+
+const ttEl=$('tt');
+function showTT(txt,e){{ttEl.innerHTML=txt;ttEl.classList.add('vis');moveTT(e);}}
+function moveTT(e){{ttEl.style.left=(e.clientX+14)+'px';ttEl.style.top=(e.clientY-32)+'px';}}
+function hideTT(){{ttEl.classList.remove('vis');}}
+
+function switchTab(id,btn){{
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  $('tab-'+id).classList.add('active');
+  btn.classList.add('active');
+}}
+
+function makeSVG(w,h,body){{
+  return `<svg viewBox="0 0 ${{w}} ${{h}}" xmlns="http://www.w3.org/2000/svg" style="display:block;width:100%;height:auto">${{body}}</svg>`;
+}}
+
+// ─── KPI STRIP ───
+function renderKPIs(){{
+  const totalAct = PORT_ACT.reduce((a,b)=>a+b,0);
+  const lastYrAct = PORT_ACT.slice(12,24).reduce((a,b)=>a+b,0);
+  const prevYrAct = PORT_ACT.slice(0,12).reduce((a,b)=>a+b,0);
+  const yoyGrowth = (lastYrAct-prevYrAct)/prevYrAct*100;
+  const q1fc = PORT_FC.reduce((a,b)=>a+b,0);
+  const q1base = PORT_ACT.slice(0,3).reduce((a,b)=>a+b,0);
+
+  // weighted avg MAPE
+  const avgMAPE = SKUS.reduce((a,s)=>a+SD[s.id].mape,0)/SKUS.length;
+
+  // best growth SKU 2025
+  const growthBySku = SKUS.map(s=>{{
+    const act=SD[s.id].actuals;
+    const y24=act.slice(0,12).reduce((a,b)=>a+b,0);
+    const y25=act.slice(12,24).reduce((a,b)=>a+b,0);
+    return {{...s,yoy:(y25-y24)/y24*100}};
+  }});
+  growthBySku.sort((a,b)=>b.yoy-a.yoy);
+
+  const kpis=[
+    {{lbl:'Total Volume (2 Yrs)', val:fV(totalAct), sub:'24-month actuals',
+      bdg:'', clr:'var(--b600)'}},
+    {{lbl:'YoY Growth 2025',      val:fPabs(yoyGrowth), sub:'2025 vs 2024 portfolio',
+      bdg:`<span class="kpi-badge ${{yoyGrowth>=0?'bdg-pos':'bdg-neg'}}">${{yoyGrowth>=0?'&#9650;':'&#9660;'}} ${{Math.abs(yoyGrowth).toFixed(1)}}%</span>`,
+      clr:'var(--pos)'}},
+    {{lbl:'Q1-2026 Forecast',     val:fV(q1fc), sub:'Jan–Mar combined',
+      bdg:`<span class="kpi-badge bdg-blue">&#9733; 3-month fwd</span>`,
+      clr:'#F59E0B'}},
+    {{lbl:'Forecast vs Prior Q1', val:fP((q1fc-q1base)/q1base*100), sub:'vs Jan–Mar 2024',
+      bdg:'', clr:'#7C3AED'}},
+    {{lbl:'Avg Model MAPE',       val:fPabs(avgMAPE), sub:'In-sample fit quality',
+      bdg:`<span class="kpi-badge ${{avgMAPE<=8?'bdg-pos':avgMAPE<=15?'bdg-warn':'bdg-neg'}}">${{avgMAPE<=8?'Excellent':avgMAPE<=15?'Good':'Needs Review'}}</span>`,
+      clr:'#059669'}},
+    {{lbl:'Fastest Growing SKU',  val:growthBySku[0].name.replace('ProClean ',''), sub:`+${{growthBySku[0].yoy.toFixed(1)}}% YoY`,
+      bdg:'', clr:growthBySku[0].color}},
+  ];
+  $('kpi-strip').innerHTML=kpis.map(k=>
+    `<div class="kpi-card" style="--kpi-clr:${{k.clr}}">
+      <div class="kpi-lbl">${{k.lbl}}</div>
+      <div class="kpi-val">${{k.val}}</div>
+      <div class="kpi-sub">${{k.sub}}</div>
+      ${{k.bdg}}
+    </div>`
+  ).join('');
+}}
+
+// ─── INSIGHTS ───
+function renderInsights(){{
+  const growthBySku=SKUS.map(s=>{{
+    const act=SD[s.id].actuals;
+    const y24=act.slice(0,12).reduce((a,b)=>a+b,0);
+    const y25=act.slice(12,24).reduce((a,b)=>a+b,0);
+    return{{...s,yoy:(y25-y24)/y24*100}};
+  }});
+  growthBySku.sort((a,b)=>b.yoy-a.yoy);
+  const best=growthBySku[0], worst=growthBySku[growthBySku.length-1];
+  const bestMAPE=[...SKUS].sort((a,b)=>SD[a.id].mape-SD[b.id].mape)[0];
+  const q1Lift=((PORT_FC.reduce((a,b)=>a+b,0)-PORT_ACT.slice(21,24).reduce((a,b)=>a+b,0))
+    /PORT_ACT.slice(21,24).reduce((a,b)=>a+b,0)*100);
+
+  const cards=[
+    {{icon:'📈', bg:'#EFF6FF', txt:`<strong>Strongest growth: ${{best.name}} (+${{best.yoy.toFixed(1)}}% YoY)</strong>
+      <span>Highest volume growth in 2025 vs 2024 across the portfolio</span>`}},
+    {{icon:'🎯', bg:'#ECFDF5', txt:`<strong>Best model fit: ${{bestMAPE.name}} (${{SD[bestMAPE.id].mape.toFixed(1)}}% MAPE)</strong>
+      <span>Lowest forecast error — most reliable planning baseline</span>`}},
+    {{icon:'🔭', bg:'#FFFBEB', txt:`<strong>Q1-2026 portfolio: ${{fV(PORT_FC.reduce((a,b)=>a+b,0))}} units forecast</strong>
+      <span>${{q1Lift>=0?'Upward':'Downward'}} trend vs Q4-2025 last 3 months (${{fP(q1Lift)}})</span>`}},
+    {{icon:'⚠️', bg:'#FFF0F0', txt:`<strong>Watch: ${{worst.name}} (${{worst.yoy.toFixed(1)}}% YoY)</strong>
+      <span>Lowest growth trajectory — may need promotional support</span>`}},
+  ];
+  $('insight-row').innerHTML=cards.map(c=>
+    `<div class="insight-card">
+      <div class="insight-icon" style="background:${{c.bg}}">${{c.icon}}</div>
+      <div class="insight-txt">${{c.txt}}</div>
+    </div>`
+  ).join('');
+}}
+
+// ─── PORTFOLIO LINE CHART ───
+function renderPortfolio(){{
+  const W=900,H=280,pad={{l:54,r:20,t:18,b:36}};
+  const plotW=W-pad.l-pad.r, plotH=H-pad.t-pad.b;
+  const n=ALL_MONTHS.length; // 27
+  const allVals=[...PORT_ACT,...PORT_FC];
+  const maxV=Math.max(...allVals)*1.12;
+  const fy=v=>pad.t+plotH*(1-v/maxV);
+  const fx=i=>pad.l+plotW/(n-1)*i;
+  let svg='';
+
+  // Grid
+  for(let gi=0;gi<=4;gi++){{
+    const y=pad.t+plotH/4*gi;
+    svg+=`<line x1="${{pad.l}}" y1="${{y}}" x2="${{W-pad.r}}" y2="${{y}}" stroke="#F1F5F9" stroke-width="1"/>`;
+    svg+=`<text x="${{pad.l-4}}" y="${{y+3.5}}" text-anchor="end" font-size="9" fill="#94A3B8">${{fV(maxV-maxV/4*gi)}}</text>`;
+  }}
+
+  // Forecast shaded region
+  svg+=`<rect x="${{fx(N_HIST)}}" y="${{pad.t}}" width="${{fx(n-1)-fx(N_HIST)}}" height="${{plotH}}" fill="#FEF9C3" opacity=".45"/>`;
+  svg+=`<line x1="${{fx(N_HIST)}}" y1="${{pad.t}}" x2="${{fx(N_HIST)}}" y2="${{pad.t+plotH}}" stroke="#F59E0B" stroke-width="1.5" stroke-dasharray="5,3"/>`;
+
+  // Confidence band (±10%)
+  const bandPts_top = PORT_FC.map((_,i)=>`${{fx(N_HIST+i)}},${{fy(PORT_FC[i]*1.10)}}`).join(' ');
+  const bandPts_bot = [...PORT_FC].reverse().map((_,i2,arr)=>{{const i=arr.length-1-i2;return `${{fx(N_HIST+i)}},${{fy(PORT_FC[i]*0.90)}}`;}}).join(' ');
+  svg+=`<polygon points="${{bandPts_top}} ${{bandPts_bot}}" fill="#FEF9C3" opacity=".7"/>`;
+
+  // Actual line
+  const actPts=PORT_ACT.map((v,i)=>`${{fx(i)}},${{fy(v)}}`).join(' ');
+  svg+=`<polyline points="${{actPts}}" fill="none" stroke="#2563EB" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>`;
+
+  // Forecast line (dashed)
+  const fcPts=[`${{fx(N_HIST-1)}},${{fy(PORT_ACT[N_HIST-1])}}`,
+    ...PORT_FC.map((v,i)=>`${{fx(N_HIST+i)}},${{fy(v)}}`)].join(' ');
+  svg+=`<polyline points="${{fcPts}}" fill="none" stroke="#F59E0B" stroke-width="2.5" stroke-dasharray="6,4" stroke-linecap="round"/>`;
+
+  // Dots — actuals
+  PORT_ACT.forEach((v,i)=>{{
+    if(i%3===0||i===N_HIST-1)
+      svg+=`<circle cx="${{fx(i)}}" cy="${{fy(v)}}" r="3.5" fill="#2563EB" stroke="#fff" stroke-width="1.5"
+        onmouseenter="showTT('${{ALL_MONTHS[i]}}<br>Actual: ${{fV(v)}}',event)" onmouseleave="hideTT()" onmousemove="moveTT(event)"/>`;
+  }});
+  PORT_FC.forEach((v,i)=>{{
+    svg+=`<circle cx="${{fx(N_HIST+i)}}" cy="${{fy(v)}}" r="4" fill="#F59E0B" stroke="#fff" stroke-width="1.5"
+      onmouseenter="showTT('${{ALL_MONTHS[N_HIST+i]}}<br>Forecast: ${{fV(v)}}<br>Band: ${{fV(v*0.9)}}–${{fV(v*1.1)}}',event)"
+      onmouseleave="hideTT()" onmousemove="moveTT(event)"/>`;
+  }});
+
+  // X labels every 3
+  ALL_MONTHS.forEach((m,i)=>{{
+    if(i%3===0||i>=N_HIST)
+      svg+=`<text x="${{fx(i)}}" y="${{H-pad.b+13}}" text-anchor="middle" font-size="8.5" fill="${{i>=N_HIST?'#F59E0B':'#94A3B8'}}">${{m}}</text>`;
+  }});
+  svg+=`<text x="${{fx(N_HIST+1)}}" y="${{pad.t+14}}" text-anchor="middle" font-size="9" fill="#D97706" font-weight="700">FORECAST</text>`;
+
+  $('c-portfolio').innerHTML=makeSVG(W,H,svg);
+}}
+
+// ─── SHARE DONUT ───
+function renderShare(){{
+  const last3=SKUS.map(s=>{{
+    const act=SD[s.id].actuals;
+    return{{...s,vol:act.slice(-3).reduce((a,b)=>a+b,0)}};
+  }});
+  const total=last3.reduce((a,s)=>a+s.vol,0);
+  const W=420,H=220;
+  const cx=130,cy=H/2,ro=80,ri=50;
+  let angle=-Math.PI/2, svg='';
+  last3.forEach(s=>{{
+    const frac=s.vol/total;
+    const a0=angle, a1=angle+frac*2*Math.PI;
+    const x0=cx+ro*Math.cos(a0),y0=cy+ro*Math.sin(a0);
+    const x1=cx+ro*Math.cos(a1),y1=cy+ro*Math.sin(a1);
+    const xi0=cx+ri*Math.cos(a0),yi0=cy+ri*Math.sin(a0);
+    const xi1=cx+ri*Math.cos(a1),yi1=cy+ri*Math.sin(a1);
+    const large=frac>0.5?1:0;
+    svg+=`<path d="M${{xi0}},${{yi0}} L${{x0}},${{y0}} A${{ro}},${{ro}} 0 ${{large}} 1 ${{x1}},${{y1}} L${{xi1}},${{yi1}} A${{ri}},${{ri}} 0 ${{large}} 0 ${{xi0}},${{yi0}} Z"
+      fill="${{s.color}}" opacity=".85"
+      onmouseenter="showTT('${{s.name}}<br>Volume: ${{fV(s.vol)}}<br>Share: ${{(frac*100).toFixed(1)}}%',event)"
+      onmouseleave="hideTT()" onmousemove="moveTT(event)"/>`;
+    const lx=cx+(ro+10)*Math.cos((a0+a1)/2);
+    const ly=cy+(ro+10)*Math.sin((a0+a1)/2);
+    if(frac>0.08)
+      svg+=`<text x="${{lx}}" y="${{ly+3}}" text-anchor="middle" font-size="9" font-weight="700" fill="#fff">${{(frac*100).toFixed(0)}}%</text>`;
+    angle=a1;
+  }});
+  svg+=`<text x="${{cx}}" y="${{cy-4}}" text-anchor="middle" font-size="10" fill="#334155" font-weight="700">${{fV(total)}}</text>`;
+  svg+=`<text x="${{cx}}" y="${{cy+10}}" text-anchor="middle" font-size="8.5" fill="#94A3B8">units</text>`;
+  // legend
+  const legX=230, legY=30;
+  last3.forEach((s,i)=>{{
+    svg+=`<rect x="${{legX}}" y="${{legY+i*28}}" width="10" height="10" rx="2" fill="${{s.color}}"/>`;
+    svg+=`<text x="${{legX+14}}" y="${{legY+i*28+9}}" font-size="9.5" fill="#334155" font-weight="600">${{s.name.replace('ProClean ','')}}</text>`;
+    svg+=`<text x="${{legX+14}}" y="${{legY+i*28+20}}" font-size="8.5" fill="#94A3B8">${{fV(s.vol)}} · ${{(s.vol/total*100).toFixed(1)}}%</text>`;
+  }});
+  $('c-share').innerHTML=makeSVG(W,H,svg);
+}}
+
+// ─── YOY GROWTH ───
+function renderYoY(){{
+  const skuGrowth=SKUS.map(s=>{{
+    const act=SD[s.id].actuals;
+    const y24=act.slice(0,12).reduce((a,b)=>a+b,0);
+    const y25=act.slice(12,24).reduce((a,b)=>a+b,0);
+    return{{...s,yoy:(y25-y24)/y24*100}};
+  }});
+  const W=460,H=200,pad={{l:44,r:16,t:18,b:36}};
+  const plotW=W-pad.l-pad.r, plotH=H-pad.t-pad.b;
+  const n=5, slotW=plotW/n, bW=38;
+  const maxV=Math.max(...skuGrowth.map(s=>Math.abs(s.yoy)))*1.2;
+  const fy=v=>pad.t+plotH*(1-v/maxV);
+  let svg='';
+  for(let gi=0;gi<=4;gi++){{
+    const y=pad.t+plotH/4*gi;
+    svg+=`<line x1="${{pad.l}}" y1="${{y}}" x2="${{W-pad.r}}" y2="${{y}}" stroke="#F1F5F9" stroke-width="1"/>`;
+    svg+=`<text x="${{pad.l-4}}" y="${{y+3.5}}" text-anchor="end" font-size="9" fill="#94A3B8">${{(maxV-maxV/4*gi).toFixed(1)}}%</text>`;
+  }}
+  skuGrowth.forEach((s,i)=>{{
+    const cx=pad.l+slotW*(i+0.5);
+    const v=s.yoy;
+    const bH=Math.abs(v)/maxV*plotH;
+    const zero=pad.t+plotH;
+    const y=v>=0?zero-bH:zero;
+    svg+=`<rect x="${{cx-bW/2}}" y="${{y}}" width="${{bW}}" height="${{bH}}" rx="3" fill="${{s.color}}" opacity=".85"
+      onmouseenter="showTT('${{s.name}}<br>YoY: ${{fP(v)}}<br>2024: ${{fV(SD[s.id].actuals.slice(0,12).reduce((a,b)=>a+b,0))}}<br>2025: ${{fV(SD[s.id].actuals.slice(12,24).reduce((a,b)=>a+b,0))}}',event)"
+      onmouseleave="hideTT()" onmousemove="moveTT(event)"/>`;
+    svg+=`<text x="${{cx}}" y="${{v>=0?y-4:y+bH+11}}" text-anchor="middle" font-size="9" font-weight="700" fill="${{s.color}}">${{fP(v)}}</text>`;
+    svg+=`<text x="${{cx}}" y="${{H-pad.b+13}}" text-anchor="middle" font-size="9" fill="#94A3B8">${{s.name.replace('ProClean ','')}}</text>`;
+  }});
+  $('c-yoy').innerHTML=makeSVG(W,H,svg);
+}}
+
+// ─── FC SUMMARY TABLE ───
+function renderFCSummary(){{
+  const rows=SKUS.map(s=>{{
+    const act=SD[s.id].actuals;
+    const fc=SD[s.id].forecast_trend;
+    const last3act=act.slice(-3).reduce((a,b)=>a+b,0);
+    const q1fc=fc.reduce((a,b)=>a+b,0);
+    const lift=(q1fc-last3act)/last3act*100;
+    const seg=skuSeg(s.id);
+    return `<tr>
+      <td><span style="display:inline-flex;align-items:center;gap:6px">
+        <span style="width:10px;height:10px;border-radius:50%;background:${{s.color}};display:inline-block;flex-shrink:0"></span>
+        ${{s.name}}</span>
+        <span class="seg-tag ${{segClass(seg)}}" style="margin-left:6px">${{seg}}</span></td>
+      ${{fc.map((v,i)=>`<td><span class="fc-badge">${{fV(v)}}</span></td>`).join('')}}
+      <td>${{fV(q1fc)}}</td>
+      <td class="${{lift>=0?'pos-val':'neg-val'}}">${{fP(lift)}}</td>
+      <td style="font-size:10px;color:var(--tfaint)">${{SD[s.id].mape.toFixed(1)}}%</td>
+    </tr>`;
+  }}).join('');
+  const totFc=MONTHS_FC.map((_,fi)=>SKUS.reduce((a,s)=>a+SD[s.id].forecast_trend[fi],0));
+  const totRow=`<tr class="bold-row">
+    <td>Portfolio Total</td>
+    ${{totFc.map(v=>`<td>${{fV(v)}}</td>`).join('')}}
+    <td>${{fV(totFc.reduce((a,b)=>a+b,0))}}</td>
+    <td>—</td><td>—</td>
+  </tr>`;
+  $('fc-summary-table').innerHTML=`<table class="data-tbl"><thead><tr>
+    <th>SKU</th><th>Jan-26</th><th>Feb-26</th><th>Mar-26</th>
+    <th>Q1 Total</th><th>vs Q4-25</th><th>MAPE</th>
+  </tr></thead><tbody>${{rows}}${{totRow}}</tbody></table>`;
+}}
+
+// ─── FORECAST vs ACTUAL PER SKU ───
+function renderForecastVsActual(){{
+  const html=SKUS.map(s=>{{
+    const act=SD[s.id].actuals;
+    const fit=SD[s.id].fitted;
+    const fc=SD[s.id].forecast_trend;
+    const col=s.color;
+    const W=860,H=200,pad={{l:48,r:18,t:14,b:30}};
+    const plotW=W-pad.l-pad.r, plotH=H-pad.t-pad.b;
+    const n=ALL_MONTHS.length;
+    const allV=[...act,...fc];
+    const maxV=Math.max(...allV)*1.12;
+    const fy=v=>pad.t+plotH*(1-v/maxV);
+    const fx=i=>pad.l+plotW/(n-1)*i;
+    let svg='';
+    // grid
+    for(let gi=0;gi<=3;gi++){{
+      const y=pad.t+plotH/3*gi;
+      svg+=`<line x1="${{pad.l}}" y1="${{y}}" x2="${{W-pad.r}}" y2="${{y}}" stroke="#F1F5F9" stroke-width="1"/>`;
+      svg+=`<text x="${{pad.l-4}}" y="${{y+3.5}}" text-anchor="end" font-size="8.5" fill="#94A3B8">${{fV(maxV-maxV/3*gi)}}</text>`;
+    }}
+    // fc shade
+    svg+=`<rect x="${{fx(N_HIST)}}" y="${{pad.t}}" width="${{fx(n-1)-fx(N_HIST)}}" height="${{plotH}}" fill="#FEF9C3" opacity=".4"/>`;
+    svg+=`<line x1="${{fx(N_HIST)}}" y1="${{pad.t}}" x2="${{fx(N_HIST)}}" y2="${{H-pad.b}}" stroke="#F59E0B" stroke-width="1" stroke-dasharray="4,3"/>`;
+    // conf band ±10%
+    const bTop=fc.map((_,i)=>`${{fx(N_HIST+i)}},${{fy(fc[i]*1.10)}}`).join(' ');
+    const bBot=[...fc].reverse().map((_,i2,arr)=>{{const i=arr.length-1-i2;return `${{fx(N_HIST+i)}},${{fy(fc[i]*0.90)}}`;}}).join(' ');
+    svg+=`<polygon points="${{bTop}} ${{bBot}}" fill="${{col}}" opacity=".10"/>`;
+    // fitted
+    const fitPts=fit.map((v,i)=>`${{fx(i)}},${{fy(v)}}`).join(' ');
+    svg+=`<polyline points="${{fitPts}}" fill="none" stroke="${{col}}" stroke-width="1.5" stroke-dasharray="4,3" opacity=".6"/>`;
+    // actual
+    const actPts=act.map((v,i)=>`${{fx(i)}},${{fy(v)}}`).join(' ');
+    svg+=`<polyline points="${{actPts}}" fill="none" stroke="${{col}}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>`;
+    // forecast
+    const fcPts=[`${{fx(N_HIST-1)}},${{fy(act[N_HIST-1])}}`,
+      ...fc.map((v,i)=>`${{fx(N_HIST+i)}},${{fy(v)}}`)].join(' ');
+    svg+=`<polyline points="${{fcPts}}" fill="none" stroke="#F59E0B" stroke-width="2.5" stroke-dasharray="7,4"/>`;
+    // dots
+    act.forEach((v,i)=>{{
+      if(i%4===0||i===N_HIST-1)
+        svg+=`<circle cx="${{fx(i)}}" cy="${{fy(v)}}" r="3" fill="${{col}}" stroke="#fff" stroke-width="1.5"
+          onmouseenter="showTT('${{ALL_MONTHS[i]}}<br>Actual: ${{fV(v)}}<br>Fitted: ${{fV(fit[i])}}',event)" onmouseleave="hideTT()" onmousemove="moveTT(event)"/>`;
+    }});
+    fc.forEach((v,i)=>{{
+      svg+=`<circle cx="${{fx(N_HIST+i)}}" cy="${{fy(v)}}" r="4" fill="#F59E0B" stroke="#fff" stroke-width="1.5"
+        onmouseenter="showTT('${{ALL_MONTHS[N_HIST+i]}}<br>Forecast: ${{fV(v)}}',event)" onmouseleave="hideTT()" onmousemove="moveTT(event)"/>`;
+    }});
+    // x labels
+    ALL_MONTHS.forEach((m,i)=>{{
+      if(i%4===0||i>=N_HIST)
+        svg+=`<text x="${{fx(i)}}" y="${{H-pad.b+12}}" text-anchor="middle" font-size="8" fill="${{i>=N_HIST?'#F59E0B':'#94A3B8'}}">${{m}}</text>`;
+    }});
+    return `<div class="card g1">
+      <div class="card-title">
+        <div class="card-title-txt" style="color:${{col}}">${{s.name}}</div>
+        <div class="legend">
+          <div class="lg-i"><div class="lg-sq" style="background:${{col}};opacity:.85"></div>Actual</div>
+          <div class="lg-i"><div class="lg-dash" style="border-color:${{col}};opacity:.6"></div>Fitted</div>
+          <div class="lg-i"><div class="lg-dash" style="border-color:#F59E0B"></div>Forecast</div>
+          <span style="font-size:10px;color:var(--tfaint)">MAPE: ${{SD[s.id].mape.toFixed(1)}}%</span>
+        </div>
+      </div>
+      ${{makeSVG(W,H,svg)}}
+    </div>`;
+  }}).join('');
+  $('fc-vs-act-charts').innerHTML=html;
+}}
+
+// ─── BY SKU TREND CHARTS ───
+function renderSKUCharts(){{
+  const html=SKUS.map(s=>{{
+    const act=SD[s.id].actuals;
+    const col=s.color;
+    const W=440,H=180,pad={{l:46,r:14,t:14,b:30}};
+    const plotW=W-pad.l-pad.r, plotH=H-pad.t-pad.b;
+    const n=act.length;
+    const maxV=Math.max(...act)*1.12;
+    const fy=v=>pad.t+plotH*(1-v/maxV);
+    const fx=i=>pad.l+plotW/(n-1)*i;
+    let svg='';
+    for(let gi=0;gi<=3;gi++){{
+      const y=pad.t+plotH/3*gi;
+      svg+=`<line x1="${{pad.l}}" y1="${{y}}" x2="${{W-pad.r}}" y2="${{y}}" stroke="#F1F5F9" stroke-width="1"/>`;
+      svg+=`<text x="${{pad.l-4}}" y="${{y+3.5}}" text-anchor="end" font-size="8.5" fill="#94A3B8">${{fV(maxV-maxV/3*gi)}}</text>`;
+    }}
+    // area fill
+    const apts=act.map((v,i)=>`${{fx(i)}},${{fy(v)}}`).join(' ');
+    const areaPoly=`${{fx(0)}},${{pad.t+plotH}} ${{apts}} ${{fx(n-1)}},${{pad.t+plotH}}`;
+    svg+=`<polygon points="${{areaPoly}}" fill="${{col}}" opacity=".08"/>`;
+    svg+=`<polyline points="${{apts}}" fill="none" stroke="${{col}}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>`;
+    act.forEach((v,i)=>{{
+      if(i%4===0)
+        svg+=`<circle cx="${{fx(i)}}" cy="${{fy(v)}}" r="3" fill="${{col}}" stroke="#fff" stroke-width="1.5"
+          onmouseenter="showTT('${{MONTHS_HIST[i]}}<br>Volume: ${{fV(v)}}',event)" onmouseleave="hideTT()" onmousemove="moveTT(event)"/>`;
+    }});
+    MONTHS_HIST.forEach((m,i)=>{{
+      if(i%6===0) svg+=`<text x="${{fx(i)}}" y="${{H-pad.b+12}}" text-anchor="middle" font-size="8.5" fill="#94A3B8">${{m}}</text>`;
+    }});
+    // trend arrow
+    const slope=SD[s.id].slope;
+    svg+=`<text x="${{W-pad.r-2}}" y="${{pad.t+12}}" text-anchor="end" font-size="10" fill="${{slope>=0?'#059669':'#DC2626'}}">${{slope>=0?'▲':'▼'}} ${{Math.abs(slope).toFixed(0)}} /mo</text>`;
+    return `<div class="card">
+      <div class="card-title">
+        <div class="card-title-txt" style="color:${{col}}">${{s.name}}</div>
+        <span class="seg-tag ${{segClass(skuSeg(s.id))}}">${{skuSeg(s.id)}}</span>
+      </div>
+      ${{makeSVG(W,H,svg)}}
+    </div>`;
+  }}).join('');
+  $('sku-trend-charts').innerHTML=html;
+}}
+
+// ─── SKU MONTHLY TABLE ───
+function renderSKUMonthlyTable(){{
+  const header=`<tr><th>Month</th>${{SKUS.map(s=>`<th style="border-bottom:3px solid ${{s.color}}">${{s.name.replace('ProClean ','')}}</th>`).join('')}}<th>Portfolio</th></tr>`;
+  const rows=MONTHS_HIST.map((m,mi)=>{{
+    const vals=SKUS.map(s=>SD[s.id].actuals[mi]);
+    const tot=vals.reduce((a,b)=>a+b,0);
+    const isFc=false;
+    return `<tr>
+      <td><strong>${{m}}</strong></td>
+      ${{vals.map((v,si)=>`<td style="color:${{SKUS[si].color}};font-weight:600">${{fV(v)}}</td>`).join('')}}
+      <td><strong>${{fV(tot)}}</strong></td>
+    </tr>`;
+  }}).join('');
+  const fcRows=MONTHS_FC.map((m,fi)=>{{
+    const vals=SKUS.map(s=>SD[s.id].forecast_trend[fi]);
+    const tot=vals.reduce((a,b)=>a+b,0);
+    return `<tr style="background:#FFFBEB">
+      <td><strong style="color:#D97706">${{m}} <span class="fc-badge">FC</span></strong></td>
+      ${{vals.map((v,si)=>`<td style="color:#D97706;font-weight:600">${{fV(v)}}</td>`).join('')}}
+      <td><strong style="color:#D97706">${{fV(tot)}}</strong></td>
+    </tr>`;
+  }}).join('');
+  $('sku-monthly-table').innerHTML=`<div style="overflow-x:auto"><table class="data-tbl"><thead>${{header}}</thead><tbody>${{rows}}${{fcRows}}</tbody></table></div>`;
+}}
+
+// ─── ACCURACY TAB ───
+function renderAccuracy(){{
+  // MAPE hbar
+  const mapes=SKUS.map(s=>{{return{{...s,mape:SD[s.id].mape}};}}).sort((a,b)=>a.mape-b.mape);
+  const maxM=Math.max(...mapes.map(s=>s.mape))*1.2;
+  const W=460,H=190,pad={{l:120,r:70,t:14,b:20}};
+  const plotW=W-pad.l-pad.r, plotH=H-pad.t-pad.b;
+  const rowH=plotH/5, bH=rowH*0.55;
+  let svg='';
+  mapes.forEach((s,i)=>{{
+    const cy=pad.t+rowH*(i+0.5);
+    const bW=s.mape/maxM*plotW;
+    const col=s.mape<=6?'#059669':s.mape<=12?'#D97706':'#DC2626';
+    svg+=`<text x="${{pad.l-6}}" y="${{cy+4}}" text-anchor="end" font-size="10" fill="#334155" font-weight="600">${{s.name.replace('ProClean ','')}}</text>`;
+    svg+=`<rect x="${{pad.l}}" y="${{cy-bH/2}}" width="${{bW}}" height="${{bH}}" rx="3" fill="${{col}}" opacity=".85"
+      onmouseenter="showTT('${{s.name}}<br>MAPE: ${{s.mape.toFixed(1)}}%<br>MAE: ${{SD[s.id].mae.toFixed(0)}}<br>Bias: ${{SD[s.id].bias.toFixed(0)}}',event)"
+      onmouseleave="hideTT()" onmousemove="moveTT(event)"/>`;
+    svg+=`<text x="${{pad.l+bW+5}}" y="${{cy+4}}" font-size="10" font-weight="700" fill="${{col}}">${{s.mape.toFixed(1)}}%</text>`;
+    // goodness badge
+    const badge=s.mape<=6?'Excellent':s.mape<=12?'Good':'Review';
+    svg+=`<text x="${{W-pad.r+4}}" y="${{cy+4}}" font-size="9" fill="${{col}}">${{badge}}</text>`;
+  }});
+  $('c-mape').innerHTML=makeSVG(W,H,svg);
+
+  // RMSE hbar
+  const rmses=SKUS.map(s=>{{return{{...s,rmse:SD[s.id].rmse}};}}).sort((a,b)=>a.rmse-b.rmse);
+  const maxR=Math.max(...rmses.map(s=>s.rmse))*1.2;
+  let svg2='';
+  rmses.forEach((s,i)=>{{
+    const cy=pad.t+rowH*(i+0.5);
+    const bW=s.rmse/maxR*plotW;
+    svg2+=`<text x="${{pad.l-6}}" y="${{cy+4}}" text-anchor="end" font-size="10" fill="#334155" font-weight="600">${{s.name.replace('ProClean ','')}}</text>`;
+    svg2+=`<rect x="${{pad.l}}" y="${{cy-bH/2}}" width="${{bW}}" height="${{bH}}" rx="3" fill="${{s.color}}" opacity=".82"
+      onmouseenter="showTT('${{s.name}}<br>RMSE: ${{s.rmse.toFixed(0)}}',event)" onmouseleave="hideTT()" onmousemove="moveTT(event)"/>`;
+    svg2+=`<text x="${{pad.l+bW+5}}" y="${{cy+4}}" font-size="10" font-weight="700" fill="${{s.color}}">${{fV(s.rmse)}}</text>`;
+  }});
+  $('c-rmse').innerHTML=makeSVG(W,H,svg2);
+
+  // Residuals (errors) scatter: month vs error for all SKUs
+  const W3=480,H3=220,pad3={{l:54,r:14,t:16,b:30}};
+  const plotW3=W3-pad3.l-pad3.r, plotH3=H3-pad3.t-pad3.b;
+  const allErr=SKUS.flatMap(s=>SD[s.id].actuals.map((v,i)=>v-SD[s.id].fitted[i]));
+  const maxE=Math.max(...allErr.map(Math.abs))*1.2;
+  const fxR=i=>pad3.l+plotW3/(N_HIST-1)*i;
+  const fyR=v=>pad3.t+plotH3*(1-((v+maxE)/(2*maxE)));
+  let svg3='';
+  for(let gi=0;gi<=4;gi++){{
+    const y=pad3.t+plotH3/4*gi;
+    svg3+=`<line x1="${{pad3.l}}" y1="${{y}}" x2="${{W3-pad3.r}}" y2="${{y}}" stroke="#F1F5F9" stroke-width="1"/>`;
+    svg3+=`<text x="${{pad3.l-4}}" y="${{y+3}}" text-anchor="end" font-size="8.5" fill="#94A3B8">${{fV(maxE-2*maxE/4*gi)}}</text>`;
+  }}
+  const zero3=fyR(0);
+  svg3+=`<line x1="${{pad3.l}}" y1="${{zero3}}" x2="${{W3-pad3.r}}" y2="${{zero3}}" stroke="#CBD5E1" stroke-width="1.5"/>`;
+  SKUS.forEach(s=>{{
+    SD[s.id].actuals.forEach((v,i)=>{{
+      const err=v-SD[s.id].fitted[i];
+      svg3+=`<circle cx="${{fxR(i)}}" cy="${{fyR(err)}}" r="3" fill="${{s.color}}" opacity=".55"
+        onmouseenter="showTT('${{s.name}}<br>${{MONTHS_HIST[i]}}<br>Error: ${{fV(err)}}',event)" onmouseleave="hideTT()" onmousemove="moveTT(event)"/>`;
+    }});
+  }});
+  MONTHS_HIST.forEach((m,i)=>{{
+    if(i%4===0) svg3+=`<text x="${{fxR(i)}}" y="${{H3-pad3.b+12}}" text-anchor="middle" font-size="8.5" fill="#94A3B8">${{m}}</text>`;
+  }});
+  $('c-residuals').innerHTML=makeSVG(W3,H3,svg3);
+
+  // Method comparison: for Jan-26, show Trend / Naïve / MA3 per SKU
+  const methods=[
+    {{lbl:'Trend+Seas', col:'#2563EB'}},
+    {{lbl:'Naïve',      col:'#DC2626'}},
+    {{lbl:'MA3',        col:'#D97706'}},
+  ];
+  const mVals=SKUS.map(s=>([
+    SD[s.id].forecast_trend[0],
+    SD[s.id].forecast_naive[0],
+    SD[s.id].forecast_ma3[0],
+  ]));
+  const W4=480,H4=220,pad4={{l:50,r:14,t:14,b:50}};
+  const plotW4=W4-pad4.l-pad4.r, plotH4=H4-pad4.t-pad4.b;
+  const n4=SKUS.length, slotW4=plotW4/n4, grpW=slotW4*0.75;
+  const bW4=grpW/3;
+  const maxV4=Math.max(...mVals.flat())*1.12;
+  const fyM=v=>pad4.t+plotH4*(1-v/maxV4);
+  let svg4='';
+  for(let gi=0;gi<=3;gi++){{
+    const y=pad4.t+plotH4/3*gi;
+    svg4+=`<line x1="${{pad4.l}}" y1="${{y}}" x2="${{W4-pad4.r}}" y2="${{y}}" stroke="#F1F5F9" stroke-width="1"/>`;
+    svg4+=`<text x="${{pad4.l-4}}" y="${{y+3}}" text-anchor="end" font-size="8.5" fill="#94A3B8">${{fV(maxV4-maxV4/3*gi)}}</text>`;
+  }}
+  SKUS.forEach((s,si)=>{{
+    const cx=pad4.l+slotW4*(si+0.5);
+    mVals[si].forEach((v,mi)=>{{
+      const x=cx-grpW/2+mi*bW4;
+      const bH=v/maxV4*plotH4;
+      const y=pad4.t+plotH4-bH;
+      svg4+=`<rect x="${{x}}" y="${{y}}" width="${{bW4-2}}" height="${{bH}}" rx="2" fill="${{methods[mi].col}}" opacity=".80"
+        onmouseenter="showTT('${{s.name}}<br>${{methods[mi].lbl}}: ${{fV(v)}}',event)" onmouseleave="hideTT()" onmousemove="moveTT(event)"/>`;
+    }});
+    svg4+=`<text x="${{cx}}" y="${{H4-pad4.b+13}}" text-anchor="middle" font-size="9" fill="#94A3B8">${{s.name.replace('ProClean ','')}}</text>`;
+  }});
+  // legend
+  methods.forEach((m,i)=>{{
+    svg4+=`<rect x="${{pad4.l+i*80}}" y="${{H4-pad4.b+24}}" width="8" height="8" rx="1" fill="${{m.col}}"/>`;
+    svg4+=`<text x="${{pad4.l+i*80+11}}" y="${{H4-pad4.b+31}}" font-size="9" fill="#94A3B8">${{m.lbl}}</text>`;
+  }});
+  $('c-methods').innerHTML=makeSVG(W4,H4,svg4);
+
+  // Accuracy table
+  const aRows=SKUS.map(s=>{{
+    const d=SD[s.id];
+    const mC=d.mape<=6?'pos-val':d.mape<=12?'warn-val':'neg-val';
+    return `<tr>
+      <td><span style="display:inline-flex;align-items:center;gap:6px">
+        <span style="width:10px;height:10px;border-radius:50%;background:${{s.color}};display:inline-block"></span>
+        ${{s.name}}</span></td>
+      <td class="${{mC}}">
+        <div class="acc-bar-wrap">
+          <div class="acc-bg"><div class="acc-fill" style="width:${{clamp(d.mape/20*100,0,100)}}%;background:${{mC==='pos-val'?'#059669':mC==='warn-val'?'#D97706':'#DC2626'}}"></div></div>
+          ${{d.mape.toFixed(1)}}%
+        </div>
+      </td>
+      <td>${{fV(d.mae)}}</td>
+      <td>${{fV(d.rmse)}}</td>
+      <td class="${{d.bias>=0?'pos-val':'neg-val'}}">${{d.bias>=0?'+':''}}${{fV(d.bias)}}</td>
+      <td>${{fV(d.slope)>='0'?'&#9650;':'&#9660;'}} ${{Math.abs(d.slope).toFixed(1)}}/mo</td>
+    </tr>`;
+  }}).join('');
+  $('accuracy-table').innerHTML=`<table class="data-tbl"><thead><tr>
+    <th>SKU</th><th>MAPE</th><th>MAE</th><th>RMSE</th><th>Bias</th><th>Trend</th>
+  </tr></thead><tbody>${{aRows}}</tbody></table>`;
+}}
+
+// ─── SCENARIO PLANNER ───
+let scMultipliers=SKUS.map(()=>1.0);
+
+function renderScenarioSliders(){{
+  const html=SKUS.map((s,i)=>{{
+    return `<div class="sc-row">
+      <div class="sc-row-top">
+        <span class="sc-sku-name">${{s.name}}</span>
+        <span class="kpi-badge bdg-blue" id="sc-pill-${{s.id}}">—</span>
+      </div>
+      <div class="sc-lbl-row">
+        <span class="sc-lbl">-30%</span>
+        <input type="range" min="0.70" max="1.30" step="0.01" value="1.00"
+          id="sc-slider-${{s.id}}"
+          oninput="scMultipliers[${{i}}]=+this.value;updateScenario()"/>
+        <span class="sc-lbl">+30%</span>
+        <span class="sc-val" id="sc-val-${{s.id}}">Base</span>
+      </div>
+    </div>`;
+  }}).join('');
+  $('sc-sliders').innerHTML=html;
+  updateScenario();
+}}
+
+function updateScenario(){{
+  SKUS.forEach((s,i)=>{{
+    const m=scMultipliers[i];
+    const el=$('sc-val-'+s.id);
+    if(el) el.textContent=(m>=1?'+':'')+((m-1)*100).toFixed(0)+'%';
+    const pill=$('sc-pill-'+s.id);
+    if(pill){{
+      const q1base=SD[s.id].forecast_trend.reduce((a,b)=>a+b,0);
+      const q1sc=Math.round(q1base*m);
+      const diff=q1sc-q1base;
+      pill.textContent=(diff>=0?'+':'')+fV(diff)+' units';
+      pill.className='kpi-badge '+(diff>=0?'bdg-pos':'bdg-neg');
+    }}
+  }});
+
+  // Scenario chart: grouped bar base vs scenario per SKU
+  const W=520,H=240,pad={{l:50,r:14,t:14,b:50}};
+  const plotW=W-pad.l-pad.r, plotH=H-pad.t-pad.b;
+  const n=SKUS.length, slotW=plotW/n, grpW=slotW*0.7, bW=grpW/2;
+  const baseVals=SKUS.map(s=>SD[s.id].forecast_trend.reduce((a,b)=>a+b,0));
+  const scVals=SKUS.map((s,i)=>Math.round(baseVals[i]*scMultipliers[i]));
+  const maxV=Math.max(...baseVals,...scVals)*1.12;
+  const fy=v=>pad.t+plotH*(1-v/maxV);
+  let svg='';
+  for(let gi=0;gi<=3;gi++){{
+    const y=pad.t+plotH/3*gi;
+    svg+=`<line x1="${{pad.l}}" y1="${{y}}" x2="${{W-pad.r}}" y2="${{y}}" stroke="#F1F5F9" stroke-width="1"/>`;
+    svg+=`<text x="${{pad.l-4}}" y="${{y+3}}" text-anchor="end" font-size="8.5" fill="#94A3B8">${{fV(maxV-maxV/3*gi)}}</text>`;
+  }}
+  SKUS.forEach((s,i)=>{{
+    const cx=pad.l+slotW*(i+0.5);
+    const bv=baseVals[i], sv=scVals[i];
+    const scCol=sv>=bv?'#059669':'#DC2626';
+    // base bar
+    svg+=`<rect x="${{cx-bW-1}}" y="${{fy(bv)}}" width="${{bW}}" height="${{pad.t+plotH-fy(bv)}}" rx="2" fill="#94A3B8" opacity=".50"/>`;
+    // scenario bar
+    svg+=`<rect x="${{cx+1}}" y="${{fy(sv)}}" width="${{bW}}" height="${{pad.t+plotH-fy(sv)}}" rx="2" fill="${{scCol}}" opacity=".80"
+      onmouseenter="showTT('${{s.name}}<br>Base Q1: ${{fV(bv)}}<br>Scenario Q1: ${{fV(sv)}}<br>Delta: ${{sv>=bv?"+":""}}${{fV(sv-bv)}}',event)"
+      onmouseleave="hideTT()" onmousemove="moveTT(event)"/>`;
+    svg+=`<text x="${{cx}}" y="${{H-pad.b+13}}" text-anchor="middle" font-size="9" fill="#94A3B8">${{s.name.replace('ProClean ','')}}</text>`;
+  }});
+  // legend
+  svg+=`<rect x="${{pad.l}}" y="${{H-pad.b+24}}" width="8" height="8" rx="1" fill="#94A3B8" opacity=".50"/>`;
+  svg+=`<text x="${{pad.l+11}}" y="${{H-pad.b+31}}" font-size="9" fill="#94A3B8">Base Forecast</text>`;
+  svg+=`<rect x="${{pad.l+90}}" y="${{H-pad.b+24}}" width="8" height="8" rx="1" fill="#059669"/>`;
+  svg+=`<text x="${{pad.l+101}}" y="${{H-pad.b+31}}" font-size="9" fill="#94A3B8">Scenario</text>`;
+  $('c-scenario').innerHTML=makeSVG(W,H,svg);
+
+  // Scenario table
+  const rows=SKUS.map((s,i)=>{{
+    const bv=baseVals[i], sv=scVals[i];
+    const diff=sv-bv, pct=diff/bv*100;
+    return `<tr>
+      <td><span style="display:inline-flex;align-items:center;gap:6px">
+        <span style="width:10px;height:10px;border-radius:50%;background:${{s.color}};display:inline-block"></span>
+        ${{s.name}}</span></td>
+      <td>${{fV(bv)}}</td>
+      <td>${{fV(sv)}}</td>
+      <td class="${{diff>=0?'pos-val':'neg-val'}}">${{diff>=0?'+':''}}${{fV(diff)}}</td>
+      <td class="${{pct>=0?'pos-val':'neg-val'}}">${{fP(pct)}}</td>
+      <td>${{((scMultipliers[i]-1)*100>=0?'+':'')}}${{((scMultipliers[i]-1)*100).toFixed(0)}}% multiplier</td>
+    </tr>`;
+  }}).join('');
+  const totBase=baseVals.reduce((a,b)=>a+b,0);
+  const totSc=scVals.reduce((a,b)=>a+b,0);
+  const totDiff=totSc-totBase;
+  const totRow=`<tr class="bold-row">
+    <td>Portfolio Total</td>
+    <td>${{fV(totBase)}}</td><td>${{fV(totSc)}}</td>
+    <td class="${{totDiff>=0?'pos-val':'neg-val'}}">${{totDiff>=0?'+':''}}${{fV(totDiff)}}</td>
+    <td class="${{totDiff>=0?'pos-val':'neg-val'}}">${{fP(totDiff/totBase*100)}}</td>
+    <td>—</td>
+  </tr>`;
+  $('sc-table').innerHTML=`<table class="data-tbl"><thead><tr>
+    <th>SKU</th><th>Base Q1 Forecast</th><th>Scenario Q1</th>
+    <th>&Delta; Volume</th><th>&Delta; %</th><th>Assumption</th>
+  </tr></thead><tbody>${{rows}}${{totRow}}</tbody></table>`;
+}}
+
+function resetScenario(){{
+  scMultipliers=SKUS.map(()=>1.0);
+  SKUS.forEach(s=>{{
+    const sl=$('sc-slider-'+s.id);
+    if(sl) sl.value=1.0;
+  }});
+  updateScenario();
+}}
+
+// ─── INIT ───
+renderKPIs();
+renderInsights();
+renderPortfolio();
+renderShare();
+renderYoY();
+renderFCSummary();
+renderForecastVsActual();
+renderSKUCharts();
+renderSKUMonthlyTable();
+renderAccuracy();
+renderScenarioSliders();
+
+window.addEventListener('resize',()=>{{
+  renderPortfolio(); renderShare(); renderYoY();
+  renderAccuracy(); updateScenario();
+}});
+</script>
+</body>
+</html>"""
+
+out = os.path.join(os.path.dirname(os.path.abspath(__file__)), "Demand_Forecasting_Dashboard.html")
+with open(out, "w", encoding="utf-8") as f:
+    f.write(HTML)
+print(f"Done!  {os.path.getsize(out)//1024} KB  ->  {out}")

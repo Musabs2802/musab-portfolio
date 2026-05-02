@@ -57,6 +57,20 @@ const workData: Work[] = [
       "24 promo events · 5 SKUs · Waterfall margin bridge · ROI optimizer with live spend reallocation sliders · Promo calendar heatmap · Mechanic benchmarking",
     demo: "/trade-promo-roi-dashboard.html",
   },
+  {
+    id: 5,
+    title: "Demand Forecasting Dashboard",
+    description:
+      "24-month demand history (Jan 2024 – Dec 2025) for a 5-SKU FMCG portfolio with 3-month forward forecasts using a Trend × Seasonality model. Compares Naïve, Moving Average, and Trend methods. Includes accuracy metrics (MAPE, MAE, RMSE, Bias), residual diagnostics, and an interactive Scenario Planner with per-SKU growth multiplier sliders.",
+    image:
+      "https://images.unsplash.com/photo-1518186285589-2f7649de83e0?w=800&q=80",
+    technologies: ["Python", "HTML", "CSS", "JavaScript", "Data Viz"],
+    category: "Dashboard",
+    client: "Data Consulting Demo",
+    results:
+      "5 SKUs · 24-month actuals · 3-month forecast · MAPE / MAE / RMSE accuracy panel · Residual scatter · Method comparison · Scenario planner with live volume reforecast",
+    demo: "/demand-forecasting-dashboard.html",
+  },
 ];
 
 export default workData;
