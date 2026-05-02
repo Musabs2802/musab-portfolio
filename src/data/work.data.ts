@@ -99,6 +99,20 @@ const workData: Work[] = [
       "30 customers · 4 channels · Revenue / GP / Trade / Logistics / Net CM waterfall · Tier A/B/C classification · Pareto cumulative curves · Channel cost structure breakdown",
     demo: "/customer-profitability-dashboard.html",
   },
+  {
+    id: 8,
+    title: "Market Share & Competitive Tracker",
+    description:
+      "Competitive intelligence dashboard tracking ProClean vs 4 rivals (BrightClean, EcoWash, CleanPro, ZipClean) across 5 FMCG categories and 4 channels over 6 rolling months. Covers Volume Share %, Value Share %, Numeric Distribution %, and Share of Shelf %. Includes category drill-downs, channel benchmarking, head-to-head brand comparisons, and a share movement heatmap showing gains/losses vs prior period.",
+    image:
+      "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800&q=80",
+    technologies: ["Python", "HTML", "CSS", "JavaScript", "Data Viz"],
+    category: "Dashboard",
+    client: "Data Consulting Demo",
+    results:
+      "5 brands · 5 categories · 4 channels · Volume & Value share trends · Distribution & shelf share · Head-to-head comparison · Share movement heatmap · Category rank tracker",
+    demo: "/market-share-tracker.html",
+  },
 ];
 
 export default workData;
