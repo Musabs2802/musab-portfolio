@@ -1,5 +1,5 @@
 """
-Salesman Action Dashboard — Demo
+Salesman Action Dashboard
 Generates a fully standalone HTML dashboard with dummy data for client showcasing.
 No real data is used. Same UI as the production dashboard.
 """
@@ -227,7 +227,7 @@ channels      = CHANNELS_LIST
 sub_channels  = SUB_CHANNELS_LIST
 
 # ── HTML ────────────────────────────────────────────────────
-print("Generating Salesman Action Dashboard (Demo) …")
+print("Generating Salesman Action Dashboard …")
 
 HTML = f"""<!DOCTYPE html>
 <html lang="en">
@@ -1288,8 +1288,8 @@ render();
 </html>"""
 
 # ── EXPORT ──────────────────────────────────────────────────
-output_file = os.path.join(os.path.dirname(__file__), "Salesman_Action_Dashboard_Demo.html")
-print(f"Writing demo dashboard to: {output_file}")
+output_file = os.path.join(os.path.dirname(__file__), "Salesman_Action_Dashboard.html")
+print(f"Writing dashboard to: {output_file}")
 with open(output_file, "w", encoding="utf-8") as f:
     f.write(HTML)
 size_kb = os.path.getsize(output_file) / 1024

@@ -335,7 +335,7 @@ input[type=range]::-webkit-slider-thumb{{
   <div class="hdr-badges">
     <span class="hdr-badge acc">&#9650; Commercial Intelligence</span>
     <span class="hdr-badge">24 Promo Events</span>
-    <span class="hdr-badge">Demo Data</span>
+    <span class="hdr-badge">Data</span>
   </div>
 </header>
 

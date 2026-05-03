@@ -95,7 +95,7 @@ const Work: React.FC = () => {
 
   return (
     <section className="min-h-screen bg-[#f8f6f3] dark:bg-neutral-950 px-6 pt-28 pb-20">
-      <div className="max-w-5xl mx-auto">
+      <div className="max-w-7xl mx-auto">
         <div className="mb-10">
           <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-neutral-400 mb-3">
             Portfolio
@@ -130,7 +130,7 @@ const Work: React.FC = () => {
             ))}
           </div>
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {filtered.map((project) =>
             project.demo ? (
               <a
@@ -149,7 +149,7 @@ const Work: React.FC = () => {
               >
                 <CardContent project={project} />
               </div>
-            )
+            ),
           )}
         </div>
       </div>

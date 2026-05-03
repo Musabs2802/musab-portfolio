@@ -744,7 +744,7 @@ body{{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,Roboto,sans-
 <header class="app-hdr">
   <div>
     <div class="hdr-title">Financial Dashboard &mdash; FMCG Corp</div>
-    <div class="hdr-sub">FY{YEARS[0]}&ndash;FY{YEARS[-1]} &nbsp;&middot;&nbsp; USD millions &nbsp;&middot;&nbsp; Demo Data</div>
+    <div class="hdr-sub">FY{YEARS[0]}&ndash;FY{YEARS[-1]} &nbsp;&middot;&nbsp; USD millions &nbsp;&middot;&nbsp; Data</div>
   </div>
   <div class="hdr-right">
     <span class="hdr-badge">&#x1F4C5; {TODAY}</span>
@@ -1063,7 +1063,7 @@ body{{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,Roboto,sans-
     <p><strong>P&amp;L Row Collapse:</strong> Click any blue section header (e.g. <em>Revenue</em>, <em>Cost of Goods Sold</em>) to collapse its sub-items. Click again to expand. This works on all three statements.</p>
     <p><strong>Cash Flow:</strong> Indirect method — Operating, Investing, Financing. Parentheses = cash outflows.</p>
     <p><strong>Balance Sheet:</strong> Assets = Liabilities + Equity across all three years with YoY movement.</p>
-    <p style="color:#94A3B8;font-size:11px">All figures are simulated demo data. Monthly seasonality uses FMCG weights that sum exactly to annual totals.</p>
+    <p style="color:#94A3B8;font-size:11px">All figures are simulated data. Monthly seasonality uses FMCG weights that sum exactly to annual totals.</p>
   </div>
 </div>
 

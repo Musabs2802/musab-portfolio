@@ -372,7 +372,7 @@ input[type=range]::-webkit-slider-thumb{{
   <div class="hdr-badges">
     <span class="hdr-badge acc">&#9650; Forecasting Intelligence</span>
     <span class="hdr-badge">Trend + Seasonality Model</span>
-    <span class="hdr-badge">Demo Data</span>
+    <span class="hdr-badge">Data</span>
   </div>
 </header>
 
