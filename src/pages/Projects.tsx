@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import ProjectGrid from "../components/ProjectGrid";
 import projectData from "../data/project.data";
+import SEO from "../components/SEO";
 
 const Projects: React.FC = () => {
   const [activeTab, setActiveTab] = useState<
@@ -21,9 +22,14 @@ const Projects: React.FC = () => {
 
   return (
     <section id="projects" className="py-20 bg-[#f8f6f3]">
+      <SEO
+        title="Software and Data Projects"
+        description="Explore software engineering, data science, and analysis projects by Musab Shaikh, including full-stack builds, analytics systems, and business intelligence solutions."
+        path="/projects"
+      />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold text-gray-900 mb-4">Projects</h2>
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">Projects</h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
             Side projects and experiments where I explore new technologies and
             push the boundaries of what's possible.

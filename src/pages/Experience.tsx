@@ -1,6 +1,7 @@
 import React from "react";
 import { Calendar, MapPin } from "lucide-react";
 import experienceData from "../data/experience.data";
+import SEO from "../components/SEO";
 
 const Experience: React.FC = () => {
   return (
@@ -8,11 +9,16 @@ const Experience: React.FC = () => {
       id="experience"
       className="min-h-screen bg-[#f8f6f3] dark:bg-neutral-950 px-6 pt-28 pb-16"
     >
+      <SEO
+        title="Professional Experience"
+        description="Professional experience of Musab Shaikh across software engineering, data analytics, machine learning, and automation delivery roles."
+        path="/experience"
+      />
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold text-neutral-900 dark:text-white mb-4">
+          <h1 className="text-4xl md:text-5xl font-bold text-neutral-900 dark:text-white mb-4">
             Experience
-          </h2>
+          </h1>
           <p className="text-lg text-neutral-600 dark:text-neutral-400 max-w-3xl mx-auto leading-relaxed">
             My journey in tech spans from building scalable software to
             uncovering insights from data — across multiple industries and

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import workData from "../data/work.data";
+import SEO from "../components/SEO";
 
 type Category = "All" | "Dashboard" | "Data Science" | "Analysis" | "Software";
 
@@ -104,6 +105,11 @@ const Work: React.FC = () => {
 
   return (
     <section className="min-h-screen bg-[#f8f6f3] dark:bg-neutral-950 px-6 pt-28 pb-20">
+      <SEO
+        title="Data Dashboard Projects"
+        description="Interactive dashboard portfolio by Musab Shaikh covering price elasticity, trade promotion ROI, demand forecasting, distribution analytics, customer profitability, and market share tracking."
+        path="/works"
+      />
       <div className="max-w-7xl mx-auto">
         <div className="mb-10">
           <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-neutral-400 mb-3">

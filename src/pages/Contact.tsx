@@ -1,5 +1,6 @@
 import React from "react";
 import { Mail, Linkedin, Github, MapPin, Phone } from "lucide-react";
+import SEO from "../components/SEO";
 
 const Contact: React.FC = () => {
   return (
@@ -7,12 +8,17 @@ const Contact: React.FC = () => {
       id="contact"
       className="min-h-screen flex items-center justify-center bg-[#f8f6f3] dark:bg-neutral-950 px-6 pt-28 pb-16"
     >
+      <SEO
+        title="Contact Musab Shaikh"
+        description="Get in touch with Musab Shaikh for software engineering, analytics dashboards, forecasting systems, and business automation consulting."
+        path="/contact"
+      />
       <div className="max-w-4xl mx-auto w-full">
         {/* Header */}
         <div className="text-center mb-12">
-          <h2 className="text-4xl md:text-5xl font-bold mb-4 text-neutral-900 dark:text-white">
+          <h1 className="text-4xl md:text-5xl font-bold mb-4 text-neutral-900 dark:text-white">
             Let's Connect
-          </h2>
+          </h1>
           <p className="text-lg text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto leading-relaxed">
             I'm always open to new opportunities, collaborations, or just a
             friendly chat. Feel free to reach out via any of the platforms
