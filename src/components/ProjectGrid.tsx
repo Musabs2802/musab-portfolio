@@ -1,6 +1,15 @@
 import React from "react";
 import { ExternalLink, Github, Building, Star } from "lucide-react";
 
+const getDemoUrl = (demo: string) => {
+  if (/^(https?:)?\/\//.test(demo)) {
+    return demo;
+  }
+
+  const normalizedPath = demo.replace(/^\/+/, "");
+  return `${import.meta.env.BASE_URL}${normalizedPath}`;
+};
+
 interface Project {
   id: number;
   title: string;
@@ -109,7 +118,7 @@ const ProjectGrid: React.FC<ProjectGridProps> = ({ projects, isClient }) => {
               )}
               {project.demo && (
                 <a
-                  href={project.demo}
+                  href={getDemoUrl(project.demo)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center space-x-1.5 px-4 py-2 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 rounded-lg text-sm font-medium hover:opacity-80 transition-opacity"

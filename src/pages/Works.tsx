@@ -13,6 +13,15 @@ const categoryStyle: Record<string, string> = {
     "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300",
 };
 
+const getDemoUrl = (demo: string) => {
+  if (/^(https?:)?\/\//.test(demo)) {
+    return demo;
+  }
+
+  const normalizedPath = demo.replace(/^\/+/, "");
+  return `${import.meta.env.BASE_URL}${normalizedPath}`;
+};
+
 const Work: React.FC = () => {
   const [activeCategory, setActiveCategory] = useState<Category>("All");
 
@@ -135,7 +144,7 @@ const Work: React.FC = () => {
             project.demo ? (
               <a
                 key={project.id}
-                href={project.demo}
+                href={getDemoUrl(project.demo)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group block bg-white dark:bg-neutral-900 rounded-2xl overflow-hidden border border-neutral-200 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 hover:shadow-[0_8px_32px_rgba(0,0,0,0.09)] transition-all duration-300 cursor-pointer"

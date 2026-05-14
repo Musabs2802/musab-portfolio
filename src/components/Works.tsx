@@ -2,6 +2,15 @@ import React from "react";
 import workData from "../data/work.data";
 import { Link } from "react-router-dom";
 
+const getDemoUrl = (demo: string) => {
+  if (/^(https?:)?\/\//.test(demo)) {
+    return demo;
+  }
+
+  const normalizedPath = demo.replace(/^\/+/, "");
+  return `${import.meta.env.BASE_URL}${normalizedPath}`;
+};
+
 const Works: React.FC = () => {
   return (
     <section className="bg-[#f8f6f3] dark:bg-neutral-950 px-6 py-28">
@@ -53,7 +62,7 @@ const Works: React.FC = () => {
             return project.demo ? (
               <a
                 key={project.id}
-                href={project.demo}
+                href={getDemoUrl(project.demo)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg transition-shadow block"
