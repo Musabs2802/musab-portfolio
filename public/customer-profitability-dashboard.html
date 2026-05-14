@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Customer Profitability Dashboard</title>
+<style>
+:root{
+  --g50:#F8FAFC;--g100:#F1F5F9;--g200:#E2E8F0;--g300:#CBD5E1;
+  --g400:#94A3B8;--g600:#475569;--g700:#334155;--g800:#1E293B;--g900:#0F172A;
+  --grn:#059669;--red:#DC2626;--amb:#D97706;--blu:#2563EB;--pur:#7C3AED;
+  --accent:#7C3AED;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--g50);color:var(--g800);font-size:13px}
+.hdr{background:linear-gradient(135deg,#2e1065 0%,#4c1d95 60%,#6d28d9 100%);
+  color:#fff;padding:18px 28px;display:flex;align-items:center;justify-content:space-between}
+.hdr-title{font-size:20px;font-weight:700;letter-spacing:.3px}
+.hdr-sub{font-size:11px;opacity:.75;margin-top:2px}
+.badge{background:rgba(255,255,255,.15);border-radius:20px;padding:3px 11px;font-size:11px}
+nav{background:#fff;border-bottom:1px solid var(--g200);display:flex;gap:4px;padding:0 24px;position:sticky;top:0;z-index:50}
+.tab{padding:12px 18px;font-size:12.5px;font-weight:600;color:var(--g400);cursor:pointer;border-bottom:3px solid transparent;transition:.2s;white-space:nowrap}
+.tab.active{color:var(--accent);border-color:var(--accent)}
+.tab:hover:not(.active){color:var(--g700)}
+.page{display:none;padding:24px 28px;max-width:1400px;margin:0 auto}
+.page.active{display:block}
+.kpi-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:14px;margin-bottom:22px}
+.kpi{background:#fff;border-radius:12px;padding:16px 18px;border:1px solid var(--g200);box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.kpi-label{font-size:10.5px;font-weight:600;color:var(--g400);text-transform:uppercase;letter-spacing:.5px}
+.kpi-value{font-size:26px;font-weight:800;color:var(--g800);margin:4px 0 2px;line-height:1}
+.kpi-delta{font-size:11px;font-weight:600}
+.kpi-delta.up{color:var(--grn)} .kpi-delta.dn{color:var(--red)} .kpi-delta.neu{color:var(--g400)}
+.card{background:#fff;border-radius:12px;border:1px solid var(--g200);box-shadow:0 1px 3px rgba(0,0,0,.06);padding:18px 20px;overflow:hidden;margin-bottom:16px}
+.card-title{font-size:13px;font-weight:700;color:var(--g700);margin-bottom:14px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{background:var(--g100);color:var(--g600);font-weight:700;text-align:left;padding:8px 10px;border-bottom:2px solid var(--g200);font-size:11px;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap}
+td{padding:8px 10px;border-bottom:1px solid var(--g100);vertical-align:middle}
+tr:hover td{background:#f8fafc}
+.bar-wrap{background:var(--g100);border-radius:4px;height:7px;width:100%;min-width:60px}
+.bar-fill{height:7px;border-radius:4px}
+.pill{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10.5px;font-weight:700}
+.pill-A{background:#EDE9FE;color:#4C1D95} .pill-B{background:#DBEAFE;color:#1E40AF} .pill-C{background:#FEF3C7;color:#92400E}
+.pill-grn{background:#D1FAE5;color:#065F46} .pill-red{background:#FEE2E2;color:#991B1B}
+.filter-bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;align-items:center}
+.filter-bar select,.filter-bar label{font-size:12px;padding:6px 10px;border:1px solid var(--g200);border-radius:7px;background:#fff;color:var(--g700);cursor:pointer}
+.filter-bar label{font-weight:600;color:var(--g600);border:none;padding:0}
+#tt{position:fixed;background:var(--g800);color:#fff;padding:7px 12px;border-radius:8px;font-size:11.5px;pointer-events:none;opacity:0;transition:opacity .15s;z-index:999;max-width:240px;line-height:1.6}
+</style>
+</head>
+<body>
+<div id="tt"></div>
+
+<div class="hdr">
+  <div>
+    <div class="hdr-title">Customer Profitability Dashboard</div>
+    <div class="hdr-sub">FMCG Portfolio · 30 Customers · 4 Channels · Nov 2025 – Apr 2026</div>
+  </div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <span class="badge">Gross Margin</span>
+    <span class="badge">Net Contribution</span>
+    <span class="badge">Pareto 80/20</span>
+  </div>
+</div>
+
+<nav>
+  <div class="tab active" onclick="showTab('overview',this)">Overview</div>
+  <div class="tab" onclick="showTab('by-customer',this)">By Customer</div>
+  <div class="tab" onclick="showTab('by-channel',this)">By Channel</div>
+  <div class="tab" onclick="showTab('pareto',this)">Pareto Analysis</div>
+  <div class="tab" onclick="showTab('waterfall',this)">Margin Waterfall</div>
+</nav>
+
+<!-- ══ TAB 1: OVERVIEW ══ -->
+<div class="page active" id="tab-overview">
+  <div class="kpi-strip" id="kpi-strip"></div>
+  <div class="grid-2" style="margin-bottom:16px">
+    <div class="card"><div class="card-title">Revenue vs Net Contribution — All Customers</div>
+      <svg id="svg-scatter" width="100%" viewBox="0 0 540 240"></svg></div>
+    <div class="card"><div class="card-title">Customer Tier Distribution</div>
+      <svg id="svg-tier-donut" width="100%" viewBox="0 0 540 240"></svg></div>
+  </div>
+  <div class="card"><div class="card-title">Top 10 Customers by Net Contribution</div>
+    <table id="tbl-top10"></table></div>
+</div>
+
+<!-- ══ TAB 2: BY CUSTOMER ══ -->
+<div class="page" id="tab-by-customer">
+  <div class="filter-bar">
+    <label>Customer:</label>
+    <select id="sel-cust" onchange="renderByCustomer()">
+      <option value="C19">Al-Bahrain Trading</option> <option value="C17">Al-Jazeera Wholesale</option> <option value="C12">Al-Manar Supermarket</option> <option value="C15">Al-Masah Market</option> <option value="C01">Al-Noor Hypermarket</option> <option value="C10">Al-Rawabi Store</option> <option value="C02">Al-Safa Hypermarket</option> <option value="C04">Al-Tamimi Hypermarket</option> <option value="C22">Al-Watan Wholesale</option> <option value="C27">Blue Sky Catering</option> <option value="C08">City Fresh Supermarket</option> <option value="C05">City Mall Hypermarket</option> <option value="C28">Continental Restaurant</option> <option value="C14">Crescent Grocery</option> <option value="C07">Crown Hypermarket</option> <option value="C30">Desert Spice Kitchen</option> <option value="C06">Eastern Plaza Hyper</option> <option value="C26">Four Seasons Catering</option> <option value="C25">Golden Palace Restaurant</option> <option value="C09">Green Valley Grocery</option> <option value="C11">Hilal Food Center</option> <option value="C13">Horizon Superstore</option> <option value="C03">Landmark Superstore</option> <option value="C20">Northern Star Dist.</option> <option value="C21">Pacific Rim Trading</option> <option value="C16">Premier Supermarket</option> <option value="C24">Royal Hotel Catering</option> <option value="C29">Sea Breeze Restaurant</option> <option value="C23">Summit Distributors</option> <option value="C18">Western Gate Wholesale</option>
+    </select>
+  </div>
+  <div id="cust-kpi-strip" class="kpi-strip" style="grid-template-columns:repeat(5,1fr)"></div>
+  <div class="grid-2" style="margin-bottom:16px">
+    <div class="card"><div class="card-title">Monthly Revenue &amp; Net Contribution</div>
+      <svg id="svg-cust-trend" width="100%" viewBox="0 0 540 200"></svg></div>
+    <div class="card"><div class="card-title">Contribution Margin % Trend</div>
+      <svg id="svg-cust-cm" width="100%" viewBox="0 0 540 200"></svg></div>
+  </div>
+  <div class="grid-2" style="margin-bottom:16px">
+    <div class="card"><div class="card-title">P&amp;L Waterfall — 6-Month Total</div>
+      <svg id="svg-cust-wf" width="100%" viewBox="0 0 540 220"></svg></div>
+    <div class="card"><div class="card-title">SKU Revenue Mix</div>
+      <svg id="svg-cust-sku" width="100%" viewBox="0 0 540 220"></svg></div>
+  </div>
+</div>
+
+<!-- ══ TAB 3: BY CHANNEL ══ -->
+<div class="page" id="tab-by-channel">
+  <div class="grid-2" style="margin-bottom:16px">
+    <div class="card"><div class="card-title">Revenue by Channel</div>
+      <svg id="svg-ch-rev" width="100%" viewBox="0 0 540 200"></svg></div>
+    <div class="card"><div class="card-title">Net Contribution Margin % by Channel</div>
+      <svg id="svg-ch-cm" width="100%" viewBox="0 0 540 200"></svg></div>
+  </div>
+  <div class="card"><div class="card-title">Channel P&amp;L Summary</div>
+    <table id="tbl-channel"></table></div>
+</div>
+
+<!-- ══ TAB 4: PARETO ══ -->
+<div class="page" id="tab-pareto">
+  <div class="grid-2" style="margin-bottom:16px">
+    <div class="card"><div class="card-title">Cumulative Revenue — Customer Pareto</div>
+      <svg id="svg-pareto-rev" width="100%" viewBox="0 0 540 220"></svg></div>
+    <div class="card"><div class="card-title">Cumulative Net Contribution — Customer Pareto</div>
+      <svg id="svg-pareto-net" width="100%" viewBox="0 0 540 220"></svg></div>
+  </div>
+  <div class="card"><div class="card-title">Full Customer Ranking by Revenue</div>
+    <table id="tbl-pareto"></table></div>
+</div>
+
+<!-- ══ TAB 5: WATERFALL ══ -->
+<div class="page" id="tab-waterfall">
+  <div class="card"><div class="card-title">Portfolio P&amp;L Waterfall — 6-Month Total</div>
+    <svg id="svg-port-wf" width="100%" viewBox="0 0 700 300"></svg></div>
+  <div class="grid-2" style="margin-bottom:16px">
+    <div class="card"><div class="card-title">Gross Margin % by Channel</div>
+      <svg id="svg-gm-ch" width="100%" viewBox="0 0 540 200"></svg></div>
+    <div class="card"><div class="card-title">Cost Structure by Channel (% of Revenue)</div>
+      <svg id="svg-cost-ch" width="100%" viewBox="0 0 540 200"></svg></div>
+  </div>
+</div>
+
+<script>
+const D = {"months": ["Nov-25", "Dec-25", "Jan-26", "Feb-26", "Mar-26", "Apr-26"], "skus": [{"id": "s1", "name": "ProClean 500g", "cogs_pct": 0.42, "asp": 18.5}, {"id": "s2", "name": "ProClean 1kg", "cogs_pct": 0.4, "asp": 34.0}, {"id": "s3", "name": "ProClean Ultra 500g", "cogs_pct": 0.38, "asp": 24.0}, {"id": "s4", "name": "ProClean Ultra 1kg", "cogs_pct": 0.36, "asp": 44.0}, {"id": "s5", "name": "ProClean Eco 750g", "cogs_pct": 0.44, "asp": 21.0}], "channels": [{"id": "ch1", "name": "Hypermarkets"}, {"id": "ch2", "name": "Supermarkets"}, {"id": "ch3", "name": "Wholesale"}, {"id": "ch4", "name": "Food Service"}], "customers": [{"id": "C01", "name": "Al-Noor Hypermarket", "channel": "ch1", "tier": "A", "total_revenue": 611461.0, "total_cogs": 244585.0, "total_gp": 366876.0, "total_trade": 73375.0, "total_logi": 24458.0, "total_net": 269043.0, "gm_pct": 60.0, "cm_pct": 44.0, "sku_mix": [30.0, 10.0, 7.0, 19.9, 33.1], "rev_series": [96326.0, 102409.0, 106316.0, 95677.0, 105324.0, 105409.0], "gp_series": [57796.0, 61445.0, 63790.0, 57406.0, 63194.0, 63245.0], "net_series": [42384.0, 45060.0, 46779.0, 42098.0, 46342.0, 46380.0], "cm_series": [44.0, 44.0, 44.0, 44.0, 44.0, 44.0]}, {"id": "C02", "name": "Al-Safa Hypermarket", "channel": "ch1", "tier": "A", "total_revenue": 612420.0, "total_cogs": 244968.0, "total_gp": 367452.0, "total_trade": 73490.0, "total_logi": 24497.0, "total_net": 269465.0, "gm_pct": 60.0, "cm_pct": 44.0, "sku_mix": [35.8, 18.9, 15.2, 8.4, 21.8], "rev_series": [96445.0, 98585.0, 104265.0, 106466.0, 107405.0, 99254.0], "gp_series": [57867.0, 59151.0, 62559.0, 63880.0, 64443.0, 59552.0], "net_series": [42436.0, 43378.0, 45876.0, 46845.0, 47258.0, 43672.0], "cm_series": [44.0, 44.0, 44.0, 44.0, 44.0, 44.0]}, {"id": "C03", "name": "Landmark Superstore", "channel": "ch1", "tier": "A", "total_revenue": 319952.0, "total_cogs": 127980.0, "total_gp": 191972.0, "total_trade": 38395.0, "total_logi": 12799.0, "total_net": 140778.0, "gm_pct": 60.0, "cm_pct": 44.0, "sku_mix": [24.8, 12.8, 25.8, 20.4, 16.2], "rev_series": [50119.0, 53171.0, 50540.0, 57526.0, 52406.0, 56190.0], "gp_series": [30071.0, 31903.0, 30324.0, 34516.0, 31444.0, 33714.0], "net_series": [22052.0, 23395.0, 22237.0, 25312.0, 23059.0, 24723.0], "cm_series": [44.0, 44.0, 44.0, 44.0, 44.0, 44.0]}, {"id": "C04", "name": "Al-Tamimi Hypermarket", "channel": "ch1", "tier": "A", "total_revenue": 610770.0, "total_cogs": 244308.0, "total_gp": 366462.0, "total_trade": 73292.0, "total_logi": 24429.0, "total_net": 268741.0, "gm_pct": 60.0, "cm_pct": 44.0, "sku_mix": [16.2, 11.7, 27.8, 13.4, 30.9], "rev_series": [100083.0, 104730.0, 102585.0, 106635.0, 93584.0, 103153.0], "gp_series": [60050.0, 62838.0, 61551.0, 63981.0, 56150.0, 61892.0], "net_series": [44037.0, 46081.0, 45138.0, 46920.0, 41177.0, 45388.0], "cm_series": [44.0, 44.0, 44.0, 44.0, 44.0, 44.0]}, {"id": "C05", "name": "City Mall Hypermarket", "channel": "ch1", "tier": "A", "total_revenue": 319609.0, "total_cogs": 127843.0, "total_gp": 191766.0, "total_trade": 38353.0, "total_logi": 12785.0, "total_net": 140628.0, "gm_pct": 60.0, "cm_pct": 44.0, "sku_mix": [21.7, 24.9, 17.4, 19.7, 16.3], "rev_series": [49708.0, 54240.0, 50015.0, 58340.0, 52020.0, 55286.0], "gp_series": [29825.0, 32544.0, 30009.0, 35004.0, 31212.0, 33172.0], "net_series": [21872.0, 23865.0, 22006.0, 25669.0, 22889.0, 24327.0], "cm_series": [44.0, 44.0, 44.0, 44.0, 44.0, 44.0]}, {"id": "C06", "name": "Eastern Plaza Hyper", "channel": "ch1", "tier": "A", "total_revenue": 148240.0, "total_cogs": 59296.0, "total_gp": 88944.0, "total_trade": 17789.0, "total_logi": 5931.0, "total_net": 65224.0, "gm_pct": 60.0, "cm_pct": 44.0, "sku_mix": [24.4, 22.8, 6.5, 21.7, 24.5], "rev_series": [22720.0, 25038.0, 23361.0, 26064.0, 25892.0, 25165.0], "gp_series": [13632.0, 15023.0, 14017.0, 15638.0, 15535.0, 15099.0], "net_series": [9997.0, 11016.0, 10280.0, 11467.0, 11392.0, 11072.0], "cm_series": [44.0, 44.0, 44.0, 44.0, 44.0, 44.0]}, {"id": "C07", "name": "Crown Hypermarket", "channel": "ch1", "tier": "A", "total_revenue": 333846.0, "total_cogs": 133539.0, "total_gp": 200307.0, "total_trade": 40061.0, "total_logi": 13353.0, "total_net": 146893.0, "gm_pct": 60.0, "cm_pct": 44.0, "sku_mix": [16.1, 6.6, 16.0, 30.3, 31.0], "rev_series": [56510.0, 50117.0, 56503.0, 54785.0, 59732.0, 56199.0], "gp_series": [33906.0, 30070.0, 33902.0, 32871.0, 35839.0, 33719.0], "net_series": [24865.0, 22051.0, 24862.0, 24106.0, 26282.0, 24727.0], "cm_series": [44.0, 44.0, 44.0, 44.0, 44.0, 44.0]}, {"id": "C08", "name": "City Fresh Supermarket", "channel": "ch2", "tier": "A", "total_revenue": 422567.0, "total_cogs": 173252.0, "total_gp": 249315.0, "total_trade": 42256.0, "total_logi": 21128.0, "total_net": 185931.0, "gm_pct": 59.0, "cm_pct": 44.0, "sku_mix": [24.6, 6.5, 35.5, 26.7, 6.7], "rev_series": [69607.0, 69852.0, 69491.0, 74504.0, 70985.0, 68128.0], "gp_series": [41068.0, 41213.0, 41000.0, 43957.0, 41881.0, 40196.0], "net_series": [30627.0, 30735.0, 30576.0, 32782.0, 31234.0, 29977.0], "cm_series": [44.0, 44.0, 44.0, 44.0, 44.0, 44.0]}, {"id": "C09", "name": "Green Valley Grocery", "channel": "ch2", "tier": "A", "total_revenue": 241752.0, "total_cogs": 99118.0, "total_gp": 142634.0, "total_trade": 24175.0, "total_logi": 12088.0, "total_net": 106371.0, "gm_pct": 59.0, "cm_pct": 44.0, "sku_mix": [15.5, 20.4, 23.1, 21.3, 19.8], "rev_series": [41755.0, 35903.0, 37620.0, 42253.0, 43059.0, 41162.0], "gp_series": [24635.0, 21183.0, 22196.0, 24929.0, 25405.0, 24286.0], "net_series": [18371.0, 15798.0, 16553.0, 18591.0, 18946.0, 18112.0], "cm_series": [44.0, 44.0, 44.0, 44.0, 44.0, 44.0]}, {"id": "C10", "name": "Al-Rawabi Store", "channel": "ch2", "tier": "A", "total_revenue": 237736.0, "total_cogs": 97472.0, "total_gp": 140264.0, "total_trade": 23774.0, "total_logi": 11886.0, "total_net": 104604.0, "gm_pct": 59.0, "cm_pct": 44.0, "sku_mix": [9.7, 32.3, 6.1, 36.1, 15.8], "rev_series": [40346.0, 41678.0, 39908.0, 38448.0, 38374.0, 38982.0], "gp_series": [23804.0, 24590.0, 23546.0, 22684.0, 22641.0, 22999.0], "net_series": [17752.0, 18338.0, 17560.0, 16917.0, 16885.0, 17152.0], "cm_series": [44.0, 44.0, 44.0, 44.0, 44.0, 44.0]}, {"id": "C11", "name": "Hilal Food Center", "channel": "ch2", "tier": "A", "total_revenue": 98700.0, "total_cogs": 40468.0, "total_gp": 58232.0, "total_trade": 9870.0, "total_logi": 4935.0, "total_net": 43427.0, "gm_pct": 59.0, "cm_pct": 44.0, "sku_mix": [11.1, 24.2, 31.1, 24.8, 8.9], "rev_series": [15732.0, 16282.0, 16824.0, 16987.0, 15500.0, 17375.0], "gp_series": [9282.0, 9606.0, 9926.0, 10022.0, 9145.0, 10251.0], "net_series": [6922.0, 7164.0, 7403.0, 7474.0, 6820.0, 7644.0], "cm_series": [44.0, 44.0, 44.0, 44.0, 44.0, 44.0]}, {"id": "C12", "name": "Al-Manar Supermarket", "channel": "ch2", "tier": "A", "total_revenue": 412032.0, "total_cogs": 168932.0, "total_gp": 243100.0, "total_trade": 41204.0, "total_logi": 20601.0, "total_net": 181295.0, "gm_pct": 59.0, "cm_pct": 44.0, "sku_mix": [30.9, 11.6, 40.6, 8.6, 8.4], "rev_series": [67418.0, 64369.0, 71380.0, 66495.0, 71747.0, 70623.0], "gp_series": [39777.0, 37978.0, 42114.0, 39232.0, 42331.0, 41668.0], "net_series": [29664.0, 28323.0, 31407.0, 29257.0, 31569.0, 31075.0], "cm_series": [44.0, 44.0, 44.0, 44.0, 44.0, 44.0]}, {"id": "C13", "name": "Horizon Superstore", "channel": "ch2", "tier": "A", "total_revenue": 233359.0, "total_cogs": 95678.0, "total_gp": 137681.0, "total_trade": 23336.0, "total_logi": 11668.0, "total_net": 102677.0, "gm_pct": 59.0, "cm_pct": 44.0, "sku_mix": [16.0, 18.9, 26.6, 7.1, 31.4], "rev_series": [36639.0, 36027.0, 37765.0, 42041.0, 38297.0, 42590.0], "gp_series": [21617.0, 21256.0, 22281.0, 24804.0, 22595.0, 25128.0], "net_series": [16121.0, 15852.0, 16617.0, 18498.0, 16850.0, 18739.0], "cm_series": [44.0, 44.0, 44.0, 44.0, 44.0, 44.0]}, {"id": "C14", "name": "Crescent Grocery", "channel": "ch2", "tier": "A", "total_revenue": 98918.0, "total_cogs": 40556.0, "total_gp": 58362.0, "total_trade": 9893.0, "total_logi": 4946.0, "total_net": 43523.0, "gm_pct": 59.0, "cm_pct": 44.0, "sku_mix": [14.4, 30.3, 31.8, 9.0, 14.5], "rev_series": [17012.0, 15159.0, 17195.0, 15446.0, 15866.0, 18240.0], "gp_series": [10037.0, 8944.0, 10145.0, 9113.0, 9361.0, 10762.0], "net_series": [7485.0, 6670.0, 7565.0, 6796.0, 6981.0, 8026.0], "cm_series": [44.0, 44.0, 44.0, 44.0, 44.0, 44.0]}, {"id": "C15", "name": "Al-Masah Market", "channel": "ch2", "tier": "A", "total_revenue": 100338.0, "total_cogs": 41138.0, "total_gp": 59200.0, "total_trade": 10034.0, "total_logi": 5016.0, "total_net": 44150.0, "gm_pct": 59.0, "cm_pct": 44.0, "sku_mix": [10.2, 29.5, 25.3, 19.1, 15.9], "rev_series": [14879.0, 16763.0, 17419.0, 15388.0, 18422.0, 17467.0], "gp_series": [8779.0, 9890.0, 10277.0, 9079.0, 10869.0, 10306.0], "net_series": [6547.0, 7376.0, 7664.0, 6771.0, 8106.0, 7686.0], "cm_series": [44.0, 44.0, 44.0, 44.0, 44.0, 44.0]}, {"id": "C16", "name": "Premier Supermarket", "channel": "ch2", "tier": "A", "total_revenue": 240971.0, "total_cogs": 98798.0, "total_gp": 142173.0, "total_trade": 24098.0, "total_logi": 12048.0, "total_net": 106027.0, "gm_pct": 59.0, "cm_pct": 44.0, "sku_mix": [9.9, 17.5, 24.9, 25.5, 22.2], "rev_series": [41655.0, 37864.0, 40367.0, 39749.0, 39276.0, 42060.0], "gp_series": [24576.0, 22340.0, 23817.0, 23452.0, 23173.0, 24815.0], "net_series": [18327.0, 16661.0, 17762.0, 17490.0, 17281.0, 18506.0], "cm_series": [44.0, 44.0, 44.0, 44.0, 44.0, 44.0]}, {"id": "C17", "name": "Al-Jazeera Wholesale", "channel": "ch3", "tier": "A", "total_revenue": 494928.0, "total_cogs": 193022.0, "total_gp": 301906.0, "total_trade": 39594.0, "total_logi": 14846.0, "total_net": 247466.0, "gm_pct": 61.0, "cm_pct": 50.0, "sku_mix": [19.9, 25.4, 14.2, 24.5, 16.0], "rev_series": [87978.0, 80412.0, 87638.0, 79413.0, 79141.0, 80346.0], "gp_series": [53667.0, 49051.0, 53459.0, 48442.0, 48276.0, 49011.0], "net_series": [43990.0, 40206.0, 43819.0, 39707.0, 39571.0, 40173.0], "cm_series": [50.0, 50.0, 50.0, 50.0, 50.0, 50.0]}, {"id": "C18", "name": "Western Gate Wholesale", "channel": "ch3", "tier": "A", "total_revenue": 279604.0, "total_cogs": 109046.0, "total_gp": 170558.0, "total_trade": 22369.0, "total_logi": 8388.0, "total_net": 139801.0, "gm_pct": 61.0, "cm_pct": 50.0, "sku_mix": [15.0, 23.1, 26.0, 5.6, 30.4], "rev_series": [44882.0, 46199.0, 43968.0, 49298.0, 45159.0, 50098.0], "gp_series": [27378.0, 28181.0, 26820.0, 30072.0, 27547.0, 30560.0], "net_series": [22441.0, 23099.0, 21984.0, 24649.0, 22579.0, 25049.0], "cm_series": [50.0, 50.0, 50.0, 50.0, 50.0, 50.0]}, {"id": "C19", "name": "Al-Bahrain Trading", "channel": "ch3", "tier": "A", "total_revenue": 513467.0, "total_cogs": 200252.0, "total_gp": 313215.0, "total_trade": 41078.0, "total_logi": 15404.0, "total_net": 256733.0, "gm_pct": 61.0, "cm_pct": 50.0, "sku_mix": [25.1, 26.7, 11.5, 22.8, 13.8], "rev_series": [86260.0, 87183.0, 79313.0, 82864.0, 87463.0, 90384.0], "gp_series": [52619.0, 53182.0, 48381.0, 50547.0, 53352.0, 55134.0], "net_series": [43130.0, 43592.0, 39657.0, 41432.0, 43731.0, 45191.0], "cm_series": [50.0, 50.0, 50.0, 50.0, 50.0, 50.0]}, {"id": "C20", "name": "Northern Star Dist.", "channel": "ch3", "tier": "A", "total_revenue": 274339.0, "total_cogs": 106992.0, "total_gp": 167347.0, "total_trade": 21947.0, "total_logi": 8230.0, "total_net": 137170.0, "gm_pct": 61.0, "cm_pct": 50.0, "sku_mix": [14.8, 26.8, 35.4, 13.0, 9.9], "rev_series": [44640.0, 42675.0, 46774.0, 49601.0, 44396.0, 46253.0], "gp_series": [27230.0, 26032.0, 28532.0, 30257.0, 27082.0, 28214.0], "net_series": [22320.0, 21338.0, 23387.0, 24801.0, 22198.0, 23126.0], "cm_series": [50.0, 50.0, 50.0, 50.0, 50.0, 50.0]}, {"id": "C21", "name": "Pacific Rim Trading", "channel": "ch3", "tier": "A", "total_revenue": 124498.0, "total_cogs": 48555.0, "total_gp": 75943.0, "total_trade": 9960.0, "total_logi": 3735.0, "total_net": 62248.0, "gm_pct": 61.0, "cm_pct": 50.0, "sku_mix": [18.7, 27.5, 28.1, 15.7, 10.1], "rev_series": [19063.0, 22031.0, 19072.0, 22472.0, 20302.0, 21558.0], "gp_series": [11628.0, 13439.0, 11634.0, 13708.0, 12384.0, 13150.0], "net_series": [9531.0, 11016.0, 9536.0, 11236.0, 10151.0, 10778.0], "cm_series": [50.0, 50.0, 50.0, 50.0, 50.0, 50.0]}, {"id": "C22", "name": "Al-Watan Wholesale", "channel": "ch3", "tier": "A", "total_revenue": 285789.0, "total_cogs": 111459.0, "total_gp": 174330.0, "total_trade": 22863.0, "total_logi": 8575.0, "total_net": 142892.0, "gm_pct": 61.0, "cm_pct": 50.0, "sku_mix": [18.3, 11.0, 17.7, 24.3, 28.7], "rev_series": [44086.0, 47785.0, 48868.0, 43992.0, 50797.0, 50261.0], "gp_series": [26892.0, 29149.0, 29809.0, 26835.0, 30986.0, 30659.0], "net_series": [22042.0, 23892.0, 24434.0, 21996.0, 25398.0, 25130.0], "cm_series": [50.0, 50.0, 50.0, 50.0, 50.0, 50.0]}, {"id": "C23", "name": "Summit Distributors", "channel": "ch3", "tier": "A", "total_revenue": 127862.0, "total_cogs": 49865.0, "total_gp": 77997.0, "total_trade": 10229.0, "total_logi": 3834.0, "total_net": 63934.0, "gm_pct": 61.0, "cm_pct": 50.0, "sku_mix": [6.4, 21.0, 32.2, 27.5, 12.9], "rev_series": [20174.0, 22114.0, 21175.0, 21547.0, 19838.0, 23014.0], "gp_series": [12306.0, 13490.0, 12917.0, 13144.0, 12101.0, 14039.0], "net_series": [10087.0, 11058.0, 10588.0, 10774.0, 9919.0, 11508.0], "cm_series": [50.0, 50.0, 50.0, 50.0, 50.0, 50.0]}, {"id": "C24", "name": "Royal Hotel Catering", "channel": "ch4", "tier": "A", "total_revenue": 347487.0, "total_cogs": 145944.0, "total_gp": 201543.0, "total_trade": 24323.0, "total_logi": 20849.0, "total_net": 156371.0, "gm_pct": 58.0, "cm_pct": 45.0, "sku_mix": [13.8, 8.0, 30.5, 22.9, 24.8], "rev_series": [58503.0, 55620.0, 61365.0, 54847.0, 58947.0, 58205.0], "gp_series": [33932.0, 32260.0, 35592.0, 31811.0, 34189.0, 33759.0], "net_series": [26327.0, 25030.0, 27614.0, 24681.0, 26526.0, 26193.0], "cm_series": [45.0, 45.0, 45.0, 45.0, 45.0, 45.0]}, {"id": "C25", "name": "Golden Palace Restaurant", "channel": "ch4", "tier": "A", "total_revenue": 173166.0, "total_cogs": 72729.0, "total_gp": 100437.0, "total_trade": 12121.0, "total_logi": 10390.0, "total_net": 77926.0, "gm_pct": 58.0, "cm_pct": 45.0, "sku_mix": [22.0, 26.0, 11.2, 24.0, 16.8], "rev_series": [27872.0, 26946.0, 26678.0, 30544.0, 30874.0, 30252.0], "gp_series": [16166.0, 15629.0, 15473.0, 17716.0, 17907.0, 17546.0], "net_series": [12543.0, 12126.0, 12005.0, 13745.0, 13894.0, 13613.0], "cm_series": [45.0, 45.0, 45.0, 45.0, 45.0, 45.0]}, {"id": "C26", "name": "Four Seasons Catering", "channel": "ch4", "tier": "A", "total_revenue": 336139.0, "total_cogs": 141178.0, "total_gp": 194961.0, "total_trade": 23530.0, "total_logi": 20169.0, "total_net": 151262.0, "gm_pct": 58.0, "cm_pct": 45.0, "sku_mix": [28.4, 22.6, 26.2, 15.1, 7.7], "rev_series": [54227.0, 55667.0, 56383.0, 56760.0, 57961.0, 55141.0], "gp_series": [31452.0, 32287.0, 32702.0, 32921.0, 33617.0, 31982.0], "net_series": [24402.0, 25050.0, 25372.0, 25542.0, 26082.0, 24814.0], "cm_series": [45.0, 45.0, 45.0, 45.0, 45.0, 45.0]}, {"id": "C27", "name": "Blue Sky Catering", "channel": "ch4", "tier": "A", "total_revenue": 178515.0, "total_cogs": 74976.0, "total_gp": 103539.0, "total_trade": 12496.0, "total_logi": 10712.0, "total_net": 80331.0, "gm_pct": 58.0, "cm_pct": 45.0, "sku_mix": [14.7, 25.0, 11.4, 25.8, 23.1], "rev_series": [30595.0, 29989.0, 29999.0, 28778.0, 30929.0, 28225.0], "gp_series": [17745.0, 17394.0, 17399.0, 16691.0, 17939.0, 16371.0], "net_series": [13767.0, 13496.0, 13499.0, 12950.0, 13918.0, 12701.0], "cm_series": [45.0, 45.0, 45.0, 45.0, 45.0, 45.0]}, {"id": "C28", "name": "Continental Restaurant", "channel": "ch4", "tier": "A", "total_revenue": 77989.0, "total_cogs": 32756.0, "total_gp": 45233.0, "total_trade": 5460.0, "total_logi": 4679.0, "total_net": 35094.0, "gm_pct": 58.0, "cm_pct": 45.0, "sku_mix": [20.9, 24.1, 9.6, 21.4, 23.9], "rev_series": [12116.0, 12467.0, 13437.0, 12769.0, 13491.0, 13709.0], "gp_series": [7027.0, 7231.0, 7793.0, 7406.0, 7825.0, 7951.0], "net_series": [5452.0, 5610.0, 6046.0, 5746.0, 6072.0, 6168.0], "cm_series": [45.0, 45.0, 45.0, 45.0, 45.0, 45.0]}, {"id": "C29", "name": "Sea Breeze Restaurant", "channel": "ch4", "tier": "A", "total_revenue": 76225.0, "total_cogs": 32014.0, "total_gp": 44211.0, "total_trade": 5336.0, "total_logi": 4574.0, "total_net": 34301.0, "gm_pct": 58.0, "cm_pct": 45.0, "sku_mix": [20.0, 12.9, 16.9, 21.2, 28.9], "rev_series": [12977.0, 12666.0, 13457.0, 12112.0, 12153.0, 12860.0], "gp_series": [7527.0, 7346.0, 7805.0, 7025.0, 7049.0, 7459.0], "net_series": [5840.0, 5699.0, 6056.0, 5450.0, 5469.0, 5787.0], "cm_series": [45.0, 45.0, 45.0, 45.0, 45.0, 45.0]}, {"id": "C30", "name": "Desert Spice Kitchen", "channel": "ch4", "tier": "A", "total_revenue": 75639.0, "total_cogs": 31768.0, "total_gp": 43871.0, "total_trade": 5294.0, "total_logi": 4538.0, "total_net": 34039.0, "gm_pct": 58.0, "cm_pct": 45.0, "sku_mix": [26.1, 27.1, 20.3, 18.3, 8.2], "rev_series": [12519.0, 12378.0, 12994.0, 12349.0, 13341.0, 12058.0], "gp_series": [7261.0, 7179.0, 7537.0, 7162.0, 7738.0, 6994.0], "net_series": [5634.0, 5570.0, 5847.0, 5557.0, 6004.0, 5427.0], "cm_series": [45.0, 45.0, 45.0, 45.0, 45.0, 45.0]}], "channel_agg": [{"id": "ch1", "name": "Hypermarkets", "n_customers": 7, "revenue": 2956298.0, "cogs": 1182519.0, "gp": 1773779.0, "trade": 354755.0, "logi": 118252.0, "net": 1300772.0, "gm_pct": 60.0, "cm_pct": 44.0}, {"id": "ch2", "name": "Supermarkets", "n_customers": 9, "revenue": 2086373.0, "cogs": 855412.0, "gp": 1230961.0, "trade": 208640.0, "logi": 104316.0, "net": 918005.0, "gm_pct": 59.0, "cm_pct": 44.0}, {"id": "ch3", "name": "Wholesale", "n_customers": 7, "revenue": 2100487.0, "cogs": 819191.0, "gp": 1281296.0, "trade": 168040.0, "logi": 63012.0, "net": 1050244.0, "gm_pct": 61.0, "cm_pct": 50.0}, {"id": "ch4", "name": "Food Service", "n_customers": 7, "revenue": 1265160.0, "cogs": 531365.0, "gp": 733795.0, "trade": 88560.0, "logi": 75911.0, "net": 569324.0, "gm_pct": 58.0, "cm_pct": 45.0}], "pareto": [{"rank": 1, "id": "C02", "name": "Al-Safa Hypermarket", "channel": "ch1", "tier": "A", "revenue": 612420.0, "net": 269465.0, "cm_pct": 44.0, "cum_rev_pct": 7.3, "cum_net_pct": 7.0}, {"rank": 2, "id": "C01", "name": "Al-Noor Hypermarket", "channel": "ch1", "tier": "A", "revenue": 611461.0, "net": 269043.0, "cm_pct": 44.0, "cum_rev_pct": 14.6, "cum_net_pct": 14.0}, {"rank": 3, "id": "C04", "name": "Al-Tamimi Hypermarket", "channel": "ch1", "tier": "A", "revenue": 610770.0, "net": 268741.0, "cm_pct": 44.0, "cum_rev_pct": 21.8, "cum_net_pct": 21.0}, {"rank": 4, "id": "C19", "name": "Al-Bahrain Trading", "channel": "ch3", "tier": "A", "revenue": 513467.0, "net": 256733.0, "cm_pct": 50.0, "cum_rev_pct": 27.9, "cum_net_pct": 27.7}, {"rank": 5, "id": "C17", "name": "Al-Jazeera Wholesale", "channel": "ch3", "tier": "A", "revenue": 494928.0, "net": 247466.0, "cm_pct": 50.0, "cum_rev_pct": 33.8, "cum_net_pct": 34.2}, {"rank": 6, "id": "C08", "name": "City Fresh Supermarket", "channel": "ch2", "tier": "A", "revenue": 422567.0, "net": 185931.0, "cm_pct": 44.0, "cum_rev_pct": 38.8, "cum_net_pct": 39.0}, {"rank": 7, "id": "C12", "name": "Al-Manar Supermarket", "channel": "ch2", "tier": "A", "revenue": 412032.0, "net": 181295.0, "cm_pct": 44.0, "cum_rev_pct": 43.7, "cum_net_pct": 43.7}, {"rank": 8, "id": "C24", "name": "Royal Hotel Catering", "channel": "ch4", "tier": "A", "revenue": 347487.0, "net": 156371.0, "cm_pct": 45.0, "cum_rev_pct": 47.9, "cum_net_pct": 47.8}, {"rank": 9, "id": "C26", "name": "Four Seasons Catering", "channel": "ch4", "tier": "A", "revenue": 336139.0, "net": 151262.0, "cm_pct": 45.0, "cum_rev_pct": 51.9, "cum_net_pct": 51.7}, {"rank": 10, "id": "C07", "name": "Crown Hypermarket", "channel": "ch1", "tier": "A", "revenue": 333846.0, "net": 146893.0, "cm_pct": 44.0, "cum_rev_pct": 55.8, "cum_net_pct": 55.6}, {"rank": 11, "id": "C03", "name": "Landmark Superstore", "channel": "ch1", "tier": "A", "revenue": 319952.0, "net": 140778.0, "cm_pct": 44.0, "cum_rev_pct": 59.6, "cum_net_pct": 59.2}, {"rank": 12, "id": "C05", "name": "City Mall Hypermarket", "channel": "ch1", "tier": "A", "revenue": 319609.0, "net": 140628.0, "cm_pct": 44.0, "cum_rev_pct": 63.4, "cum_net_pct": 62.9}, {"rank": 13, "id": "C22", "name": "Al-Watan Wholesale", "channel": "ch3", "tier": "A", "revenue": 285789.0, "net": 142892.0, "cm_pct": 50.0, "cum_rev_pct": 66.8, "cum_net_pct": 66.6}, {"rank": 14, "id": "C18", "name": "Western Gate Wholesale", "channel": "ch3", "tier": "A", "revenue": 279604.0, "net": 139801.0, "cm_pct": 50.0, "cum_rev_pct": 70.2, "cum_net_pct": 70.3}, {"rank": 15, "id": "C20", "name": "Northern Star Dist.", "channel": "ch3", "tier": "A", "revenue": 274339.0, "net": 137170.0, "cm_pct": 50.0, "cum_rev_pct": 73.4, "cum_net_pct": 73.8}, {"rank": 16, "id": "C09", "name": "Green Valley Grocery", "channel": "ch2", "tier": "A", "revenue": 241752.0, "net": 106371.0, "cm_pct": 44.0, "cum_rev_pct": 76.3, "cum_net_pct": 76.6}, {"rank": 17, "id": "C16", "name": "Premier Supermarket", "channel": "ch2", "tier": "A", "revenue": 240971.0, "net": 106027.0, "cm_pct": 44.0, "cum_rev_pct": 79.2, "cum_net_pct": 79.4}, {"rank": 18, "id": "C10", "name": "Al-Rawabi Store", "channel": "ch2", "tier": "A", "revenue": 237736.0, "net": 104604.0, "cm_pct": 44.0, "cum_rev_pct": 82.0, "cum_net_pct": 82.1}, {"rank": 19, "id": "C13", "name": "Horizon Superstore", "channel": "ch2", "tier": "A", "revenue": 233359.0, "net": 102677.0, "cm_pct": 44.0, "cum_rev_pct": 84.8, "cum_net_pct": 84.8}, {"rank": 20, "id": "C27", "name": "Blue Sky Catering", "channel": "ch4", "tier": "A", "revenue": 178515.0, "net": 80331.0, "cm_pct": 45.0, "cum_rev_pct": 86.9, "cum_net_pct": 86.9}, {"rank": 21, "id": "C25", "name": "Golden Palace Restaurant", "channel": "ch4", "tier": "A", "revenue": 173166.0, "net": 77926.0, "cm_pct": 45.0, "cum_rev_pct": 89.0, "cum_net_pct": 88.9}, {"rank": 22, "id": "C06", "name": "Eastern Plaza Hyper", "channel": "ch1", "tier": "A", "revenue": 148240.0, "net": 65224.0, "cm_pct": 44.0, "cum_rev_pct": 90.7, "cum_net_pct": 90.6}, {"rank": 23, "id": "C23", "name": "Summit Distributors", "channel": "ch3", "tier": "A", "revenue": 127862.0, "net": 63934.0, "cm_pct": 50.0, "cum_rev_pct": 92.2, "cum_net_pct": 92.3}, {"rank": 24, "id": "C21", "name": "Pacific Rim Trading", "channel": "ch3", "tier": "A", "revenue": 124498.0, "net": 62248.0, "cm_pct": 50.0, "cum_rev_pct": 93.7, "cum_net_pct": 93.9}, {"rank": 25, "id": "C15", "name": "Al-Masah Market", "channel": "ch2", "tier": "A", "revenue": 100338.0, "net": 44150.0, "cm_pct": 44.0, "cum_rev_pct": 94.9, "cum_net_pct": 95.0}, {"rank": 26, "id": "C14", "name": "Crescent Grocery", "channel": "ch2", "tier": "A", "revenue": 98918.0, "net": 43523.0, "cm_pct": 44.0, "cum_rev_pct": 96.1, "cum_net_pct": 96.2}, {"rank": 27, "id": "C11", "name": "Hilal Food Center", "channel": "ch2", "tier": "A", "revenue": 98700.0, "net": 43427.0, "cm_pct": 44.0, "cum_rev_pct": 97.3, "cum_net_pct": 97.3}, {"rank": 28, "id": "C28", "name": "Continental Restaurant", "channel": "ch4", "tier": "A", "revenue": 77989.0, "net": 35094.0, "cm_pct": 45.0, "cum_rev_pct": 98.2, "cum_net_pct": 98.2}, {"rank": 29, "id": "C29", "name": "Sea Breeze Restaurant", "channel": "ch4", "tier": "A", "revenue": 76225.0, "net": 34301.0, "cm_pct": 45.0, "cum_rev_pct": 99.1, "cum_net_pct": 99.1}, {"rank": 30, "id": "C30", "name": "Desert Spice Kitchen", "channel": "ch4", "tier": "A", "revenue": 75639.0, "net": 34039.0, "cm_pct": 45.0, "cum_rev_pct": 100.0, "cum_net_pct": 100.0}], "summary": {"total_customers": 30, "port_rev": 8408318.0, "port_gp": 5019831.0, "port_trade": 819995.0, "port_logi": 361491.0, "port_net": 3838345.0, "port_gm": 59.7, "port_cm": 45.6, "tier_a": 30, "tier_b": 0, "tier_c": 0}};
+const MONTHS = D.months;
+const SKUS = D.skus;
+const CHANNELS = D.channels;
+const CD = D.customers;         // customer detail array
+const CA = D.channel_agg;       // channel aggregates
+const PAR = D.pareto;           // pareto array
+const SUM = D.summary;
+const CH_COLORS = ['#7C3AED','#2563EB','#059669','#D97706'];
+const SKU_COLORS = ['#2563EB','#7C3AED','#059669','#D97706','#DC2626'];
+
+const ttEl = document.getElementById('tt');
+function showTT(e,html){ttEl.innerHTML=html;ttEl.style.opacity=1;moveTT(e);}
+function hideTT(){ttEl.style.opacity=0;}
+function moveTT(e){ttEl.style.left=(e.clientX+14)+'px';ttEl.style.top=(e.clientY-32)+'px';}
+document.addEventListener('mousemove',moveTT);
+
+function fM(v){
+  if(v>=1e6) return '$'+(v/1e6).toFixed(2)+'M';
+  if(v>=1e3) return '$'+(v/1e3).toFixed(1)+'K';
+  return '$'+v.toFixed(0);
+}
+function fP(v,d=1){return v.toFixed(d)+'%';}
+function cmClr(v){return v>=35?'var(--grn)':v>=22?'var(--amb)':'var(--red)';}
+function chName(id){return CHANNELS.find(c=>c.id===id)?.name||id;}
+
+function showTab(id,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  el.classList.add('active');
+  if(id==='by-customer') renderByCustomer();
+  if(id==='by-channel')  renderByChannel();
+  if(id==='pareto')      renderPareto();
+  if(id==='waterfall')   renderWaterfall();
+}
+
+// ── line chart helper ──────────────────────────────────────────────────
+function lineChart(svgId,series,labels,opts){
+  const el=document.getElementById(svgId); if(!el) return;
+  const vw=540,vh=opts.h||200;
+  el.setAttribute('viewBox','0 0 '+vw+' '+vh);
+  const pad=opts.pad||{l:52,r:16,t:14,b:32};
+  const plotW=vw-pad.l-pad.r,plotH=vh-pad.t-pad.b;
+  const allV=series.flatMap(s=>s.data);
+  const mn=opts.yMin!==undefined?opts.yMin:Math.max(0,Math.min(...allV)*0.9);
+  const mx=opts.yMax!==undefined?opts.yMax:Math.max(...allV)*1.08;
+  const fy=v=>pad.t+plotH-(v-mn)/(mx-mn)*plotH;
+  const fx=i=>pad.l+i/(labels.length-1)*plotW;
+  let svg='';
+  for(let i=0;i<=4;i++){
+    const y=pad.t+plotH/4*i; const v=mx-(mx-mn)/4*i;
+    svg+=`<line x1="${pad.l}" x2="${pad.l+plotW}" y1="${y}" y2="${y}" stroke="#E2E8F0" stroke-width="1"/>`;
+    svg+=`<text x="${pad.l-6}" y="${y+4}" text-anchor="end" font-size="9" fill="#94A3B8">${opts.pct?v.toFixed(0)+'%':fM(v)}</text>`;
+  }
+  labels.forEach((lb,i)=>{
+    svg+=`<text x="${fx(i)}" y="${vh-6}" text-anchor="middle" font-size="9" fill="#94A3B8">${lb}</text>`;
+  });
+  series.forEach(s=>{
+    if(s.bar){
+      const bw=plotW/labels.length*0.6;
+      s.data.forEach((v,i)=>{
+        const x=fx(i)-bw/2; const h=Math.max(1,(v-mn)/(mx-mn)*plotH);
+        const y=pad.t+plotH-h;
+        svg+=`<rect x="${x}" y="${y}" width="${bw}" height="${h}" rx="2" fill="${s.color}" opacity=".7"
+          onmouseenter="showTT(event,'<b>${s.name}</b><br>${MONTHS[i]}: ${fM(v)}')" onmouseleave="hideTT()"/>`;
+      });
+      return;
+    }
+    const pts=s.data.map((v,i)=>fx(i)+','+fy(v)).join(' ');
+    svg+=`<polyline points="${pts}" fill="none" stroke="${s.color}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>`;
+    s.data.forEach((v,i)=>{
+      const label=opts.pct?fP(v):fM(v);
+      svg+=`<circle cx="${fx(i)}" cy="${fy(v)}" r="3.5" fill="${s.color}" stroke="#fff" stroke-width="1.5"
+        onmouseenter="showTT(event,'<b>${s.name}</b><br>${MONTHS[i]}: ${label}')" onmouseleave="hideTT()"/>`;
+    });
+  });
+  if(opts.target!==undefined){
+    const ty=fy(opts.target);
+    svg+=`<line x1="${pad.l}" x2="${pad.l+plotW}" y1="${ty}" y2="${ty}" stroke="#D97706" stroke-width="1.5" stroke-dasharray="5,4"/>`;
+  }
+  el.innerHTML=svg;
+}
+
+// ── waterfall helper ───────────────────────────────────────────────────
+function waterfallChart(svgId,steps,vw,vh){
+  const el=document.getElementById(svgId); if(!el) return;
+  el.setAttribute('viewBox','0 0 '+vw+' '+vh);
+  const pad={l:14,r:14,t:30,b:50};
+  const plotW=vw-pad.l-pad.r, plotH=vh-pad.t-pad.b;
+  const n=steps.length;
+  // pre-compute all bar extents to derive y-range
+  let _r=0;
+  const _ext=steps.flatMap(s=>{
+    const s0=s.absolute?0:_r;
+    const s1=s.absolute?s.value:_r+s.value;
+    if(!s.absolute) _r=s1;
+    return [s0,s1];
+  });
+  const mn=Math.min(0,..._ext);
+  const mx=Math.max(..._ext)*1.08;
+  const fy=v=>pad.t+plotH-(v-mn)/(mx-mn)*plotH;
+  const bw=plotW/n*0.55;
+  const gap=plotW/n;
+  let svg='';
+  // grid
+  [0,.25,.5,.75,1].forEach(f=>{
+    const v=mn+(mx-mn)*f; const y=fy(v);
+    svg+=`<line x1="${pad.l}" x2="${pad.l+plotW}" y1="${y}" y2="${y}" stroke="#E2E8F0" stroke-width="1"/>`;
+    svg+=`<text x="${pad.l-2}" y="${y+4}" text-anchor="end" font-size="9" fill="#94A3B8">${fM(v)}</text>`;
+  });
+  let running=0;
+  steps.forEach((s,i)=>{
+    const x=pad.l+i*gap+(gap-bw)/2;
+    const start=s.absolute?0:running;
+    const end=s.absolute?s.value:running+s.value;
+    const top=fy(Math.max(start,end));
+    const bot=fy(Math.min(start,end));
+    const h=Math.max(2,bot-top);
+    const fc=s.color||(s.value>=0?'var(--grn)':'var(--red)');
+    svg+=`<rect x="${x}" y="${top}" width="${bw}" height="${h}" rx="3" fill="${fc}" opacity=".88"
+      onmouseenter="showTT(event,'<b>${s.label}</b><br>${fM(Math.abs(s.value))}')" onmouseleave="hideTT()"/>`;
+    // connector
+    if(i<n-1 && !steps[i+1].absolute){
+      svg+=`<line x1="${x+bw}" x2="${x+gap}" y1="${fy(end)}" y2="${fy(end)}" stroke="#CBD5E1" stroke-width="1" stroke-dasharray="3,2"/>`;
+    }
+    // value label
+    const labelY=top-5;
+    svg+=`<text x="${x+bw/2}" y="${labelY}" text-anchor="middle" font-size="9" fill="#334155" font-weight="700">${fM(Math.abs(s.value))}</text>`;
+    // axis label
+    svg+=`<text x="${x+bw/2}" y="${vh-8}" text-anchor="middle" font-size="9" fill="#475569" font-weight="600"
+      transform="rotate(-20,${x+bw/2},${vh-8})">${s.label}</text>`;
+    if(!s.absolute) running=end;
+  });
+  el.innerHTML=svg;
+}
+
+// ── KPI STRIP ─────────────────────────────────────────────────────────
+function renderKPIs(){
+  const kpis=[
+    {label:'Total Revenue',    value:fM(SUM.port_rev),   delta:'30 Customers · 4 Channels', cls:'neu'},
+    {label:'Gross Profit',     value:fM(SUM.port_gp),    delta:'GM: '+fP(SUM.port_gm),      cls:'up'},
+    {label:'Trade Spend',      value:fM(SUM.port_trade), delta:'of Revenue',                 cls:'dn'},
+    {label:'Net Contribution', value:fM(SUM.port_net),   delta:'CM: '+fP(SUM.port_cm),       cls:SUM.port_cm>=25?'up':'dn'},
+    {label:'Tier A Customers', value:SUM.tier_a,         delta:SUM.tier_b+' Tier B · '+SUM.tier_c+' Tier C', cls:'up'},
+  ];
+  document.getElementById('kpi-strip').innerHTML=kpis.map(k=>`
+    <div class="kpi">
+      <div class="kpi-label">${k.label}</div>
+      <div class="kpi-value">${k.value}</div>
+      <div class="kpi-delta ${k.cls}">${k.delta}</div>
+    </div>`).join('');
+}
+
+// ── OVERVIEW ──────────────────────────────────────────────────────────
+function renderOverview(){
+  // Scatter: revenue vs CM%
+  const el=document.getElementById('svg-scatter');
+  const vw=540,vh=240,pad={l:52,r:20,t:14,b:36};
+  const plotW=vw-pad.l-pad.r,plotH=vh-pad.t-pad.b;
+  const revs=CD.map(c=>c.total_revenue);
+  const cms=CD.map(c=>c.cm_pct);
+  const maxR=Math.max(...revs)*1.1, minR=0;
+  const maxC=Math.max(...cms)*1.1, minC=Math.min(...cms)*0.9;
+  let svg='';
+  [0,25,50,75,100].forEach(f=>{
+    const y=pad.t+plotH*(1-f/100);
+    svg+=`<line x1="${pad.l}" x2="${pad.l+plotW}" y1="${y}" y2="${y}" stroke="#E2E8F0" stroke-width="1"/>`;
+    svg+=`<text x="${pad.l-5}" y="${y+4}" text-anchor="end" font-size="8.5" fill="#94A3B8">${((maxC-minC)*f/100+minC).toFixed(0)}%</text>`;
+  });
+  // avg CM line
+  const avgCM=(SUM.port_cm-minC)/(maxC-minC);
+  const avgY=pad.t+plotH*(1-avgCM);
+  svg+=`<line x1="${pad.l}" x2="${pad.l+plotW}" y1="${avgY}" y2="${avgY}" stroke="#D97706" stroke-width="1.2" stroke-dasharray="5,4"/>`;
+  svg+=`<text x="${pad.l+plotW+2}" y="${avgY+4}" font-size="8.5" fill="#D97706" font-weight="700">Avg</text>`;
+  CD.forEach(c=>{
+    const x=pad.l+(c.total_revenue-minR)/(maxR-minR)*plotW;
+    const y=pad.t+plotH*(1-(c.cm_pct-minC)/(maxC-minC));
+    const rc=CH_COLORS[CHANNELS.findIndex(ch=>ch.id===c.channel)]||'#7C3AED';
+    svg+=`<circle cx="${x}" cy="${y}" r="5" fill="${rc}" opacity=".8" stroke="#fff" stroke-width="1"
+      onmouseenter="showTT(event,'<b>${c.name}</b><br>Rev: ${fM(c.total_revenue)}<br>CM: ${fP(c.cm_pct)}<br>Tier ${c.tier}')" onmouseleave="hideTT()"/>`;
+  });
+  // x-axis
+  svg+=`<text x="${pad.l+plotW/2}" y="${vh-4}" text-anchor="middle" font-size="9" fill="#94A3B8">Revenue →</text>`;
+  svg+=`<text x="${8}" y="${pad.t+plotH/2}" text-anchor="middle" font-size="9" fill="#94A3B8" transform="rotate(-90,8,${pad.t+plotH/2})">CM% →</text>`;
+  // legend
+  CHANNELS.forEach((ch,i)=>{
+    svg+=`<circle cx="${pad.l+10+i*110}" cy="${14}" r="4" fill="${CH_COLORS[i]}"/>`;
+    svg+=`<text x="${pad.l+18+i*110}" y="${18}" font-size="9" fill="#475569">${ch.name}</text>`;
+  });
+  el.innerHTML=svg;
+
+  // Tier donut
+  const tiers=[
+    {label:'Tier A',value:SUM.tier_a,color:'#7C3AED'},
+    {label:'Tier B',value:SUM.tier_b,color:'#2563EB'},
+    {label:'Tier C',value:SUM.tier_c,color:'#D97706'},
+  ];
+  const total=tiers.reduce((a,t)=>a+t.value,0);
+  const el2=document.getElementById('svg-tier-donut');
+  const cx=200,cy=120,R=80,r=50;
+  let angle=-Math.PI/2; let svg2='';
+  tiers.forEach(t=>{
+    const sweep=t.value/total*Math.PI*2;
+    const x1=cx+R*Math.cos(angle),y1=cy+R*Math.sin(angle);
+    const x2=cx+R*Math.cos(angle+sweep),y2=cy+R*Math.sin(angle+sweep);
+    const xi=cx+r*Math.cos(angle),yi=cy+r*Math.sin(angle);
+    const xo=cx+r*Math.cos(angle+sweep),yo=cy+r*Math.sin(angle+sweep);
+    const lg=sweep>Math.PI?1:0;
+    svg2+=`<path d="M${xi},${yi} L${x1},${y1} A${R},${R} 0 ${lg},1 ${x2},${y2} L${xo},${yo} A${r},${r} 0 ${lg},0 ${xi},${yi}Z"
+      fill="${t.color}" opacity=".88"
+      onmouseenter="showTT(event,'<b>${t.label}</b><br>${t.value} customers')" onmouseleave="hideTT()"/>`;
+    const ma=angle+sweep/2;
+    const lx=cx+(R+18)*Math.cos(ma),ly=cy+(R+18)*Math.sin(ma);
+    svg2+=`<text x="${lx}" y="${ly+4}" text-anchor="middle" font-size="10" font-weight="700" fill="${t.color}">${t.value}</text>`;
+    angle+=sweep;
+  });
+  svg2+=`<text x="${cx}" y="${cy-6}" text-anchor="middle" font-size="11" fill="#334155" font-weight="700">Customers</text>`;
+  svg2+=`<text x="${cx}" y="${cy+10}" text-anchor="middle" font-size="22" fill="#1E293B" font-weight="800">${total}</text>`;
+  // legend
+  tiers.forEach((t,i)=>{
+    svg2+=`<rect x="310" y="${90+i*30}" width="12" height="12" rx="2" fill="${t.color}"/>`;
+    svg2+=`<text x="328" y="${101+i*30}" font-size="11" fill="#334155" font-weight="600">${t.label}: ${t.value} customers</text>`;
+  });
+  el2.innerHTML=svg2;
+
+  // Top 10 table
+  const top10=CD.slice().sort((a,b)=>b.total_net-a.total_net).slice(0,10);
+  document.getElementById('tbl-top10').innerHTML=`<thead><tr>
+    <th>#</th><th>Customer</th><th>Channel</th><th>Tier</th>
+    <th>Revenue</th><th>Gross Profit</th><th>Trade Spend</th><th>Net Contribution</th><th>CM%</th>
+  </tr></thead><tbody>`+top10.map((c,i)=>`<tr>
+    <td style="color:var(--g400);font-weight:700">${i+1}</td>
+    <td style="font-weight:700">${c.name}</td>
+    <td style="color:var(--g600)">${chName(c.channel)}</td>
+    <td><span class="pill pill-${c.tier}">${c.tier}</span></td>
+    <td>${fM(c.total_revenue)}</td>
+    <td style="color:var(--grn);font-weight:700">${fM(c.total_gp)}</td>
+    <td style="color:var(--red)">${fM(c.total_trade)}</td>
+    <td style="font-weight:700;color:${cmClr(c.cm_pct)}">${fM(c.total_net)}</td>
+    <td><span style="font-weight:700;color:${cmClr(c.cm_pct)}">${fP(c.cm_pct)}</span></td>
+  </tr>`).join('')+'</tbody>';
+}
+
+// ── BY CUSTOMER ───────────────────────────────────────────────────────
+function renderByCustomer(){
+  const cid=document.getElementById('sel-cust').value;
+  const c=CD.find(x=>x.id===cid);
+  const skuMeta=D.skus;
+
+  // KPIs
+  document.getElementById('cust-kpi-strip').innerHTML=[
+    {l:'Revenue',   v:fM(c.total_revenue), d:'6-month total', cls:'neu'},
+    {l:'Gross Profit', v:fM(c.total_gp),  d:'GM: '+fP(c.gm_pct), cls:'up'},
+    {l:'Trade Spend',  v:fM(c.total_trade),d:'of Revenue',    cls:'dn'},
+    {l:'Net Contribution',v:fM(c.total_net),d:'CM: '+fP(c.cm_pct), cls:c.cm_pct>=25?'up':'dn'},
+    {l:'Tier',      v:c.tier,             d:chName(c.channel), cls:'neu'},
+  ].map(k=>`<div class="kpi">
+    <div class="kpi-label">${k.l}</div>
+    <div class="kpi-value">${k.v}</div>
+    <div class="kpi-delta ${k.cls}">${k.d}</div>
+  </div>`).join('');
+
+  // Revenue & Net trend (bar + line)
+  lineChart('svg-cust-trend',[
+    {name:'Revenue',      color:'#7C3AED', bar:true, data:c.rev_series},
+    {name:'Net Contribution',color:'#059669',data:c.net_series},
+  ],MONTHS,{h:200,pad:{l:56,r:20,t:14,b:32}});
+
+  // CM% trend
+  lineChart('svg-cust-cm',[
+    {name:'CM%',color:'#7C3AED',data:c.cm_series},
+  ],MONTHS,{h:200,pad:{l:44,r:20,t:14,b:32},pct:true,yMin:0,yMax:60});
+
+  // Waterfall
+  waterfallChart('svg-cust-wf',[
+    {label:'Revenue',   value:c.total_revenue,  absolute:true, color:'#7C3AED'},
+    {label:'– COGS',    value:-c.total_cogs,                   color:'#DC2626'},
+    {label:'Gross Profit',value:c.total_gp,     absolute:true, color:'#059669'},
+    {label:'– Trade',   value:-c.total_trade,                  color:'#F97316'},
+    {label:'– Logistics',value:-c.total_logi,                  color:'#F97316'},
+    {label:'Net Contrib.',value:c.total_net,    absolute:true, color:'#2563EB'},
+  ],540,220);
+
+  // SKU donut
+  const el=document.getElementById('svg-cust-sku');
+  const cx=160,cy=110,R=80,ri=50;
+  let angle=-Math.PI/2; let svg='';
+  c.sku_mix.forEach((pct,i)=>{
+    const sweep=pct/100*Math.PI*2;
+    const x1=cx+R*Math.cos(angle),y1=cy+R*Math.sin(angle);
+    const x2=cx+R*Math.cos(angle+sweep),y2=cy+R*Math.sin(angle+sweep);
+    const xi=cx+ri*Math.cos(angle),yi=cy+ri*Math.sin(angle);
+    const xo=cx+ri*Math.cos(angle+sweep),yo=cy+ri*Math.sin(angle+sweep);
+    const lg=sweep>Math.PI?1:0;
+    svg+=`<path d="M${xi},${yi} L${x1},${y1} A${R},${R} 0 ${lg},1 ${x2},${y2} L${xo},${yo} A${ri},${ri} 0 ${lg},0 ${xi},${yi}Z"
+      fill="${SKU_COLORS[i]}" opacity=".88"
+      onmouseenter="showTT(event,'<b>${skuMeta[i].name}</b><br>${pct.toFixed(1)}% of revenue')" onmouseleave="hideTT()"/>`;
+    if(sweep>0.3){
+      const ma=angle+sweep/2;
+      const lx=cx+(R+16)*Math.cos(ma),ly=cy+(R+16)*Math.sin(ma);
+      svg+=`<text x="${lx}" y="${ly+4}" text-anchor="middle" font-size="9.5" font-weight="700" fill="${SKU_COLORS[i]}">${pct.toFixed(0)}%</text>`;
+    }
+    angle+=sweep;
+  });
+  svg+=`<text x="${cx}" y="${cy+5}" text-anchor="middle" font-size="11" fill="#334155" font-weight="700">SKU Mix</text>`;
+  skuMeta.forEach((s,i)=>{
+    svg+=`<rect x="290" y="${40+i*32}" width="11" height="11" rx="2" fill="${SKU_COLORS[i]}"/>`;
+    svg+=`<text x="307" y="${51+i*32}" font-size="10" fill="#334155">${s.name}: ${c.sku_mix[i].toFixed(1)}%</text>`;
+  });
+  el.innerHTML=svg;
+}
+
+// ── BY CHANNEL ────────────────────────────────────────────────────────
+function renderByChannel(){
+  // Revenue bars
+  const maxRev=Math.max(...CA.map(c=>c.revenue));
+  const el=document.getElementById('svg-ch-rev');
+  const vw=540,vh=200,pad={l:120,r:20,t:14,b:24};
+  const plotW=vw-pad.l-pad.r,plotH=vh-pad.t-pad.b;
+  let svg='';
+  CA.forEach((ch,i)=>{
+    const bH=28; const y=pad.t+i*(bH+8);
+    const w=ch.revenue/maxRev*plotW;
+    svg+=`<text x="${pad.l-8}" y="${y+bH/2+4}" text-anchor="end" font-size="10.5" fill="#475569" font-weight="600">${ch.name}</text>`;
+    svg+=`<rect x="${pad.l}" y="${y}" width="${w}" height="${bH}" rx="3" fill="${CH_COLORS[i]}" opacity=".85"
+      onmouseenter="showTT(event,'<b>${ch.name}</b><br>Rev: ${fM(ch.revenue)}<br>Customers: ${ch.n_customers}')" onmouseleave="hideTT()"/>`;
+    svg+=`<text x="${pad.l+w+5}" y="${y+bH/2+4}" font-size="10" fill="#334155" font-weight="700">${fM(ch.revenue)}</text>`;
+  });
+  [0,.25,.5,.75,1].forEach(f=>{
+    const x=pad.l+f*plotW;
+    svg+=`<line x1="${x}" x2="${x}" y1="${pad.t}" y2="${pad.t+plotH}" stroke="#E2E8F0" stroke-width="1"/>`;
+    svg+=`<text x="${x}" y="${pad.t+plotH+16}" text-anchor="middle" font-size="9" fill="#94A3B8">${fM(maxRev*f)}</text>`;
+  });
+  el.innerHTML=svg;
+
+  // CM% bars
+  const el2=document.getElementById('svg-ch-cm');
+  let svg2='';
+  CA.forEach((ch,i)=>{
+    const bH=28; const y=pad.t+i*(bH+8);
+    const w=ch.cm_pct/50*plotW;
+    svg2+=`<text x="${pad.l-8}" y="${y+bH/2+4}" text-anchor="end" font-size="10.5" fill="#475569" font-weight="600">${ch.name}</text>`;
+    svg2+=`<rect x="${pad.l}" y="${y}" width="${w}" height="${bH}" rx="3" fill="${cmClr(ch.cm_pct)}" opacity=".85"
+      onmouseenter="showTT(event,'<b>${ch.name}</b><br>CM: ${fP(ch.cm_pct)}<br>Net: ${fM(ch.net)}')" onmouseleave="hideTT()"/>`;
+    svg2+=`<text x="${pad.l+w+5}" y="${y+bH/2+4}" font-size="10" fill="#334155" font-weight="700">${fP(ch.cm_pct)}</text>`;
+  });
+  [0,10,20,30,40,50].forEach(v=>{
+    const x=pad.l+v/50*plotW;
+    svg2+=`<line x1="${x}" x2="${x}" y1="${pad.t}" y2="${pad.t+plotH}" stroke="#E2E8F0" stroke-width="1"/>`;
+    svg2+=`<text x="${x}" y="${pad.t+plotH+16}" text-anchor="middle" font-size="9" fill="#94A3B8">${v}%</text>`;
+  });
+  el2.innerHTML=svg2;
+
+  // Channel table
+  document.getElementById('tbl-channel').innerHTML=`<thead><tr>
+    <th>Channel</th><th>Customers</th><th>Revenue</th><th>COGS</th>
+    <th>Gross Profit</th><th>GM%</th><th>Trade Spend</th><th>Logistics</th><th>Net Contribution</th><th>CM%</th>
+  </tr></thead><tbody>`+CA.map((ch,i)=>`<tr>
+    <td style="font-weight:700;color:${CH_COLORS[i]}">${ch.name}</td>
+    <td>${ch.n_customers}</td>
+    <td style="font-weight:700">${fM(ch.revenue)}</td>
+    <td style="color:var(--red)">${fM(ch.cogs)}</td>
+    <td style="color:var(--grn);font-weight:700">${fM(ch.gp)}</td>
+    <td style="font-weight:700">${fP(ch.gm_pct)}</td>
+    <td style="color:#F97316">${fM(ch.trade)}</td>
+    <td style="color:#F97316">${fM(ch.logi)}</td>
+    <td style="font-weight:700;color:${cmClr(ch.cm_pct)}">${fM(ch.net)}</td>
+    <td><span style="font-weight:700;color:${cmClr(ch.cm_pct)}">${fP(ch.cm_pct)}</span></td>
+  </tr>`).join('')+'</tbody>';
+}
+
+// ── PARETO ────────────────────────────────────────────────────────────
+function renderPareto(){
+  const n=PAR.length;
+  const drawPareto=(svgId,yKey,yLabel)=>{
+    const el=document.getElementById(svgId); if(!el) return;
+    const vw=540,vh=220,pad={l:44,r:44,t:14,b:32};
+    const plotW=vw-pad.l-pad.r,plotH=vh-pad.t-pad.b;
+    const fx=i=>pad.l+i/(n-1)*plotW;
+    const fy=v=>pad.t+plotH*(1-v/100);
+    let svg='';
+    [0,20,40,60,80,100].forEach(v=>{
+      const y=fy(v);
+      svg+=`<line x1="${pad.l}" x2="${pad.l+plotW}" y1="${y}" y2="${y}" stroke="#E2E8F0" stroke-width="1"/>`;
+      svg+=`<text x="${pad.l-5}" y="${y+4}" text-anchor="end" font-size="9" fill="#94A3B8">${v}%</text>`;
+    });
+    // 80% reference
+    svg+=`<line x1="${pad.l}" x2="${pad.l+plotW}" y1="${fy(80)}" y2="${fy(80)}" stroke="#D97706" stroke-width="1.2" stroke-dasharray="5,4"/>`;
+    svg+=`<text x="${pad.l+plotW+2}" y="${fy(80)+4}" font-size="9" fill="#D97706" font-weight="700">80%</text>`;
+    const pts=PAR.map((p,i)=>fx(i)+','+fy(p[yKey])).join(' ');
+    svg+=`<polyline points="${pts}" fill="none" stroke="#7C3AED" stroke-width="2.2" stroke-linejoin="round"/>`;
+    // area fill
+    svg+=`<polygon points="${pad.l},${fy(0)} ${pts} ${fx(n-1)},${fy(0)}" fill="#7C3AED" opacity=".08"/>`;
+    PAR.forEach((p,i)=>{
+      if(i%5===0||i===n-1)
+        svg+=`<circle cx="${fx(i)}" cy="${fy(p[yKey])}" r="3" fill="#7C3AED" stroke="#fff" stroke-width="1.5"
+          onmouseenter="showTT(event,'<b>#${p.rank} ${p.name}</b><br>${yLabel}: ${p[yKey].toFixed(1)}%')" onmouseleave="hideTT()"/>`;
+    });
+    // x ticks
+    [1,6,12,18,24,30].forEach(v=>{
+      if(v<=n){
+        const x=fx(v-1);
+        svg+=`<text x="${x}" y="${vh-4}" text-anchor="middle" font-size="9" fill="#94A3B8">#${v}</text>`;
+      }
+    });
+    el.innerHTML=svg;
+  };
+  drawPareto('svg-pareto-rev','cum_rev_pct','Cum. Revenue');
+  drawPareto('svg-pareto-net','cum_net_pct','Cum. Net Contribution');
+
+  // Full table
+  document.getElementById('tbl-pareto').innerHTML=`<thead><tr>
+    <th>Rank</th><th>Customer</th><th>Channel</th><th>Tier</th>
+    <th>Revenue</th><th>Cum Rev%</th><th>Net Contribution</th><th>Cum Net%</th><th>CM%</th>
+  </tr></thead><tbody>`+PAR.map(p=>`<tr>
+    <td style="color:var(--g400);font-weight:700">${p.rank}</td>
+    <td style="font-weight:700">${p.name}</td>
+    <td style="color:var(--g600)">${chName(p.channel)}</td>
+    <td><span class="pill pill-${p.tier}">${p.tier}</span></td>
+    <td>${fM(p.revenue)}</td>
+    <td>
+      <div style="display:flex;align-items:center;gap:6px">
+        <div class="bar-wrap"><div class="bar-fill" style="width:${p.cum_rev_pct}%;background:#7C3AED"></div></div>
+        <span style="font-weight:700;color:#7C3AED">${fP(p.cum_rev_pct)}</span>
+      </div>
+    </td>
+    <td style="font-weight:700;color:${cmClr(p.cm_pct)}">${fM(p.net)}</td>
+    <td>
+      <div style="display:flex;align-items:center;gap:6px">
+        <div class="bar-wrap"><div class="bar-fill" style="width:${Math.min(100,p.cum_net_pct)}%;background:#059669"></div></div>
+        <span style="font-weight:700;color:#059669">${fP(p.cum_net_pct)}</span>
+      </div>
+    </td>
+    <td><span style="font-weight:700;color:${cmClr(p.cm_pct)}">${fP(p.cm_pct)}</span></td>
+  </tr>`).join('')+'</tbody>';
+}
+
+// ── WATERFALL ─────────────────────────────────────────────────────────
+function renderWaterfall(){
+  waterfallChart('svg-port-wf',[
+    {label:'Revenue',    value:SUM.port_rev,   absolute:true, color:'#7C3AED'},
+    {label:'– COGS',     value:-(SUM.port_rev-SUM.port_gp),  color:'#DC2626'},
+    {label:'Gross Profit',value:SUM.port_gp,   absolute:true, color:'#059669'},
+    {label:'– Trade',    value:-SUM.port_trade,              color:'#F97316'},
+    {label:'– Logistics',value:-SUM.port_logi,              color:'#F97316'},
+    {label:'Net Contrib.',value:SUM.port_net,  absolute:true, color:'#2563EB'},
+  ],700,300);
+
+  // GM% by channel
+  const elG=document.getElementById('svg-gm-ch');
+  const vw=540,vh=200,pad={l:120,r:20,t:14,b:24};
+  const plotW=vw-pad.l-pad.r,plotH=vh-pad.t-pad.b;
+  let svgG='';
+  CA.forEach((ch,i)=>{
+    const bH=28; const y=pad.t+i*(bH+8);
+    const w=ch.gm_pct/80*plotW;
+    svgG+=`<text x="${pad.l-8}" y="${y+bH/2+4}" text-anchor="end" font-size="10.5" fill="#475569" font-weight="600">${ch.name}</text>`;
+    svgG+=`<rect x="${pad.l}" y="${y}" width="${w}" height="${bH}" rx="3" fill="${CH_COLORS[i]}" opacity=".85"/>`;
+    svgG+=`<text x="${pad.l+w+5}" y="${y+bH/2+4}" font-size="10" fill="#334155" font-weight="700">${fP(ch.gm_pct)}</text>`;
+  });
+  [0,20,40,60,80].forEach(v=>{
+    const x=pad.l+v/80*plotW;
+    svgG+=`<line x1="${x}" x2="${x}" y1="${pad.t}" y2="${pad.t+plotH}" stroke="#E2E8F0" stroke-width="1"/>`;
+    svgG+=`<text x="${x}" y="${pad.t+plotH+16}" text-anchor="middle" font-size="9" fill="#94A3B8">${v}%</text>`;
+  });
+  elG.innerHTML=svgG;
+
+  // Cost structure stacked bar by channel
+  const elC=document.getElementById('svg-cost-ch');
+  const costKeys=[
+    {key:'cogs', label:'COGS',      color:'#DC2626'},
+    {key:'trade',label:'Trade',     color:'#F97316'},
+    {key:'logi', label:'Logistics', color:'#FBBF24'},
+  ];
+  let svgC='';
+  CA.forEach((ch,i)=>{
+    const bH=28; const y=pad.t+i*(bH+8);
+    let xOff=pad.l;
+    costKeys.forEach(k=>{
+      const pct=ch[k.key]/ch.revenue*100;
+      const w=pct/100*plotW;
+      svgC+=`<rect x="${xOff}" y="${y}" width="${w}" height="${bH}" fill="${k.color}" opacity=".85"
+        onmouseenter="showTT(event,'<b>${ch.name} — ${k.label}</b><br>${pct.toFixed(1)}% of Revenue')" onmouseleave="hideTT()"/>`;
+      if(w>20) svgC+=`<text x="${xOff+w/2}" y="${y+bH/2+4}" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">${pct.toFixed(0)}%</text>`;
+      xOff+=w;
+    });
+    svgC+=`<text x="${pad.l-8}" y="${y+bH/2+4}" text-anchor="end" font-size="10.5" fill="#475569" font-weight="600">${ch.name}</text>`;
+  });
+  costKeys.forEach((k,i)=>{
+    svgC+=`<rect x="${pad.l+i*100}" y="${pad.t+plotH+14}" width="10" height="10" rx="2" fill="${k.color}"/>`;
+    svgC+=`<text x="${pad.l+i*100+14}" y="${pad.t+plotH+23}" font-size="9.5" fill="#475569">${k.label}</text>`;
+  });
+  elC.innerHTML=svgC;
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────
+renderKPIs();
+renderOverview();
+</script>
+</body>
+</html>
