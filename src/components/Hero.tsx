@@ -16,33 +16,24 @@ const Hero: React.FC = () => {
       }}
     >
       <div className="max-w-3xl mx-auto text-center animate-fade-in">
-        {/* Avatar / Illustration Placeholder */}
-        <div className="mx-auto mb-6 w-24 h-24 rounded-2xl bg-white dark:bg-neutral-900 shadow-sm flex items-center justify-center overflow-hidden">
-          <img
-            src="https://res.cloudinary.com/de75b0zis/image/upload/v1767276493/musab-img_dbulfo.png"
-            alt="Musab Shaikh"
-            className="w-full h-full object-cover transition-transform duration-300"
-          />
-        </div>
-
         {/* Intro pill */}
         <div className="inline-flex items-center gap-2 px-4 py-1.5 mb-6 rounded-full bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-sm text-neutral-600 dark:text-neutral-400">
           Hey! I’m{" "}
           <span className="font-medium text-neutral-900 dark:text-white">
-            Musab Shaikh
+            Musab Shaikh 👋
           </span>
         </div>
 
         {/* Main headline */}
         <h1 className="font-heading text-4xl md:text-6xl font-semibold text-neutral-900 dark:text-white leading-tight mb-6">
-          I build{" "}
+          Building{" "}
           <span className="text-neutral-900 dark:text-white">
             <Typewriter
               words={[
-                "App & Websites",
-                "PowerBI & Excel solutions",
-                "AI Solutions & Systems",
-                "Automated Analysis Reports",
+                "AI applications",
+                "data systems",
+                "automation tools",
+                "analytics dashboards",
               ]}
               typingSpeed={140}
               deletingSpeed={80}
@@ -51,25 +42,32 @@ const Hero: React.FC = () => {
           </span>
           <br />
           <span className="text-neutral-500 dark:text-neutral-400">
-            that actually work.
+            for businesses.
           </span>
         </h1>
 
         {/* Subtext */}
         <p className="text-base md:text-lg text-neutral-600 dark:text-neutral-400 leading-relaxed max-w-2xl mx-auto mb-10">
-          Building apps, AI systems, dashboards, and automation that solve
-          complex problems and improve decision-making.{" "}
+          Data Scientist & Software Engineer focused on machine learning,
+          business intelligence, forecasting, and scalable automation systems.
         </p>
 
         {/* CTA */}
-        <div className="flex justify-center mb-14">
+        <div className="flex justify-center gap-4 mb-14">
           <a
             href="https://calendly.com/musabs2802/introductory-meeting"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-sm font-medium shadow-sm hover:opacity-90 transition"
           >
-            Contact me
+            Book a call
+          </a>
+
+          <a
+            href="#projects"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-neutral-300 dark:border-neutral-700 text-sm font-medium text-neutral-700 dark:text-neutral-300 hover:bg-white/60 dark:hover:bg-neutral-900 transition"
+          >
+            View projects
           </a>
         </div>
 
