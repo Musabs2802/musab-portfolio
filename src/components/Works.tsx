@@ -15,7 +15,7 @@ const Works: React.FC = () => {
   return (
     <section
       id="projects"
-      className="bg-[#f8f6f3] dark:bg-neutral-950 px-6 py-28"
+      className="bg-[#f8f6f3] px-6 py-28"
     >
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-10">

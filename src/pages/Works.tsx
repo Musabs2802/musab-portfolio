@@ -5,13 +5,13 @@ import SEO from "../components/SEO";
 type Category = "All" | "Dashboard" | "Data Science" | "Analysis" | "Software";
 
 const categoryStyle: Record<string, string> = {
-  Dashboard: "bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300",
+  Dashboard: "bg-blue-50 text-blue-700",
   "Data Science":
-    "bg-violet-50 text-violet-700 dark:bg-violet-950/50 dark:text-violet-300",
+    "bg-violet-50 text-violet-700",
   Analysis:
-    "bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300",
+    "bg-amber-50 text-amber-700",
   Software:
-    "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300",
+    "bg-emerald-50 text-emerald-700",
 };
 
 const getDemoUrl = (demo: string) => {
@@ -42,7 +42,7 @@ const Work: React.FC = () => {
 
   const CardContent = ({ project }: { project: (typeof workData)[0] }) => (
     <>
-      <div className="relative aspect-[16/9] overflow-hidden bg-neutral-100 dark:bg-neutral-800">
+      <div className="relative aspect-[16/9] overflow-hidden bg-neutral-100">
         <img
           src={project.image}
           alt={project.title}
@@ -65,7 +65,7 @@ const Work: React.FC = () => {
       </div>
       <div className="p-5">
         <div className="flex items-start justify-between gap-3 mb-2">
-          <h2 className="text-lg font-bold text-neutral-900 dark:text-white leading-snug">
+          <h2 className="text-lg font-bold text-neutral-900 leading-snug">
             {project.title}
           </h2>
           <span
@@ -77,22 +77,22 @@ const Work: React.FC = () => {
             {project.category}
           </span>
         </div>
-        <p className="text-neutral-500 dark:text-neutral-400 text-sm leading-relaxed mb-4 line-clamp-2">
+        <p className="text-neutral-500 text-sm leading-relaxed mb-4 line-clamp-2">
           {project.description}
         </p>
         <div className="flex flex-wrap gap-1.5 mb-4">
           {project.technologies.map((tech, i) => (
             <span
               key={i}
-              className="px-2.5 py-1 bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 text-xs rounded font-medium"
+              className="px-2.5 py-1 bg-neutral-100 text-neutral-600 text-xs rounded font-medium"
             >
               {tech}
             </span>
           ))}
         </div>
-        <div className="flex items-center justify-between border-t border-neutral-100 dark:border-neutral-800 pt-3.5">
+        <div className="flex items-center justify-between border-t border-neutral-100 pt-3.5">
           <span className="text-xs text-neutral-400">{project.client}</span>
-          <span className="text-sm font-semibold text-neutral-800 dark:text-neutral-200 flex items-center gap-1">
+          <span className="text-sm font-semibold text-neutral-800 flex items-center gap-1">
             View{" "}
             <span className="group-hover:translate-x-0.5 transition-transform inline-block">
               →
@@ -104,7 +104,7 @@ const Work: React.FC = () => {
   );
 
   return (
-    <section className="min-h-screen bg-[#f8f6f3] dark:bg-neutral-950 px-6 pt-28 pb-20">
+    <section className="min-h-screen bg-[#f8f6f3] px-6 pt-28 pb-20">
       <SEO
         title="Work & Sample Dashboards"
         description="Client case studies and interactive sample dashboards by Musab Shaikh: P&L, sales, price elasticity, trade promotion ROI, forecasting, distribution and more."
@@ -117,10 +117,10 @@ const Work: React.FC = () => {
           </p>
           <div className="flex items-end justify-between gap-4 flex-wrap">
             <div>
-              <h1 className="text-5xl font-bold text-neutral-900 dark:text-white leading-none">
+              <h1 className="text-5xl font-bold text-neutral-900 leading-none">
                 Work
               </h1>
-              <p className="mt-3 text-neutral-500 dark:text-neutral-400 text-base max-w-md">
+              <p className="mt-3 text-neutral-500 text-base max-w-md">
                 Live, interactive data consulting deliverables — built to
                 production standard.
               </p>
@@ -136,8 +136,8 @@ const Work: React.FC = () => {
                 onClick={() => setActiveCategory(cat)}
                 className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-all duration-200 ${
                   activeCategory === cat
-                    ? "bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 border-neutral-900 dark:border-white"
-                    : "bg-transparent text-neutral-500 dark:text-neutral-400 border-neutral-200 dark:border-neutral-700 hover:border-neutral-400 dark:hover:border-neutral-500"
+                    ? "bg-neutral-900 text-white border-neutral-900"
+                    : "bg-transparent text-neutral-500 border-neutral-200 hover:border-neutral-400"
                 }`}
               >
                 {cat === "All" ? "All Projects" : cat}
@@ -153,14 +153,14 @@ const Work: React.FC = () => {
                 href={getDemoUrl(project.demo)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group block bg-white dark:bg-neutral-900 rounded-2xl overflow-hidden border border-neutral-200 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 hover:shadow-[0_8px_32px_rgba(0,0,0,0.09)] transition-all duration-300 cursor-pointer"
+                className="group block bg-white rounded-2xl overflow-hidden border border-neutral-200 hover:border-neutral-300 hover:shadow-[0_8px_32px_rgba(0,0,0,0.09)] transition-all duration-300 cursor-pointer"
               >
                 <CardContent project={project} />
               </a>
             ) : (
               <div
                 key={project.id}
-                className="group bg-white dark:bg-neutral-900 rounded-2xl overflow-hidden border border-neutral-200 dark:border-neutral-800"
+                className="group bg-white rounded-2xl overflow-hidden border border-neutral-200"
               >
                 <CardContent project={project} />
               </div>

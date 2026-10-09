@@ -1,6 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
+import site from "../data/site.data";
+
+const navItems = [
+  { label: "Services", to: "/#services" },
+  { label: "Case Studies", to: "/#case-studies" },
+  { label: "Work", to: "/works" },
+  { label: "Pricing", to: "/#pricing" },
+  { label: "Experience", to: "/experience" },
+  { label: "Contact", to: "/contact" },
+];
 
 const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -9,8 +19,9 @@ const Header: React.FC = () => {
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
+      setIsScrolled(window.scrollY > 20);
     };
+    handleScroll();
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
@@ -18,39 +29,43 @@ const Header: React.FC = () => {
   // Close mobile menu on route change
   useEffect(() => {
     setIsMenuOpen(false);
-  }, [location.pathname]);
+  }, [location.pathname, location.hash]);
 
-  const navItems = [
-    { label: "Home", to: "/" },
-    { label: "Works", to: "/works" },
-    { label: "Experience", to: "/experience" },
-    { label: "Contact", to: "/contact" },
-  ];
+  const isActive = (to: string) =>
+    !to.includes("#") && location.pathname === to;
 
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled
-          ? "bg-white/95 dark:bg-neutral-950/95 backdrop-blur-sm shadow-sm"
+        isScrolled || isMenuOpen
+          ? "bg-white/90 backdrop-blur-md shadow-[0_1px_0_rgba(0,0,0,0.06)]"
           : "bg-transparent"
       }`}
     >
-      <div className="max-w-7xl mx-auto px-6">
+      <div className="container-page">
         <div className="flex justify-between items-center h-16">
-          <div className="text-xl font-bold text-neutral-900 dark:text-white cursor-pointer">
-            <Link to="/">Musab Shaikh</Link>
-          </div>
+          <Link
+            to="/"
+            className="flex items-center gap-2.5 font-heading font-semibold text-ink"
+          >
+            <img
+              src={site.avatar}
+              alt=""
+              className="w-8 h-8 rounded-full object-cover bg-sand-200"
+            />
+            Musab Shaikh
+          </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-1">
+          <nav className="hidden lg:flex items-center gap-1">
             {navItems.map(({ label, to }) => (
               <Link
                 key={to}
                 to={to}
-                className={`px-4 py-2 rounded-lg text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-900 transition-all duration-200 capitalize text-sm font-medium ${
-                  location.pathname === to
-                    ? "bg-neutral-100 dark:bg-neutral-900 text-neutral-900 dark:text-white"
-                    : ""
+                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  isActive(to)
+                    ? "text-brand-800 bg-brand-50"
+                    : "text-neutral-600 hover:text-ink hover:bg-sand-200/60"
                 }`}
               >
                 {label}
@@ -58,32 +73,52 @@ const Header: React.FC = () => {
             ))}
           </nav>
 
-          {/* Mobile Menu Button */}
-          <button
-            className="md:hidden p-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-900 transition text-neutral-900 dark:text-white"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            aria-label="Toggle menu"
-          >
-            {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
+          <div className="flex items-center gap-2">
+            <a
+              href={site.calendly}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hidden sm:inline-flex btn-primary !py-2 !px-4"
+            >
+              Book a free call
+            </a>
+
+            {/* Mobile Menu Button */}
+            <button
+              className="lg:hidden p-2 rounded-lg hover:bg-sand-200 transition text-ink"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              aria-label="Toggle menu"
+              aria-expanded={isMenuOpen}
+            >
+              {isMenuOpen ? <X size={22} /> : <Menu size={22} />}
+            </button>
+          </div>
         </div>
 
         {/* Mobile Navigation */}
         {isMenuOpen && (
-          <nav className="md:hidden py-4 bg-white dark:bg-neutral-950 border-t border-neutral-200 dark:border-neutral-800">
+          <nav className="lg:hidden pb-4 border-t border-sand-200 pt-2">
             {navItems.map(({ label, to }) => (
               <Link
                 key={to}
                 to={to}
-                className={`block w-full text-left px-4 py-2 rounded-lg text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-900 transition-all duration-200 capitalize ${
-                  location.pathname === to
-                    ? "bg-neutral-100 dark:bg-neutral-900 text-neutral-900 dark:text-white font-medium"
-                    : ""
+                className={`block px-3 py-2.5 rounded-lg text-[15px] ${
+                  isActive(to)
+                    ? "bg-brand-50 text-brand-800 font-medium"
+                    : "text-neutral-700 hover:bg-sand-100"
                 }`}
               >
                 {label}
               </Link>
             ))}
+            <a
+              href={site.calendly}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-primary w-full mt-3 sm:hidden"
+            >
+              Book a free call
+            </a>
           </nav>
         )}
       </div>
