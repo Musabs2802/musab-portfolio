@@ -1,93 +1,65 @@
 import React from "react";
-import { Code2, BarChart3 } from "lucide-react";
+import { Link } from "react-router-dom";
+import { ArrowRight, GraduationCap, MapPin, Clock } from "lucide-react";
+import site from "../data/site.data";
+
+const facts = [
+  { icon: <MapPin size={16} />, text: "Jeddah, Saudi Arabia · works remotely worldwide" },
+  { icon: <GraduationCap size={16} />, text: "MSc Data Science (Distinction), Middlesex University Dubai" },
+  { icon: <Clock size={16} />, text: "Overlaps with GCC, UK and European working hours" },
+];
 
 const About: React.FC = () => {
   return (
-    <section id="about" className="bg-[#f8f6f3] px-6 py-28">
-      <div className="max-w-6xl mx-auto">
-        {/* Top Content */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-14 items-center mb-20">
-          {/* Illustration / Image */}
-          <div className="flex justify-center">
-            <div className="w-full max-w-sm rounded-3xl bg-white shadow-sm overflow-hidden">
-              <img
-                src="https://res.cloudinary.com/de75b0zis/image/upload/v1767276292/musab-working-img_pb9nkt.png" // replace with your image
-                alt="Working illustration"
-                className="w-full h-auto"
-              />
-            </div>
-          </div>
-
-          {/* Text */}
-          <div>
-            <h2 className="font-heading text-3xl md:text-4xl font-semibold text-neutral-900 mb-4">
-              A bit about me
-              <span className="text-neutral-400"> (and my work)</span>
-            </h2>
-
-            <p className="text-neutral-600 leading-relaxed mb-6">
-              I’m a software engineer and data scientist passionate about
-              building systems that don’t just run — they scale, deliver
-              insights, and solve real business challenges.
-            </p>
-
-            <p className="text-neutral-600 leading-relaxed mb-8">
-              From full-stack applications to AI-driven analytics, pricing
-              optimization, and demand forecasting, I transform messy data and
-              abstract ideas into clean, production-ready solutions that create
-              measurable impact.
-            </p>
-
-            <a
-              href="https://calendly.com/musabs2802/introductory-meeting"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-neutral-900 text-white text-sm font-medium shadow-sm hover:opacity-90 transition"
-            >
-              Contact me
-            </a>
+    <section id="about" className="bg-white py-24 md:py-28">
+      <div className="container-page grid md:grid-cols-[0.8fr_1.2fr] gap-12 lg:gap-20 items-center">
+        <div className="mx-auto w-full max-w-xs md:max-w-none">
+          <div className="rounded-[2rem] overflow-hidden bg-sand-100 border border-sand-300">
+            <img
+              src={site.avatar}
+              alt="Illustrated portrait of Musab Shaikh"
+              loading="lazy"
+              className="w-full h-auto"
+            />
           </div>
         </div>
 
-        {/* Bottom Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Software Engineer Card */}
-          <div className="rounded-2xl bg-white border border-neutral-200 p-6 shadow-sm">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 rounded-xl bg-neutral-100">
-                <Code2 className="w-5 h-5 text-neutral-700" />
-              </div>
-              <h3 className="font-medium text-lg text-neutral-900">
-                Software Engineer
-              </h3>
-            </div>
-
-            <p className="text-neutral-600 leading-relaxed">
-              I design and build scalable, maintainable applications using
-              modern front-end and back-end technologies, with a strong focus on
-              clean architecture and long-term reliability.
+        <div>
+          <p className="eyebrow mb-3">About me</p>
+          <h2 className="section-title mb-6">
+            An analyst who knows how sales teams actually work.
+          </h2>
+          <div className="space-y-4 text-neutral-600 text-[17px] leading-relaxed">
+            <p>
+              I've spent 3+ years in FMCG commercial teams across the GCC. Today
+              I'm a Sales Analyst III at Seara (JBS), where I own the Power BI
+              reporting that everyone from the CEO to field sales opens each
+              morning. I also set sales targets for 250+ salesmen and track the
+              incentive programs behind 35% year-on-year growth.
+            </p>
+            <p>
+              That's what I bring to freelance work: dashboards built around the
+              decisions your team needs to make, not just charts. And because I
+              also build mobile apps, I can take an idea from a spreadsheet to
+              an app in your customers' hands.
             </p>
           </div>
 
-          {/* Data Analyst / Scientist Card */}
-          <div className="rounded-2xl bg-white border border-neutral-200 p-6 shadow-sm">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 rounded-xl bg-neutral-100">
-                <BarChart3 className="w-5 h-5 text-neutral-700" />
-              </div>
-              <h3 className="font-medium text-lg text-neutral-900">
-                Data Analyst
-              </h3>
-            </div>
+          <ul className="mt-8 space-y-3">
+            {facts.map(({ icon, text }) => (
+              <li key={text} className="flex items-center gap-3 text-sm text-ink">
+                <span className="p-2 rounded-lg bg-brand-50 text-brand-700">{icon}</span>
+                {text}
+              </li>
+            ))}
+          </ul>
 
-            <p className="text-neutral-600 leading-relaxed">
-              I’m a Power BI & Excel expert who turns complex datasets into
-              actionable insights, building forecasting, pricing, and predictive
-              models while creating dashboards that help businesses improve
-              revenue, optimize operations, and make confident data-driven
-              decisions.
-            </p>
-          </div>
+          <Link
+            to="/experience"
+            className="inline-flex items-center gap-1.5 mt-8 text-sm font-medium text-brand-700 hover:text-brand-900"
+          >
+            See my full experience <ArrowRight size={15} />
+          </Link>
         </div>
       </div>
     </section>

@@ -3,12 +3,12 @@ import Hero from "../components/Hero";
 import Stats from "../components/Stats";
 import Services from "../components/Services";
 import CaseStudies from "../components/CaseStudies";
-import Contact from "../components/Contact";
-import ClientProjects from "../components/Works";
-import Testimonials from "../components/Testimonials";
+import Works from "../components/Works";
+import Process from "../components/Process";
+import Pricing from "../components/Pricing";
 import About from "../components/About";
 import FAQ from "../components/FAQ";
-import Skills from "../components/Skills";
+import Contact from "../components/Contact";
 import SEO from "../components/SEO";
 
 const Home: React.FC = () => {
@@ -23,10 +23,10 @@ const Home: React.FC = () => {
       <Stats />
       <Services />
       <CaseStudies />
+      <Works />
+      <Process />
+      <Pricing />
       <About />
-      <Skills />
-      <ClientProjects />
-      <Testimonials />
       <FAQ />
       <Contact />
     </main>

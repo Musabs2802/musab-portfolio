@@ -64,6 +64,10 @@ const caseStudies: CaseStudy[] = [
     ],
     tools: ["Python", "Pandas", "Excel", "Data Modeling"],
     visual: { type: "before-after", before: "3 hrs", after: "30 min", unit: "daily reporting time" },
+    quote: {
+      text: "In just four months, Musab streamlined and automated our accounting process, resulting in significant efficiency improvements.",
+      author: "Al Kabeer Group, Dubai",
+    },
   },
   {
     id: "tritone",

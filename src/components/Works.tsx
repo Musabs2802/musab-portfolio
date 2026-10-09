@@ -1,86 +1,62 @@
 import React from "react";
-import workData from "../data/work.data";
 import { Link } from "react-router-dom";
-
-const getDemoUrl = (demo: string) => {
-  if (/^(https?:)?\/\//.test(demo)) {
-    return demo;
-  }
-
-  const normalizedPath = demo.replace(/^\/+/, "");
-  return `${import.meta.env.BASE_URL}${normalizedPath}`;
-};
+import { ArrowRight, ArrowUpRight } from "lucide-react";
+import workData from "../data/work.data";
+import { getDemoUrl } from "../utils/demoUrl";
 
 const Works: React.FC = () => {
   return (
-    <section
-      id="projects"
-      className="bg-[#f8f6f3] px-6 py-28"
-    >
-      <div className="max-w-6xl mx-auto">
-        <div className="flex items-center justify-between mb-10">
-          <h2 className="text-4xl md:text-5xl font-bold text-[#1a1a1a]">
-            My Works
-          </h2>
-          <Link
-            to="/works"
-            className="px-5 py-2.5 bg-neutral-900 text-white rounded-xl hover:opacity-90 transition font-medium text-sm flex items-center gap-2 shadow-sm"
-          >
-            View All
-            <span>→</span>
+    <section id="samples" className="bg-white py-24 md:py-28">
+      <div className="container-page">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+          <div className="max-w-2xl">
+            <p className="eyebrow mb-3">Sample dashboards</p>
+            <h2 className="section-title">Click around before you hire me.</h2>
+            <p className="mt-4 text-neutral-600 text-lg leading-relaxed">
+              Interactive dashboards I built on fictional FMCG data to show
+              what's possible. Yours is built in Power BI or Excel, on your own
+              data.
+            </p>
+          </div>
+          <Link to="/works" className="btn-secondary shrink-0 self-start md:self-auto">
+            View all {workData.length}
+            <ArrowRight size={16} />
           </Link>
         </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {workData.slice(0, 6).map((project) => {
-            const card = (
-              <>
-                <div className="aspect-video bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
-                  <img
-                    src={project.image}
-                    alt={project.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                </div>
-                <div className="p-5">
-                  <h3 className="text-lg font-bold text-gray-900 mb-2">
+          {workData.slice(0, 6).map((project) => (
+            <a
+              key={project.id}
+              href={project.demo ? getDemoUrl(project.demo) : undefined}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group block rounded-2xl overflow-hidden border border-sand-300 bg-sand-50 hover:border-brand-300 hover:shadow-[0_16px_40px_-20px_rgba(15,61,62,0.35)] transition-all"
+            >
+              <div className="aspect-[16/10] overflow-hidden bg-sand-200 border-b border-sand-200">
+                <img
+                  src={project.image}
+                  alt={`${project.title} screenshot`}
+                  loading="lazy"
+                  className="w-full h-full object-cover object-top group-hover:scale-[1.03] transition-transform duration-500"
+                />
+              </div>
+              <div className="p-5">
+                <div className="flex items-start justify-between gap-3">
+                  <h3 className="font-semibold text-ink leading-snug">
                     {project.title}
                   </h3>
-                  <p className="text-gray-600 mb-4 text-sm leading-relaxed line-clamp-2">
-                    {project.description}
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {project.technologies.map((tech, index) => (
-                      <span
-                        key={index}
-                        className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-xs"
-                      >
-                        {tech}
-                      </span>
-                    ))}
-                  </div>
+                  <ArrowUpRight
+                    size={18}
+                    className="shrink-0 text-neutral-400 group-hover:text-brand-700 transition-colors"
+                  />
                 </div>
-              </>
-            );
-
-            return project.demo ? (
-              <a
-                key={project.id}
-                href={getDemoUrl(project.demo)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg transition-shadow block"
-              >
-                {card}
-              </a>
-            ) : (
-              <div
-                key={project.id}
-                className="group bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg transition-shadow"
-              >
-                {card}
+                <p className="text-neutral-600 mt-2 text-sm leading-relaxed line-clamp-2">
+                  {project.description}
+                </p>
               </div>
-            );
-          })}
+            </a>
+          ))}
         </div>
       </div>
     </section>
