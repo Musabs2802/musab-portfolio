@@ -2,54 +2,26 @@ import skillCategories from "../data/skills.data";
 
 export default function Skills() {
   return (
-    <section className="bg-[#f8f6f3] px-6 py-28">
-      <div className="max-w-5xl mx-auto w-full">
-        <h2 className="text-4xl md:text-5xl font-bold text-center mb-12 text-[#1a1a1a]">
-          My Skills & Stack
-        </h2>
+    <section className="mt-20">
+      <p className="eyebrow mb-3">Toolkit</p>
+      <h2 className="section-title mb-8">Skills &amp; tools</h2>
 
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-gray-200">
-                  <th className="text-left py-4 px-6 font-semibold text-gray-600 text-sm">
-                    Category
-                  </th>
-                  <th className="text-left py-4 px-6 font-semibold text-gray-600 text-sm">
-                    Skills
-                  </th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {skillCategories.map((category, index) => (
-                  <tr
-                    key={index}
-                    className="border-b border-gray-100 last:border-0"
-                  >
-                    <td className="py-5 px-6 text-gray-400 font-medium align-top whitespace-nowrap">
-                      {category.category}
-                    </td>
-
-                    <td className="py-5 px-6">
-                      <div className="flex flex-wrap gap-2">
-                        {category.skills.map((skill, skillIndex) => (
-                          <span
-                            key={skillIndex}
-                            className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm"
-                          >
-                            {skill}
-                          </span>
-                        ))}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      <div className="rounded-2xl bg-white border border-sand-300 divide-y divide-sand-200">
+        {skillCategories.map(({ category, skills }) => (
+          <div
+            key={category}
+            className="grid sm:grid-cols-[200px_1fr] gap-3 sm:gap-6 px-6 py-5"
+          >
+            <p className="text-sm font-semibold text-ink pt-1">{category}</p>
+            <div className="flex flex-wrap gap-2">
+              {skills.map((skill) => (
+                <span key={skill} className="chip">
+                  {skill}
+                </span>
+              ))}
+            </div>
           </div>
-        </div>
+        ))}
       </div>
     </section>
   );

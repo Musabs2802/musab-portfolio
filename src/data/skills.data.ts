@@ -1,60 +1,23 @@
 const skillCategories = [
   {
-    category: "Languages",
-    skills: ["Python", "JavaScript", "TypeScript", "SQL", "DAX"],
+    category: "Business Intelligence",
+    skills: ["Power BI", "DAX", "Power Query", "Semantic models", "Power BI Service", "Power Automate"],
   },
   {
-    category: "Frontend",
-    skills: ["React", "Next.js", "Tailwind CSS", "Flutter", "Android", "iOS"],
+    category: "Excel & Data",
+    skills: ["Advanced Excel", "Data modeling", "SQL", "ETL", "Nielsen retail data"],
   },
   {
-    category: "Backend",
-    skills: ["Node.js", "REST APIs", "FastAPI", "Express.js"],
+    category: "Analytics & ML",
+    skills: ["Python", "Pandas", "Scikit-learn", "LightGBM / XGBoost", "Forecasting", "Price elasticity"],
   },
   {
-    category: "Data Science & ML",
-    skills: [
-      "Pandas",
-      "NumPy",
-      "Scikit-learn",
-      "Time Series (ARIMA, SARIMA, Prophet)",
-      "Price Elasticity Modeling",
-      "Regression Models",
-      "LSTM",
-    ],
+    category: "Commercial",
+    skills: ["Sales performance", "Target setting", "Incentives & rebates", "Distribution KPIs", "Profitability"],
   },
   {
-    category: "Databases",
-    skills: ["PostgreSQL", "MongoDB", "SQLite", "MySQL"],
-  },
-  {
-    category: "BI & Analytics",
-    skills: [
-      "Power BI",
-      "Excel (Advanced)",
-      "Google Looker Studio",
-      "Statistical Analysis",
-    ],
-  },
-  {
-    category: "Automation & Cloud",
-    skills: [
-      "AWS (S3, EC2)",
-      "Puppeteer",
-      "RPA",
-      "Workflow Automation",
-      "Web Scraping",
-    ],
-  },
-  {
-    category: "Tools & Platforms",
-    skills: [
-      "Git & GitHub",
-      "Docker (Basics)",
-      "Streamlit",
-      "Telegram Bots",
-      "LangChain",
-    ],
+    category: "Mobile Apps",
+    skills: ["Flutter", "Dart", "Android", "iOS", "Firebase", "REST APIs"],
   },
 ];
 

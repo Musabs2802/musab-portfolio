@@ -1,90 +1,89 @@
 import React from "react";
-import { Calendar, MapPin } from "lucide-react";
+import { Calendar, GraduationCap, MapPin } from "lucide-react";
 import experienceData from "../data/experience.data";
+import Skills from "../components/Skills";
 import SEO from "../components/SEO";
 
 const Experience: React.FC = () => {
   return (
-    <section
-      id="experience"
-      className="min-h-screen bg-[#f8f6f3] px-6 pt-28 pb-16"
-    >
+    <main className="min-h-screen bg-sand-100 pt-32 pb-24">
       <SEO
         title="Experience"
         description="Commercial BI experience of Musab Shaikh: Power BI reporting for a $700M+ FMCG business, propensity modelling, target setting and reporting automation across the GCC."
         path="/experience"
       />
-      <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-16">
-          <h1 className="text-4xl md:text-5xl font-bold text-neutral-900 mb-4">
-            Experience
+      <div className="container-page max-w-4xl">
+        <header className="mb-14">
+          <p className="eyebrow mb-3">Experience</p>
+          <h1 className="text-4xl md:text-5xl font-semibold text-ink leading-tight">
+            3+ years in FMCG commercial analytics
           </h1>
-          <p className="text-lg text-neutral-600 max-w-3xl mx-auto leading-relaxed">
-            My journey in tech spans from building scalable software to
-            uncovering insights from data — across multiple industries and
-            roles.
+          <p className="mt-4 text-neutral-600 text-lg leading-relaxed max-w-2xl">
+            Building the reporting, targets and models that sales teams across
+            the GCC use to make decisions every day.
           </p>
-        </div>
+        </header>
 
-        <div className="relative">
-          {/* Vertical line */}
-          <div className="absolute left-4 md:left-1/2 transform md:-translate-x-1/2 h-full w-0.5 bg-neutral-300"></div>
-
-          {/* Timeline items */}
-          {experienceData.map((exp, index) => (
-            <div
-              key={index}
-              className={`relative flex items-center mb-12 ${
-                index % 2 === 0 ? "md:flex-row" : "md:flex-row-reverse"
-              }`}
-            >
-              {/* Dot */}
-              <div className="absolute left-4 md:left-1/2 transform md:-translate-x-1/2 w-4 h-4 bg-neutral-900 rounded-full border-4 border-[#FAFAF8] shadow-sm z-10"></div>
-
-              {/* Content */}
-              <div
-                className={`ml-12 md:ml-0 md:w-5/12 ${
-                  index % 2 === 0 ? "md:mr-auto md:pr-8" : "md:ml-auto md:pl-8"
-                }`}
-              >
-                <div className="bg-white p-6 rounded-xl shadow-sm">
-                  <div className="flex items-center text-sm text-neutral-500 mb-2">
-                    <Calendar size={16} className="mr-2" />
-                    <span>{exp.period}</span>
-                    <MapPin size={16} className="ml-4 mr-2" />
-                    <span>{exp.location}</span>
-                  </div>
-
-                  <h3 className="text-xl font-bold text-neutral-900 mb-1">
-                    {exp.title}
-                  </h3>
-                  <h4 className="text-lg text-neutral-600 font-semibold mb-4">
-                    {exp.company}
-                  </h4>
-
-                  <ul className="space-y-2 mb-4 list-disc list-inside text-neutral-600 text-sm leading-relaxed">
-                    {exp.description.map((item, idx) => (
-                      <li key={idx}>{item}</li>
-                    ))}
-                  </ul>
-
-                  <div className="flex flex-wrap gap-2">
-                    {exp.technologies.map((tech, idx) => (
-                      <span
-                        key={idx}
-                        className="px-3 py-1.5 bg-gray-100 text-gray-700 text-xs rounded-md"
-                      >
-                        {tech}
-                      </span>
-                    ))}
-                  </div>
+        <ol className="relative border-l-2 border-sand-300 ml-2 space-y-10">
+          {experienceData.map((exp) => (
+            <li key={exp.company} className="pl-8 relative">
+              <span className="absolute -left-[9px] top-7 h-4 w-4 rounded-full bg-brand-700 ring-4 ring-sand-100" />
+              <article className="rounded-2xl bg-white border border-sand-300 p-6 md:p-8">
+                <div className="flex flex-wrap items-center gap-x-5 gap-y-1 text-sm text-neutral-500 mb-3">
+                  <span className="inline-flex items-center gap-1.5">
+                    <Calendar size={15} /> {exp.period}
+                  </span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <MapPin size={15} /> {exp.location}
+                  </span>
                 </div>
-              </div>
-            </div>
+                <h2 className="text-xl md:text-2xl font-semibold text-ink">
+                  {exp.title}
+                </h2>
+                <p className="text-brand-700 font-medium mb-5">{exp.company}</p>
+
+                <ul className="space-y-2.5 mb-6 text-neutral-700 text-[15px] leading-relaxed">
+                  {exp.description.map((item) => (
+                    <li key={item} className="flex gap-3">
+                      <span className="mt-[0.6rem] h-1.5 w-1.5 shrink-0 rounded-full bg-brand-500" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+
+                <div className="flex flex-wrap gap-2">
+                  {exp.technologies.map((tech) => (
+                    <span key={tech} className="chip">
+                      {tech}
+                    </span>
+                  ))}
+                </div>
+              </article>
+            </li>
           ))}
-        </div>
+
+          <li className="pl-8 relative">
+            <span className="absolute -left-[9px] top-7 h-4 w-4 rounded-full bg-sand-300 ring-4 ring-sand-100" />
+            <article className="rounded-2xl bg-white border border-sand-300 p-6 md:p-8">
+              <div className="flex items-center gap-1.5 text-sm text-neutral-500 mb-3">
+                <GraduationCap size={16} /> Sep 2023 - Feb 2025
+              </div>
+              <h2 className="text-xl font-semibold text-ink">
+                MSc Data Science, Distinction
+              </h2>
+              <p className="text-brand-700 font-medium mb-3">
+                Middlesex University Dubai
+              </p>
+              <p className="text-neutral-700 text-[15px]">
+                Dissertation: Price Elasticity in FMCG.
+              </p>
+            </article>
+          </li>
+        </ol>
+
+        <Skills />
       </div>
-    </section>
+    </main>
   );
 };
 
