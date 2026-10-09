@@ -10,7 +10,7 @@ const Contact: React.FC = () => {
     >
       <SEO
         title="Contact Musab Shaikh"
-        description="Get in touch with Musab Shaikh for software engineering, analytics dashboards, forecasting systems, and business automation consulting."
+        description="Book a free call or message Musab Shaikh about a Power BI dashboard, Excel tracker, reporting automation or mobile app project."
         path="/contact"
       />
       <div className="max-w-4xl mx-auto w-full">

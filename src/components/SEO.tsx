@@ -8,7 +8,7 @@ interface SEOProps {
   image?: string;
 }
 
-const DEFAULT_SITE_URL = "https://musab-portfolio.vercel.app";
+const DEFAULT_SITE_URL = "https://musab-shaikh.vercel.app";
 const DEFAULT_IMAGE =
   "https://res.cloudinary.com/de75b0zis/image/upload/v1767276493/musab-img_dbulfo.png";
 
@@ -81,13 +81,40 @@ const SEO: FC<SEOProps> = ({ title, description, path, image }) => {
         {
           "@type": "Person",
           name: "Musab Shaikh",
-          jobTitle: "Software Engineer & Data Scientist",
+          jobTitle: "Power BI Consultant & Mobile App Developer",
           url: siteUrl,
           image: DEFAULT_IMAGE,
           sameAs: [
             "https://www.linkedin.com/in/musab-shaikh-2802/",
             "https://github.com/Musabs2802",
           ],
+        },
+        {
+          "@type": "ProfessionalService",
+          name: "Musab Shaikh - Analytics & App Development",
+          url: siteUrl,
+          image: DEFAULT_IMAGE,
+          email: "musabs2802@gmail.com",
+          telephone: "+966507055745",
+          areaServed: ["SA", "AE", "KW", "QA", "BH", "OM", "Worldwide"],
+          address: {
+            "@type": "PostalAddress",
+            addressLocality: "Jeddah",
+            addressCountry: "SA",
+          },
+          hasOfferCatalog: {
+            "@type": "OfferCatalog",
+            name: "Services",
+            itemListElement: [
+              "Power BI dashboard development",
+              "Excel trackers and data models",
+              "Reporting automation",
+              "Android and iOS app development",
+            ].map((service) => ({
+              "@type": "Offer",
+              itemOffered: { "@type": "Service", name: service },
+            })),
+          },
         },
         {
           "@type": "WebSite",

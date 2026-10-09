@@ -106,8 +106,8 @@ const Work: React.FC = () => {
   return (
     <section className="min-h-screen bg-[#f8f6f3] dark:bg-neutral-950 px-6 pt-28 pb-20">
       <SEO
-        title="Data Dashboard Projects"
-        description="Interactive dashboard portfolio by Musab Shaikh covering price elasticity, trade promotion ROI, demand forecasting, distribution analytics, customer profitability, and market share tracking."
+        title="Work & Sample Dashboards"
+        description="Client case studies and interactive sample dashboards by Musab Shaikh: P&L, sales, price elasticity, trade promotion ROI, forecasting, distribution and more."
         path="/works"
       />
       <div className="max-w-7xl mx-auto">

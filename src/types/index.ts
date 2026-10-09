@@ -1,5 +1,3 @@
-import { SimpleIcon } from "simple-icons";
-
 export interface Experience {
   title: string;
   company: string;
@@ -7,18 +5,6 @@ export interface Experience {
   period: string;
   description: string[];
   technologies: string[];
-}
-
-export interface Project {
-  id: number;
-  title: string;
-  description: string;
-  image: string;
-  technologies: string[];
-  category: "Software" | "Data Science" | "Analysis";
-  github?: string;
-  demo?: string;
-  highlights: string;
 }
 
 export interface Work {
@@ -31,19 +17,4 @@ export interface Work {
   client: string;
   results: string;
   demo?: string;
-}
-
-export interface Technology {
-  name: string;
-  icon: SimpleIcon;
-  category:
-    | "Frontend"
-    | "Language"
-    | "Backend"
-    | "Data"
-    | "Visualization"
-    | "ML"
-    | "Tools"
-    | "Database"
-    | "Cloud";
 }

@@ -12,8 +12,8 @@ const Home: React.FC = () => {
   return (
     <main className="min-h-screen bg-white">
       <SEO
-        title="Software Engineer and Data Scientist Portfolio"
-        description="Musab Shaikh builds AI applications, analytics dashboards, forecasting systems, and automation tools for business growth. Explore live dashboards and consulting work."
+        title="Power BI Consultant & Mobile App Developer"
+        description="Power BI dashboards, Excel trackers, reporting automation and Android & iOS apps for growing businesses in Saudi Arabia, the GCC and worldwide."
         path="/"
       />
       <Hero />

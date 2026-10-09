@@ -10,8 +10,8 @@ const Experience: React.FC = () => {
       className="min-h-screen bg-[#f8f6f3] dark:bg-neutral-950 px-6 pt-28 pb-16"
     >
       <SEO
-        title="Professional Experience"
-        description="Professional experience of Musab Shaikh across software engineering, data analytics, machine learning, and automation delivery roles."
+        title="Experience"
+        description="Commercial BI experience of Musab Shaikh: Power BI reporting for a $700M+ FMCG business, propensity modelling, target setting and reporting automation across the GCC."
         path="/experience"
       />
       <div className="max-w-7xl mx-auto">

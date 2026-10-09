@@ -4,8 +4,8 @@
   "start_url": "/",
   "display": "standalone",
   "background_color": "#f8f6f3",
-  "theme_color": "#111111",
-  "description": "Portfolio for software engineering, data science, analytics dashboards, and automation solutions by Musab Shaikh.",
+  "theme_color": "#0f3d3e",
+  "description": "Power BI dashboards, Excel trackers and mobile apps by Musab Shaikh.",
   "icons": [
     {
       "src": "/vite.svg",
