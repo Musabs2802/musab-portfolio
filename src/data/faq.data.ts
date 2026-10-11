@@ -7,9 +7,9 @@ interface FAQItem {
 const faqs: FAQItem[] = [
   {
     id: 1,
-    question: "How much does a dashboard or app cost?",
+    question: "How do you price a project?",
     answer:
-      "Excel trackers start at $250, Power BI dashboards at $750, and the monthly BI Partner retainer at $500. Mobile apps start at $4,000. After a free call I send a fixed quote, so the price won't change unless the scope does.",
+      "Every project gets a fixed quote based on scope: your data sources, the number of report pages or app screens, and integrations. After a free call I send a written proposal, and the price won't change unless the scope does.",
   },
   {
     id: 2,

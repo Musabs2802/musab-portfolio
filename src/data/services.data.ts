@@ -45,20 +45,16 @@ const services: Service[] = [
 
 export interface Package {
   name: string;
-  price: string;
-  cadence: string;
   summary: string;
   includes: string[];
   timeline: string;
   featured?: boolean;
 }
 
-// Starting prices; final quotes depend on scope (data sources, pages, screens)
+// Engagement types; quotes depend on scope (data sources, pages, screens)
 export const packages: Package[] = [
   {
     name: "Excel Tracker",
-    price: "$250",
-    cadence: "one-off, from",
     summary:
       "A ready-to-use tracker or template with formulas, validation and a summary dashboard.",
     includes: [
@@ -72,8 +68,6 @@ export const packages: Package[] = [
   },
   {
     name: "Dashboard Build",
-    price: "$750",
-    cadence: "one-off, from",
     summary:
       "A Power BI report built on your data, from data model to published dashboard.",
     includes: [
@@ -87,8 +81,6 @@ export const packages: Package[] = [
   },
   {
     name: "BI Partner",
-    price: "$500",
-    cadence: "per month, from",
     summary:
       "Your part-time BI analyst: keep reports running and keep improving them.",
     includes: [
@@ -103,8 +95,6 @@ export const packages: Package[] = [
   },
   {
     name: "Mobile App",
-    price: "$4,000",
-    cadence: "per project, from",
     summary:
       "An Android and iOS app, designed, built and published to both stores.",
     includes: [

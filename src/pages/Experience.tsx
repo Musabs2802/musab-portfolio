@@ -40,7 +40,11 @@ const Experience: React.FC = () => {
                 <h2 className="text-xl md:text-2xl font-semibold text-ink">
                   {exp.title}
                 </h2>
-                <p className="text-brand-700 font-medium mb-5">{exp.company}</p>
+                <p className="text-brand-700 font-medium">{exp.company}</p>
+                {exp.companyNote && (
+                  <p className="text-sm text-neutral-500 mt-0.5">{exp.companyNote}</p>
+                )}
+                <div className="mb-5" />
 
                 <ul className="space-y-2.5 mb-6 text-neutral-700 text-[15px] leading-relaxed">
                   {exp.description.map((item) => (

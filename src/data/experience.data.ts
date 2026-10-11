@@ -4,6 +4,7 @@ const experienceData: Experience[] = [
   {
     title: "Sales Analyst III",
     company: "Seara (JBS)",
+    companyNote: "Part of JBS, the world's largest protein company",
     location: "Jeddah, KSA",
     period: "Apr 2025 - Present",
     description: [
@@ -17,6 +18,7 @@ const experienceData: Experience[] = [
   {
     title: "Data Analyst",
     company: "Al Kabeer Group of Companies",
+    companyNote: "A leading frozen food maker in the GCC",
     location: "Dubai, UAE",
     period: "Feb 2023 - Sep 2024",
     description: [

@@ -1,6 +1,7 @@
 export interface Experience {
   title: string;
   company: string;
+  companyNote?: string;
   location: string;
   period: string;
   description: string[];

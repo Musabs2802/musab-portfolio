@@ -22,7 +22,7 @@ const caseStudies: CaseStudy[] = [
     id: "propensity",
     service: "Analytics",
     title: "Customer-SKU propensity model",
-    client: "Seara (JBS) · FMCG · KSA, UAE & Kuwait",
+    client: "Seara (JBS), the world's largest protein company · KSA, UAE & Kuwait",
     problem:
       "Distribution was thin and field sales were not reaching the right customers with the right products. Salesmen planned visits from habit, so growth opportunities went unnoticed.",
     built: [
@@ -49,7 +49,7 @@ const caseStudies: CaseStudy[] = [
     id: "reporting-automation",
     service: "Analytics",
     title: "Daily sales reporting automation",
-    client: "Al Kabeer Group · FMCG · 6 GCC countries",
+    client: "Al Kabeer Group, a leading GCC frozen food maker · 6 countries",
     problem:
       "Daily sales reports were assembled by hand every morning. It took 3 hours, so senior management saw the numbers late, and each country's report looked different.",
     built: [
@@ -73,7 +73,7 @@ const caseStudies: CaseStudy[] = [
     id: "tritone",
     service: "Mobile App",
     title: "Medii: health app for neurodivergent people",
-    client: "Tritone Health · London, UK",
+    client: "Tritone Health, a UK health-tech startup working with the NHS · London",
     problem:
       "Tritone Health needed a simple, accessible app that helps neurodivergent and developmentally diverse people, and their carers, track their health and stay connected with their care team.",
     built: [
@@ -102,7 +102,7 @@ const caseStudies: CaseStudy[] = [
     id: "mbvs",
     service: "Mobile App",
     title: "MBVS Hub: professional networking app",
-    client: "MBVS (Association of Muslim Professionals) · Zürich, Switzerland",
+    client: "MBVS, Switzerland's network of Muslim professionals · Zürich",
     problem:
       "Switzerland's association of Muslim professionals needed one place where members could find each other, discover events and share job and business opportunities.",
     built: [

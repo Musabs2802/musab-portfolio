@@ -1,14 +1,52 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, CalendarDays, TrendingUp, Users } from "lucide-react";
 import site from "../data/site.data";
 
 const experienceWith = [
-  "Seara (JBS)",
-  "Al Kabeer Group",
-  "Tritone Health · UK",
-  "MBVS · Switzerland",
+  { name: "Seara (JBS)", note: "World's largest protein company" },
+  { name: "Al Kabeer Group", note: "Leading GCC frozen food maker" },
+  { name: "Tritone Health", note: "UK health-tech startup working with the NHS" },
+  { name: "MBVS", note: "Swiss network of Muslim professionals" },
 ];
+
+// Rotating end of the headline. All phrases sit in one grid cell, so the
+// heading keeps the height of the longest one and nothing below it jumps.
+const focusAreas = [
+  "dashboards & reporting",
+  "sales forecasting",
+  "pricing & promo analysis",
+  "machine learning models",
+  "Android & iOS apps",
+];
+
+const RotatingFocus: React.FC = () => {
+  const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const id = window.setInterval(
+      () => setIndex((i) => (i + 1) % focusAreas.length),
+      2600
+    );
+    return () => window.clearInterval(id);
+  }, []);
+
+  return (
+    <span className="grid text-brand-700" aria-hidden="true">
+      {focusAreas.map((phrase, i) => (
+        <span
+          key={phrase}
+          className={`[grid-area:1/1] transition-all duration-500 ease-out ${
+            i === index ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3"
+          }`}
+        >
+          {phrase}
+        </span>
+      ))}
+    </span>
+  );
+};
 
 const Hero: React.FC = () => {
   return (
@@ -31,18 +69,23 @@ const Hero: React.FC = () => {
           </div>
 
           <h1 className="text-4xl sm:text-5xl lg:text-[3.6rem] font-semibold text-ink leading-[1.08] mb-6">
-            Power BI dashboards, Excel trackers{" "}
-            <span className="text-brand-700">&amp; mobile apps</span> for
-            growing businesses.
+            <span className="sr-only">
+              Senior-level analytics and mobile apps for growing businesses:{" "}
+              {focusAreas.join(", ")}.
+            </span>
+            <span aria-hidden="true">Senior-level</span>
+            <RotatingFocus />
+            <span aria-hidden="true">for growing businesses.</span>
           </h1>
 
           <p className="text-lg text-neutral-600 leading-relaxed max-w-xl mb-9">
-            I'm Musab, a commercial BI analyst. I run daily reporting for a{" "}
+            I'm Musab, a commercial analyst. I run reporting, forecasting and
+            targets for a{" "}
             <strong className="font-semibold text-ink">
               $700M+ business across 13 countries
             </strong>
-            , used by 250+ people from the CEO to field sales. I bring that
-            same standard to your business, along with Android &amp; iOS apps.
+            , used by 250+ people from the CEO to field sales. You get the same
+            senior-level work without hiring a full-time analyst.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3 mb-12">
@@ -65,9 +108,14 @@ const Hero: React.FC = () => {
             <p className="text-xs uppercase tracking-[0.16em] text-neutral-400 mb-3">
               Experience with
             </p>
-            <ul className="flex flex-wrap gap-x-6 gap-y-2 text-sm font-medium text-neutral-500">
-              {experienceWith.map((name) => (
-                <li key={name}>{name}</li>
+            <ul className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm font-medium text-neutral-500">
+              {experienceWith.map(({ name, note }) => (
+                <li key={name}>
+                  <span className="text-ink">{name}</span>
+                  <span className="block text-xs font-normal text-neutral-400 mt-0.5">
+                    {note}
+                  </span>
+                </li>
               ))}
             </ul>
           </div>

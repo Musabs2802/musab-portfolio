@@ -3,16 +3,17 @@ import { Check } from "lucide-react";
 import { packages } from "../data/services.data";
 import site, { whatsappLink } from "../data/site.data";
 
-const Pricing: React.FC = () => {
+const Quote: React.FC = () => {
   return (
-    <section id="pricing" className="bg-sand-100 py-24 md:py-28">
+    <section id="quote" className="bg-sand-100 py-24 md:py-28">
       <div className="container-page">
         <div className="max-w-2xl mb-14">
-          <p className="eyebrow mb-3">Pricing</p>
+          <p className="eyebrow mb-3">Get a quote</p>
           <h2 className="section-title">Ways to work together</h2>
           <p className="mt-4 text-neutral-600 text-lg leading-relaxed">
-            Starting prices in USD. After a free call you get a fixed quote
-            based on your data sources, pages or screens.
+            Every project is scoped to your data, pages or screens. Pick what
+            fits, tell me a little about it, and you get a fixed quote within
+            24 hours.
           </p>
         </div>
 
@@ -26,11 +27,6 @@ const Pricing: React.FC = () => {
                   : "bg-white border border-sand-300"
               }`}
             >
-              {pkg.featured && (
-                <span className="absolute -top-3 left-6 px-2.5 py-1 rounded-full bg-emerald-400 text-brand-950 text-[11px] font-semibold uppercase tracking-wide">
-                  Best value
-                </span>
-              )}
               <h3 className="text-lg font-semibold">{pkg.name}</h3>
               <p
                 className={`text-sm mt-1.5 leading-relaxed ${
@@ -40,20 +36,8 @@ const Pricing: React.FC = () => {
                 {pkg.summary}
               </p>
 
-              <div className="mt-6 mb-6">
-                <p
-                  className={`text-xs ${
-                    pkg.featured ? "text-brand-200" : "text-neutral-500"
-                  }`}
-                >
-                  {pkg.cadence}
-                </p>
-                <p className="font-heading text-4xl font-semibold tracking-tight">
-                  {pkg.price}
-                </p>
-              </div>
 
-              <ul className="space-y-2 text-sm mb-6">
+              <ul className="space-y-2 text-sm mt-6 mb-6">
                 {pkg.includes.map((item) => (
                   <li key={item} className="flex gap-2.5">
                     <Check
@@ -93,8 +77,8 @@ const Pricing: React.FC = () => {
         </div>
 
         <p className="mt-8 text-sm text-neutral-500">
-          Need something else, like a one-off analysis or a training session
-          for your team?{" "}
+          Not sure which fits, or need something else, like a one-off analysis
+          or a training session for your team?{" "}
           <a
             href={site.calendly}
             target="_blank"
@@ -110,4 +94,4 @@ const Pricing: React.FC = () => {
   );
 };
 
-export default Pricing;
+export default Quote;

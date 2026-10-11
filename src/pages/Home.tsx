@@ -5,7 +5,7 @@ import Services from "../components/Services";
 import CaseStudies from "../components/CaseStudies";
 import Works from "../components/Works";
 import Process from "../components/Process";
-import Pricing from "../components/Pricing";
+import Quote from "../components/Quote";
 import About from "../components/About";
 import FAQ from "../components/FAQ";
 import Contact from "../components/Contact";
@@ -25,7 +25,7 @@ const Home: React.FC = () => {
       <CaseStudies />
       <Works />
       <Process />
-      <Pricing />
+      <Quote />
       <About />
       <FAQ />
       <Contact />
