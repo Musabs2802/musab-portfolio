@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Demand Planning, Inventory &amp; Supply Chain Dashboard | Sample by Musab Shaikh</title>
+<meta name="description" content="Sample demand planning dashboard for an FMCG company: forecast accuracy and bias, forecast value add, stock cover and projected inventory by DC, expiry and stock-out risk, customer OTIF, production adherence, warehouse capacity and supplier performance. Built by Musab Shaikh with fictional data." />
+<link rel="canonical" href="https://musab-shaikh.vercel.app/dashboards/demand-planning.html" />
+<meta property="og:image" content="https://musab-shaikh.vercel.app/thumbnails/demand-planning.webp" />
+<link rel="icon" type="image/svg+xml" href="/icon.svg" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lexend:wght@600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="dash.css" />
+</head>
+<body>
+<header class="topbar">
+  <div class="wrap">
+    <a class="back" href="/works"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>Musab Shaikh</a>
+    <span class="spacer"></span>
+    <span class="pill">Sample dashboard · fictional data</span>
+    <a class="btn" href="/contact">Get one built</a>
+  </div>
+</header>
+
+<main>
+  <section class="wrap intro">
+    <div>
+      <p class="eyebrow">Demand planning · FMCG, Saudi Arabia</p>
+      <h1>Demand, stock and supply</h1>
+      <p class="context">Najma Foods plans 20 frozen and chilled products monthly. The planning team produces a statistical forecast, then sales adjusts it in the monthly S&amp;OP meeting. Some products keep running out while chilled stock expires in the warehouse, and on-time delivery to customers is slipping.</p>
+    </div>
+    <div class="question">
+      <div class="label">The business question</div>
+      <p>How good is our forecast, which products will run out or expire next, and where is the supply chain letting customers down?</p>
+    </div>
+  </section>
+
+  <div class="filters">
+    <div class="wrap">
+      <div class="filter"><span>Category</span><div id="f-cat"></div></div>
+      <div class="filter"><span>Product</span><select class="select" id="f-sku" aria-label="Product"></select></div>
+      <span class="note">FY2026 · actuals to September · units</span>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="kpis" id="kpis"></div>
+
+    <section class="insight" aria-labelledby="ins-h">
+      <h2 id="ins-h">What the data says</h2>
+      <ol id="insights"></ol>
+    </section>
+
+    <div class="tabs" id="tabs">
+      <button data-tab="forecast">Forecast</button>
+      <button data-tab="stock">Stock &amp; replenishment</button>
+      <button data-tab="supply">Supply &amp; service</button>
+    </div>
+
+    <section id="forecast">
+      <div class="grid">
+        <article class="card span-8">
+          <div class="card-head"><div><h3 id="trend-title">Forecast vs actual demand</h3><p class="sub">Monthly units. Oct–Dec are the forward forecast.</p></div></div>
+          <div id="lg-trend"></div>
+          <div id="c-trend"></div>
+        </article>
+        <article class="card span-4">
+          <div class="card-head"><div><h3>Do the sales changes help?</h3><p class="sub">Monthly forecast accuracy, statistical vs after sales input</p></div></div>
+          <div id="lg-acc"></div>
+          <div id="c-acc"></div>
+        </article>
+        <article class="card span-5">
+          <div class="card-head"><div><h3>Forecast bias by category</h3><p class="sub">Final forecast vs actual, Jan–Sep. Above zero means over-forecast.</p></div></div>
+          <div id="c-bias"></div>
+          <p class="callout" id="bias-note"></p>
+        </article>
+        <article class="card span-7">
+          <div class="card-head"><div><h3>Where sales input hurts most</h3><p class="sub">Accuracy change from S&amp;OP adjustments, by product (pts)</p></div></div>
+          <div id="c-fva"></div>
+        </article>
+      </div>
+    </section>
+
+    <section id="stock" hidden>
+      <div class="grid">
+        <article class="card span-12">
+          <div class="card-head"><div><h3 id="proj-title">Projected stock, next 12 weeks</h3><p class="sub">Current stock, minus the final forecast, plus planned production and purchase receipts</p></div></div>
+          <div id="lg-proj"></div>
+          <div id="c-proj"></div>
+          <p class="callout" id="proj-note"></p>
+        </article>
+        <article class="card span-6">
+          <div class="card-head"><div><h3>Stock cover by product</h3><p class="sub">Days of stock at next month's forecast demand</p></div></div>
+          <div id="lg-cover"></div>
+          <div id="c-cover"></div>
+        </article>
+        <article class="card span-6">
+          <div class="card-head"><div><h3>Cover by warehouse</h3><p class="sub">Days of stock in each DC at its own share of demand</p></div></div>
+          <div id="lg-dc"></div>
+          <div id="c-dc"></div>
+        </article>
+        <article class="card span-12">
+          <div class="card-head"><div><h3>Product planning table</h3><p class="sub">Click a column to sort</p></div></div>
+          <div id="t-sku"></div>
+        </article>
+      </div>
+    </section>
+
+    <section id="supply" hidden>
+      <div class="grid">
+        <article class="card span-8">
+          <div class="card-head"><div><h3>On time, in full to customers</h3><p class="sub">% of orders delivered complete on the promised day, weekly</p></div></div>
+          <div id="lg-otif"></div>
+          <div id="c-otif"></div>
+        </article>
+        <article class="card span-4">
+          <div class="card-head"><div><h3>Why orders were missed</h3><p class="sub">Failed orders, last 8 weeks</p></div></div>
+          <div id="c-miss"></div>
+        </article>
+        <article class="card span-6">
+          <div class="card-head"><div><h3>Production plan adherence</h3><p class="sub">Produced ÷ planned, last 13 weeks, by line</p></div></div>
+          <div id="c-prod"></div>
+          <p class="callout" id="prod-note"></p>
+        </article>
+        <article class="card span-6">
+          <div class="card-head"><div><h3>Warehouse space used</h3><p class="sub">Pallet positions occupied, by DC and temperature zone</p></div></div>
+          <div id="c-wh"></div>
+        </article>
+        <article class="card span-12">
+          <div class="card-head"><div><h3>Supplier performance</h3><p class="sub">Last 6 months · click a column to sort</p></div></div>
+          <div id="t-sup"></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="next">
+      <h2>What I'd do next</h2>
+      <ol id="next"></ol>
+    </section>
+
+    <section class="cta">
+      <div>
+        <h2>Want this for your S&amp;OP meeting?</h2>
+        <p>I build forecasts in Python and planning dashboards in Power BI or Excel from your sales history and stock data.</p>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <a class="btn" href="/contact">Get a quote</a>
+        <a class="btn ghost" href="/works">See other samples</a>
+      </div>
+    </section>
+    <p class="foot">Sample built by Musab Shaikh. Najma Foods and all figures are fictional.</p>
+  </div>
+</main>
+
+<script src="dash.js"></script>
+<script src="data/demand.js"></script>
+<script>
+const D = window.DATA, { fmt, sum } = Dash;
+const A = D.actualMonths, PAST = [...Array(A).keys()];
+const state = { cat: "all", sku: "all" };
+
+const acc = (skus, key, months) => {
+  const act = sum(skus, (s) => sum(months, (m) => s.actual[m]));
+  const err = sum(skus, (s) => sum(months, (m) => Math.abs(s[key][m] - s.actual[m])));
+  const diff = sum(skus, (s) => sum(months, (m) => s[key][m] - s.actual[m]));
+  return { accuracy: 100 - (err / act) * 100, bias: (diff / act) * 100 };
+};
+const SKUS = D.skus.map((s) => {
+  const daily = s.stat[A] / 30;
+  const cover = s.stock / daily;
+  const chilled = s.shelfLife <= 120;
+  let status = "Healthy", risk = 0;
+  if (cover < s.coverTarget * 0.5) { status = "Stock-out risk"; }
+  else if (chilled && cover > s.shelfLife * 0.8) { status = "Expiry risk"; risk = (cover - s.shelfLife * 0.8) * daily * s.price; }
+  else if (cover > s.coverTarget * 2.2) { status = "Excess"; risk = (cover - s.coverTarget * 2) * daily * s.price; }
+  const a = acc([s], "consensus", PAST), st = acc([s], "stat", PAST);
+  return { ...s, daily, cover, status, risk, acc: a.accuracy, bias: a.bias, statAcc: st.accuracy, revenue: sum(s.actual) * s.price };
+});
+// ABC class by revenue
+(() => { const tot = sum(SKUS, (s) => s.revenue); let run = 0; [...SKUS].sort((a, b) => b.revenue - a.revenue).forEach((s) => { run += s.revenue; s.abc = run / tot <= 0.8 ? "A" : run / tot <= 0.95 ? "B" : "C"; }); })();
+const list = (a) => (a.length < 2 ? a.join("") : a.slice(0, -1).join(", ") + " and " + a[a.length - 1]);
+const STATUS = { "Stock-out risk": { c: "--s2", tag: "bad", icon: "▼" }, "Expiry risk": { c: "--s4", tag: "warn", icon: "●" }, Excess: { c: "--s3", tag: "neutral", icon: "▲" }, Healthy: { c: "--s1", tag: "good", icon: "✓" } };
+
+(function story() {
+  const c = acc(SKUS, "consensus", PAST), s = acc(SKUS, "stat", PAST);
+  const promoMonths = [1, 2, 8];
+  const pc = acc(SKUS, "consensus", promoMonths), ps = acc(SKUS, "stat", promoMonths);
+  const exp = SKUS.filter((x) => x.status === "Expiry risk");
+  const out = SKUS.filter((x) => x.status === "Stock-out risk");
+  const outA = out.filter((x) => x.abc === "A");
+  const otif4 = sum(D.otif.slice(-4)) / 4;
+  const miss = D.misses[0], missTot = sum(D.misses, (x) => x.orders);
+  document.getElementById("insights").innerHTML = [
+    `<b>Sales changes make the forecast worse.</b> The statistical forecast is ${s.accuracy.toFixed(1)}% accurate; after S&OP adjustments it drops to <b>${c.accuracy.toFixed(1)}%</b>, and promotion months are over-forecast by <b>${fmt.signedPct(pc.bias, 0)}</b> (statistical: ${fmt.signedPct(ps.bias, 0)}).`,
+    `On-time, in-full delivery fell to <b>${otif4.toFixed(1)}%</b> over the last 4 weeks (target 95%). <b>${((miss.orders / missTot) * 100).toFixed(0)}% of missed orders</b> were <b>${miss.reason.toLowerCase().replace("dc", "DC")}</b>, not transport problems.`,
+    `<b>${exp.length} chilled products</b> (${exp.map((x) => x.name).join(", ")}) hold more stock than their shelf life allows: <b>${fmt.sar(sum(exp, (x) => x.risk))} at risk of expiry</b>. Meanwhile best-sellers ${list(outA.map((x) => x.name))} have ${Math.max(...outA.map((x) => x.cover)) < 7 ? "under a week" : "under two weeks"} of stock.`,
+  ].map((h, i) => `<li><span class="n">${i + 1}</span><span>${h}</span></li>`).join("");
+  document.getElementById("next").innerHTML = [
+    { h: "Track forecast value add every month", p: "Show the statistical and final forecast side by side in S&OP. Keep sales overrides only where they beat the statistical forecast, and require a reason for each one.", i: `Recovers ≈ ${(s.accuracy - c.accuracy).toFixed(1)} pts of accuracy` },
+    { h: "Balance stock between DCs weekly", p: "Run a Sunday transfer from Riyadh to Jeddah when a DC falls under 5 days of cover, and bring forward the poultry line 2 maintenance backlog.", i: "Lifts OTIF back towards 95%" },
+    { h: "Rebalance stock now", p: `Move expiring chilled stock to foodservice or a short-date discount this week, cut the next production run, and expedite ${list(outA.map((x) => x.name))}.`, i: `Saves up to ${fmt.sar(sum(exp, (x) => x.risk))} of write-offs` },
+  ].map((n, i) => `<li><div class="step">STEP ${i + 1}</div><h3>${n.h}</h3><p>${n.p}</p><div class="impact">${n.i}</div></li>`).join("");
+})();
+
+function render() {
+  renderSupply();
+  const list = SKUS.filter((s) => state.cat === "all" || s.category === state.cat);
+  const focus = state.sku === "all" ? list : list.filter((s) => s.name === state.sku);
+  const c = acc(focus, "consensus", PAST), s = acc(focus, "stat", PAST);
+  const coverW = sum(focus, (x) => x.stock) / sum(focus, (x) => x.daily);
+  const atRisk = focus.filter((x) => x.status !== "Healthy");
+  Dash.kpis("#kpis", [
+    { label: "Forecast accuracy", value: fmt.pct(c.accuracy), delta: { text: `${(c.accuracy - s.accuracy >= 0 ? "+" : "−") + Math.abs(c.accuracy - s.accuracy).toFixed(1)} pts vs statistical`, tone: c.accuracy >= s.accuracy ? "good" : "bad" }, sub: "1 − weighted error" },
+    { label: "Forecast bias", value: fmt.signedPct(c.bias), delta: { text: Math.abs(c.bias) < 3 ? "within ±3%" : c.bias > 0 ? "over-forecasting" : "under-forecasting", tone: Math.abs(c.bias) < 3 ? "good" : "bad" } },
+    { label: "Fill rate · September", value: fmt.pct(D.fillRate[A - 1]), delta: { text: "target 96%", tone: D.fillRate[A - 1] >= 96 ? "good" : "bad" } },
+    { label: "Stock cover", value: `${coverW.toFixed(0)} days`, sub: "at next month's forecast" },
+    { label: "Customer OTIF · 4 weeks", value: fmt.pct(sum(D.otif.slice(-4)) / 4), delta: { text: "target 95%", tone: sum(D.otif.slice(-4)) / 4 >= 95 ? "good" : "bad" } },
+    { label: "Products at risk", value: `${atRisk.length} of ${focus.length}`, sub: `${fmt.sar(sum(atRisk, (x) => x.risk))} of stock exposed` },
+  ]);
+
+  document.getElementById("trend-title").textContent = state.sku === "all" ? `Forecast vs actual · ${state.cat === "all" ? "all products" : state.cat}` : `Forecast vs actual · ${state.sku}`;
+  const series = [
+    { name: "Actual", color: "--s1", values: D.months.map((_, m) => (m < A ? sum(focus, (x) => x.actual[m]) : null)) },
+    { name: "Statistical forecast", color: "--s3", values: D.months.map((_, m) => sum(focus, (x) => x.stat[m])) },
+    { name: "Final forecast (after S&OP)", color: "--s2", values: D.months.map((_, m) => sum(focus, (x) => x.consensus[m])), dashed: true },
+  ];
+  Dash.legend("#lg-trend", series.map((x) => ({ name: x.name, color: x.color, type: x.dashed ? "dash" : "line" })));
+  Dash.line("#c-trend", { categories: D.months, series, format: fmt.compact, tipFormat: (v) => fmt.num(v) + " units", height: 250, zero: false, label: "Forecast vs actual",
+    tipExtra: (m) => (m < A ? [{ name: "Final forecast error", value: fmt.signedPct(((series[2].values[m] - series[0].values[m]) / series[0].values[m]) * 100) }] : [{ name: "Status", value: "forward forecast" }]) });
+
+  const monthly = PAST.map((m) => ({ s: acc(focus, "stat", [m]).accuracy, c: acc(focus, "consensus", [m]).accuracy }));
+  const as = [{ name: "Statistical", color: "--s3", values: monthly.map((x) => x.s) }, { name: "After sales input", color: "--s2", values: monthly.map((x) => x.c) }];
+  Dash.legend("#lg-acc", as.map((x) => ({ ...x, type: "line" })));
+  Dash.line("#c-acc", { categories: D.months.slice(0, A), series: as, format: (v) => v.toFixed(0) + "%", tipFormat: (v) => fmt.pct(v), zero: false, height: 230, label: "Monthly forecast accuracy" });
+
+  const cats = D.categories.filter((k) => state.cat === "all" || k === state.cat).map((k) => { const sk = SKUS.filter((x) => x.category === k); return { k, c: acc(sk, "consensus", PAST).bias, s: acc(sk, "stat", PAST).bias }; }).sort((a, b) => b.c - a.c);
+  Dash.hbars("#c-bias", {
+    items: cats.map((x) => ({ label: x.k, values: [x.c], color: Math.abs(x.c) > 5 ? "--s2" : "--s1", extra: [{ name: "Statistical bias", value: fmt.signedPct(x.s) }] })),
+    valueName: "Final forecast bias", format: (v) => fmt.signedPct(v, 0), tipFormat: (v) => fmt.signedPct(v), rowHeight: 34, label: "Bias by category",
+  });
+  const top = cats[0];
+  document.getElementById("bias-note").innerHTML = `<b>${top.k}</b> is over-forecast by ${fmt.signedPct(top.c, 0)} after sales input, against ${fmt.signedPct(top.s, 0)} for the statistical forecast.`;
+
+  Dash.legend("#lg-cover", Object.entries(STATUS).map(([n, v]) => ({ name: n, color: v.c })));
+  Dash.hbars("#c-cover", {
+    items: [...list].sort((a, b) => a.cover - b.cover).map((x) => ({ label: x.name + (x.name === state.sku ? "  ◀" : ""), values: [x.cover], color: STATUS[x.status].c, extra: [{ name: "Status", value: x.status }, { name: "Target cover", value: x.coverTarget + " days" }, { name: "Shelf life", value: x.shelfLife + " days" }] })),
+    valueName: "Cover", format: (v) => v.toFixed(0) + "d", tipFormat: (v) => v.toFixed(0) + " days", rowHeight: 24, label: "Stock cover by product",
+  });
+
+  Dash.table("#t-sku", {
+    sort: "risk", rows: list.map((x) => ({ ...x, _class: x.name === state.sku ? "total" : "" })), limit: 10, resetLimit: true,
+    columns: [
+      { key: "name", label: "Product", render: (x) => `<span class="strong">${x.name}</span><br><span class="dim">${x.category} · class ${x.abc}</span>` },
+      { key: "acc", label: "Accuracy", align: "right", render: (x) => fmt.pct(x.acc) },
+      { key: "fva", label: "Sales input effect", align: "right", value: (x) => x.acc - x.statAcc, render: (x) => { const v = x.acc - x.statAcc; return `<span class="${v < -2 ? "tag bad" : v > 2 ? "tag good" : ""}">${v >= 0 ? "+" : "−"}${Math.abs(v).toFixed(1)} pts</span>`; } },
+      { key: "bias", label: "Bias", align: "right", render: (x) => fmt.signedPct(x.bias) },
+      { key: "stock", label: "Stock (units)", align: "right", render: (x) => fmt.num(x.stock) },
+      { key: "cover", label: "Cover", align: "right", render: (x) => `${x.cover.toFixed(0)} / ${x.coverTarget} days` },
+      { key: "status", label: "Status", value: (x) => x.status, render: (x) => `<span class="tag ${STATUS[x.status].tag}">${STATUS[x.status].icon} ${x.status}</span>` },
+      { key: "risk", label: "Stock at risk", align: "right", render: (x) => (x.risk ? `<span class="strong">${fmt.sar(x.risk)}</span>` : '<span class="dim">–</span>') },
+    ],
+  });
+}
+
+const skuSel = document.getElementById("f-sku");
+const fillSkus = () => Dash.select(skuSel, [{ value: "all", label: "All products" }, ...SKUS.filter((s) => state.cat === "all" || s.category === state.cat).map((s) => ({ value: s.name, label: s.name }))], state.sku, () => {});
+skuSel.addEventListener("change", () => { state.sku = skuSel.value; render(); });
+function renderSupply() {
+  const list2 = SKUS.filter((s) => state.cat === "all" || s.category === state.cat);
+  const focus = state.sku === "all" ? list2 : list2.filter((s) => s.name === state.sku);
+  // Stock projection: with no product picked, show the most at-risk best-seller
+  const weekly = (x) => x.consensus[A] / 4.33;
+  const urgent = [...list2].sort((a, b) => (a.abc === "A" ? 0 : 1) - (b.abc === "A" ? 0 : 1) || a.cover - b.cover)[0];
+  const pf = state.sku === "all" ? [urgent] : focus;
+  let st = sum(pf, (x) => x.stock);
+  const safety = sum(pf, (x) => (x.safetyDays * x.daily));
+  const proj = D.projWeeks.map((_, w) => { st = st - sum(pf, weekly) + sum(pf, (x) => x.receipts[w]); return st; });
+  const rec = D.projWeeks.map((_, w) => sum(pf, (x) => x.receipts[w]));
+  document.getElementById("proj-title").textContent = `Projected stock, next 12 weeks · ${pf[0].name}${state.sku === "all" ? " (most at risk; pick a product to change)" : ""}`;
+  Dash.legend("#lg-proj", [{ name: "Projected stock", color: "--s1", type: "line" }, { name: "Safety stock", color: "--bad", type: "line" }]);
+  Dash.line("#c-proj", { categories: D.projWeeks, series: [{ name: "Projected stock", color: "--s1", values: proj }], area: true, threshold: { value: safety, label: "Safety stock", below: true },
+    format: fmt.compact, tipFormat: (v) => fmt.num(v) + " units", height: 240, label: "Projected stock", tipTitle: (i) => "Week of " + D.projWeeks[i],
+    tipExtra: (i) => [{ name: "Demand", value: fmt.num(sum(pf, weekly)) }, { name: "Receipts", value: rec[i] ? fmt.num(rec[i]) : "–" }] });
+  const firstShort = proj.findIndex((v) => v < 0), firstLow = proj.findIndex((v) => v < safety);
+  document.getElementById("proj-note").innerHTML = firstShort >= 0
+    ? `Stock runs out in the <b>week of ${D.projWeeks[firstShort]}</b>, before the next receipt arrives. Bring production forward or transfer stock between DCs.`
+    : firstLow >= 0 ? `Stock drops below safety stock in the <b>week of ${D.projWeeks[firstLow]}</b>. No stock-out is expected if receipts arrive on time.`
+    : "Stock stays above safety stock for the next 12 weeks.";
+
+  // DC cover heatmap
+  const dShare = [0.45, 0.35, 0.2];
+  const rows = [...list2].sort((a, b) => Math.min(...a.dcStock.map((v, j) => v / (a.daily * dShare[j]))) - Math.min(...b.dcStock.map((v, j) => v / (b.daily * dShare[j])))).slice(0, 12);
+  Dash.legend("#lg-dc", [{ name: "Short", color: "--s2" }, { name: "On target", color: "--surface-2" }, { name: "Long", color: "--s1" }]);
+  Dash.heatmap("#c-dc", { rows: rows.map((x) => x.name), cols: D.dcs.map((d) => d.replace(" DC", "")), values: rows.map((x) => x.dcStock.map((v, j) => v / (x.daily * dShare[j]))),
+    diverging: { mid: 25, span: 20 }, showValues: true, cellHeight: 28, format: (v) => v.toFixed(0) + "d", valueName: "Days of cover", label: "Cover by warehouse" });
+
+  // Service
+  const tgt = 95;
+  Dash.legend("#lg-otif", [{ name: "OTIF", color: "--s1", type: "line" }, { name: "Target 95%", color: "--bad", type: "line" }]);
+  Dash.line("#c-otif", { categories: D.otifWeeks, series: [{ name: "OTIF", color: "--s1", values: D.otif }], threshold: { value: tgt, label: "Target 95%" }, zero: false, endLabels: true, format: (v) => v.toFixed(0) + "%", tipFormat: (v) => fmt.pct(v), height: 220, label: "Customer OTIF", tipTitle: (i) => "Week of " + D.otifWeeks[i] });
+  Dash.hbars("#c-miss", { items: D.misses.map((m, i) => ({ label: m.reason, values: [m.orders], color: i === 0 ? "--s2" : "--s1" })), valueName: "Orders", format: (v) => fmt.num(v), rowHeight: 30, label: "Reasons for missed orders" });
+  const lines = D.lines.map((n, li) => { const r = D.production.filter((p) => p[1] === li); return { n, plan: sum(r, (p) => p[2]), act: sum(r, (p) => p[3]) }; }).map((x) => ({ ...x, adh: (x.act / x.plan) * 100 }));
+  Dash.hbars("#c-prod", { items: lines.map((x) => ({ label: x.n, values: [x.adh], color: x.adh < 92 ? "--s2" : "--s1", extra: [{ name: "Planned", value: fmt.num(x.plan) }, { name: "Produced", value: fmt.num(x.act) }] })), valueName: "Adherence", format: (v) => v.toFixed(0) + "%", target: { value: 95, label: "Target 95%" }, rowHeight: 34, label: "Production adherence" });
+  const worstLine = [...lines].sort((a, b) => a.adh - b.adh)[0];
+  document.getElementById("prod-note").innerHTML = `<b>${worstLine.n}</b> produced ${fmt.num(worstLine.plan - worstLine.act)} units less than planned, mostly during three weeks of unplanned breakdowns.`;
+  Dash.hbars("#c-wh", { items: D.warehouses.map((w) => { const u = (w.used / w.capacity) * 100; return { label: `${w.dc.replace(" DC", "")} · ${w.zone}`, values: [u], color: u > 90 ? "--s2" : "--s1", extra: [{ name: "Pallets used", value: fmt.num(w.used) }, { name: "Capacity", value: fmt.num(w.capacity) }] }; }), valueName: "Space used", format: (v) => v.toFixed(0) + "%", target: { value: 85, label: "Max 85%" }, rowHeight: 30, label: "Warehouse utilisation" });
+  Dash.table("#t-sup", { sort: "otif", dir: 1, rows: D.suppliers.map((x) => ({ ...x, otif: (x.onTime * x.inFull) / 100 })), columns: [
+    { key: "name", label: "Supplier", render: (x) => `<span class="strong">${x.name}</span><br><span class="dim">${x.item}</span>` },
+    { key: "leadWeeks", label: "Lead time", align: "right", render: (x) => x.leadWeeks + (x.leadWeeks > 1 ? " weeks" : " week") },
+    { key: "onTime", label: "On time", align: "right", render: (x) => fmt.pct(x.onTime) },
+    { key: "inFull", label: "In full", align: "right", render: (x) => fmt.pct(x.inFull) },
+    { key: "otif", label: "OTIF", align: "right", render: (x) => `<span class="tag ${x.otif < 85 ? "bad" : x.otif < 92 ? "warn" : "good"}">${fmt.pct(x.otif)}</span>` },
+  ] });
+
+  // Forecast value add by product
+  const fva = [...list2].map((x) => ({ n: x.name, v: x.acc - x.statAcc })).sort((a, b) => a.v - b.v).slice(0, 10);
+  Dash.hbars("#c-fva", { items: fva.map((x) => ({ label: x.n, values: [x.v], color: x.v < 0 ? "--s2" : "--s1" })), valueName: "Accuracy change", format: (v) => (v >= 0 ? "+" : "−") + Math.abs(v).toFixed(1), rowHeight: 26, label: "Forecast value add by product" });
+}
+
+Dash.segmented("#f-cat", [{ value: "all", label: "All" }, ...D.categories.map((c) => ({ value: c, label: c }))], state.cat, (v) => { state.cat = v; state.sku = "all"; fillSkus(); render(); });
+fillSkus();
+Dash.tabs("#tabs");
+render();
+</script>
+</body>
+</html>

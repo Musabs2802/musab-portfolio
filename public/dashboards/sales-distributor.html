@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>FMCG Sales Opportunity &amp; Promo ROI Dashboard | Sample by Musab Shaikh</title>
+<meta name="description" content="Sample dashboard for an FMCG distributor in Saudi Arabia: a machine learning model ranks which customers each salesman should visit and what to sell, plus SKU distribution gaps and promotion ROI. Built by Musab Shaikh with fictional data." />
+<link rel="canonical" href="https://musab-shaikh.vercel.app/dashboards/sales-distributor.html" />
+<meta property="og:image" content="https://musab-shaikh.vercel.app/thumbnails/sales-distributor.webp" />
+<link rel="icon" type="image/svg+xml" href="/icon.svg" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lexend:wght@600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="dash.css" />
+</head>
+<body>
+<header class="topbar">
+  <div class="wrap">
+    <a class="back" href="/works"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>Musab Shaikh</a>
+    <span class="spacer"></span>
+    <span class="pill">Sample dashboard · fictional data</span>
+    <a class="btn" href="/contact">Get one built</a>
+  </div>
+</header>
+
+<main>
+  <section class="wrap intro">
+    <div>
+      <p class="eyebrow">FMCG distributor · Jeddah, Makkah &amp; Taif</p>
+      <h1>Who to visit, and what to sell</h1>
+      <p class="context">Al Waha Distribution supplies frozen and chilled food to 320 baqalas, mini-markets, supermarkets and restaurants with 8 salesmen. Visits were planned from habit, so many shops only ever bought a handful of the 20 products. A machine learning model now scores every customer each month.</p>
+    </div>
+    <div class="question">
+      <div class="label">The business question</div>
+      <p>Which customers should each salesman visit this month, what should he offer, and which promotions are worth repeating?</p>
+    </div>
+  </section>
+
+  <div class="filters">
+    <div class="wrap">
+      <div class="filter"><span>Salesman</span><select class="select" id="f-salesman" aria-label="Salesman"></select></div>
+      <div class="filter"><span>Channel</span><div id="f-channel"></div></div>
+      <span class="note">October 2026 plan · SAR</span>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="kpis" id="kpis"></div>
+
+    <section class="insight" aria-labelledby="ins-h">
+      <h2 id="ins-h">What the data says</h2>
+      <ol id="insights"></ol>
+    </section>
+
+    <div class="grid">
+      <article class="card span-7">
+        <div class="card-head"><div><h3>This month's opportunity by salesman</h3><p class="sub">Expected extra sales if each flagged customer is visited</p></div></div>
+        <div id="lg-sm"></div>
+        <div id="c-sm"></div>
+      </article>
+      <article class="card span-5">
+        <div class="card-head"><div><h3>Can we trust the model?</h3><p class="sub">Last month: predicted vs actual % of customers who bought, by score band</p></div></div>
+        <div id="lg-cal"></div>
+        <div id="c-cal"></div>
+        <p class="callout" id="cal-note"></p>
+      </article>
+
+      <article class="card span-12">
+        <div class="card-head" style="flex-wrap:wrap">
+          <div><h3>Visit list</h3><p class="sub">Sorted by opportunity · click a column to sort</p></div>
+          <input class="search" id="q" type="search" placeholder="Search customer or product" aria-label="Search customers" />
+        </div>
+        <div id="t-list"></div>
+      </article>
+
+      <article class="card span-6">
+        <div class="card-head"><div><h3>Distribution gaps</h3><p class="sub">% of active customers buying each product, lowest 10</p></div></div>
+        <div id="c-dist"></div>
+      </article>
+      <article class="card span-6">
+        <div class="card-head"><div><h3>Which promotions paid back?</h3><p class="sub">Return on trade spend, from extra gross profit</p></div></div>
+        <div id="c-promo"></div>
+        <p class="callout" id="promo-note"></p>
+      </article>
+    </div>
+
+    <section class="next">
+      <h2>What I'd do next</h2>
+      <ol id="next"></ol>
+    </section>
+
+    <section class="cta">
+      <div>
+        <h2>Want this for your sales team?</h2>
+        <p>I built this kind of model for a $700M+ FMCG business. I can build yours from your invoice history.</p>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <a class="btn" href="/contact">Get a quote</a>
+        <a class="btn ghost" href="/works">See other samples</a>
+      </div>
+    </section>
+    <p class="foot">Sample built by Musab Shaikh. Al Waha Distribution and all figures are fictional.</p>
+  </div>
+</main>
+
+<script src="dash.js"></script>
+<script src="data/distributor.js"></script>
+<script>
+const D = window.DATA, { fmt, sum } = Dash;
+const state = { salesman: "all", channel: "all", q: "" };
+const C = D.customers;
+
+(function story() {
+  const opp = sum(C, (c) => c.opportunity);
+  const monthly = sum(C, (c) => c.sales6m) / 6;
+  const win = C.filter((c) => c.action === "Win");
+  const promos = [...D.promos].sort((a, b) => b.roi - a.roi);
+  const losers = promos.filter((p) => p.roi < 0);
+  document.getElementById("insights").innerHTML = [
+    `The model flags <b>${fmt.sar(opp)} of extra sales this month</b>, ${((opp / monthly) * 100).toFixed(0)}% on top of normal. ${win.length} of the ${C.length} customers are growth accounts that buy only a few of our products.`,
+    `It works: last month <b>${D.hitRate.flagged}% of flagged customers bought</b> the suggested products, against ${D.hitRate.notFlagged}% of customers the model did not flag.`,
+    `<b>${promos[0].name}</b> returned ${promos[0].roi}% on its trade spend. ${losers.length} promotions lost money: <b>${losers.map((p) => p.name).join(" and ")}</b>.`,
+  ].map((h, i) => `<li><span class="n">${i + 1}</span><span>${h}</span></li>`).join("");
+  const lostSpend = sum(losers, (p) => p.spend);
+  const protect = C.filter((c) => c.action === "Protect" && c.lastVisit > 10);
+  document.getElementById("next").innerHTML = [
+    { h: "Send each salesman his top 15 every Sunday", p: "A WhatsApp-friendly list with the customer, the 3 products to offer and the reason. Track visits against it weekly.", i: `≈ ${fmt.sar(opp * (D.hitRate.flagged / 100))} if last month's hit rate holds` },
+    { h: "Visit loyal accounts before they slip", p: `${protect.length} high-value customers have not been visited in over 10 days. They are worth ${fmt.sar(sum(protect, (c) => c.sales6m) / 6)} a month.`, i: "Protects the base the growth plan relies on" },
+    { h: "Move promo budget to what works", p: `Stop the ${losers.length} loss-making promotions (${fmt.sar(lostSpend)} of trade spend) and fund a second run of the “${promos[0].name}” for Ramadan 2027.`, i: `≈ ${fmt.sar(lostSpend * (promos[0].roi / 100))} extra gross profit` },
+  ].map((n, i) => `<li><div class="step">STEP ${i + 1}</div><h3>${n.h}</h3><p>${n.p}</p><div class="impact">${n.i}</div></li>`).join("");
+})();
+
+function render() {
+  const inScope = C.filter((c) => (state.salesman === "all" || c.salesman === +state.salesman) && (state.channel === "all" || c.channel === +state.channel));
+  const win = inScope.filter((c) => c.action === "Win"), protect = inScope.filter((c) => c.action === "Protect");
+  const opp = sum(inScope, (c) => c.opportunity);
+  Dash.kpis("#kpis", [
+    { label: "Opportunity this month", value: fmt.sar(opp), sub: `${inScope.length} customers scored` },
+    { label: "Customers to win", value: fmt.num(win.length), sub: fmt.sar(sum(win, (c) => c.opportunity)) + " potential" },
+    { label: "Customers to protect", value: fmt.num(protect.length), sub: fmt.sar(sum(protect, (c) => c.sales6m) / 6) + " a month at stake" },
+    { label: "Model hit rate", value: D.hitRate.flagged + "%", sub: `vs ${D.hitRate.notFlagged}% for unflagged customers` },
+    { label: "Products per customer", value: (sum(inScope, (c) => c.skus) / (inScope.length || 1)).toFixed(1), sub: `out of ${D.skus.length} in the range` },
+  ]);
+
+  // Salesmen (channel filter applies; selected salesman highlighted)
+  const sm = D.salesmen.map((name, si) => {
+    const cs = C.filter((c) => c.salesman === si && (state.channel === "all" || c.channel === +state.channel));
+    return { name, si, win: sum(cs.filter((c) => c.action === "Win"), (c) => c.opportunity), protect: sum(cs.filter((c) => c.action === "Protect"), (c) => c.opportunity), n: cs.length };
+  }).sort((a, b) => b.win + b.protect - (a.win + a.protect));
+  const sel = state.salesman === "all" ? null : +state.salesman;
+  const series = [{ name: "Win new products", color: "--s1" }, { name: "Protect loyal accounts", color: "--s3" }];
+  Dash.legend("#lg-sm", series);
+  Dash.hbars("#c-sm", {
+    series,
+    items: sm.map((s) => ({ label: s.name + (s.si === sel ? "  ◀" : ""), values: [s.win, s.protect], extra: [{ name: "Customers", value: s.n }] })),
+    format: fmt.sar, label: "Opportunity by salesman",
+  });
+
+  const list = inScope.filter((c) => !state.q || c.name.toLowerCase().includes(state.q) || c.recs.some((r) => D.skus[r].toLowerCase().includes(state.q)));
+  Dash.table("#t-list", {
+    sort: "opportunity", limit: 12, resetLimit: true,
+    rows: list,
+    columns: [
+      { key: "name", label: "Customer", render: (c) => `<span class="strong">${c.name}</span><br><span class="dim">${D.channels[c.channel]} · ${D.areas[c.area]}</span>` },
+      { key: "salesman", label: "Salesman", value: (c) => D.salesmen[c.salesman], render: (c) => D.salesmen[c.salesman] },
+      { key: "action", label: "Action", render: (c) => (c.action === "Win" ? '<span class="tag good">＋ Win</span>' : '<span class="tag neutral">◆ Protect</span>') },
+      { key: "score", label: "Buy chance", align: "right", render: (c) => `<span class="meter"><i style="width:${c.score * 100}%"></i></span>${(c.score * 100).toFixed(0)}%` },
+      { key: "recs", label: "Offer these", sortable: false, render: (c) => `<span class="dim">${c.recs.map((r) => D.skus[r]).join(", ")}</span>` },
+      { key: "sales6m", label: "Sales (6m)", align: "right", render: (c) => fmt.sar(c.sales6m) },
+      { key: "lastVisit", label: "Last visit", align: "right", render: (c) => `<span class="${c.action === "Protect" && c.lastVisit > 10 ? "tag warn" : ""}">${c.lastVisit}d ago</span>` },
+      { key: "opportunity", label: "Opportunity", align: "right", render: (c) => `<span class="strong">${fmt.sar(c.opportunity)}</span>` },
+    ],
+  });
+}
+
+(function staticViews() {
+  const cal = D.calibration;
+  const cs = [{ name: "Predicted", color: "--s3", values: cal.map((c) => c.predicted) }, { name: "Actually bought", color: "--s1", values: cal.map((c) => c.actual) }];
+  Dash.legend("#lg-cal", cs);
+  Dash.columns("#c-cal", { categories: cal.map((c) => c.band.split("–")[0]), series: cs, format: (v) => v.toFixed(0) + "%", height: 220, label: "Model calibration",
+    tipTitle: (i) => `Score ${cal[i].band}` });
+  const gap = Math.max(...cal.map((c) => Math.abs(c.actual - c.predicted)));
+  document.getElementById("cal-note").innerHTML = `Bars move together: in every band, the real buy rate was within <b>${gap.toFixed(0)} pts</b> of the prediction.`;
+
+  const dist = D.skus.map((s, i) => ({ s, v: D.skuDistribution[i] * 100 })).sort((a, b) => a.v - b.v).slice(0, 10);
+  Dash.hbars("#c-dist", { items: dist.map((d) => ({ label: d.s, values: [d.v] })), valueName: "Customers buying", format: (v) => v.toFixed(0) + "%", rowHeight: 28, label: "Distribution by product" });
+
+  const pr = [...D.promos].sort((a, b) => b.roi - a.roi);
+  Dash.hbars("#c-promo", {
+    items: pr.map((p) => ({ label: p.name, values: [p.roi], color: p.roi < 0 ? "--s2" : "--s1", extra: [{ name: "Period", value: p.period }, { name: "Trade spend", value: fmt.sar(p.spend) }, { name: "Extra gross profit", value: fmt.sar(p.incGP) }] })),
+    valueName: "ROI", format: (v) => (v > 0 ? "+" : "") + v + "%", rowHeight: 30, label: "Promotion ROI",
+  });
+  const tot = { s: sum(D.promos, (p) => p.spend), g: sum(D.promos, (p) => p.incGP) };
+  document.getElementById("promo-note").innerHTML = `Across all six, <b>${fmt.sar(tot.s)}</b> of trade spend brought <b>${fmt.sar(tot.g)}</b> of extra gross profit.`;
+})();
+
+Dash.select("#f-salesman", [{ value: "all", label: "All salesmen" }, ...D.salesmen.map((s, i) => ({ value: String(i), label: s }))], state.salesman, (v) => { state.salesman = v; render(); });
+Dash.segmented("#f-channel", [{ value: "all", label: "All" }, ...D.channels.map((c, i) => ({ value: String(i), label: c }))], state.channel, (v) => { state.channel = v; render(); });
+document.getElementById("q").addEventListener("input", (e) => { state.q = e.target.value.trim().toLowerCase(); render(); });
+render();
+</script>
+</body>
+</html>

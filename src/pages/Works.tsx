@@ -17,9 +17,9 @@ const Work: React.FC = () => {
             Sample dashboards
           </h1>
           <p className="mt-4 text-neutral-600 text-lg leading-relaxed">
-            Interactive dashboards covering the questions commercial teams ask
-            most. Open any of them and click around: filters, drill-downs and
-            simulators all work.
+            Each one answers a real business question for a different kind of
+            business, and ends with what I'd do next. Open any of them and
+            click around: filters, tooltips and tables all work.
           </p>
           <p className="mt-5 flex gap-2.5 rounded-xl bg-white border border-sand-300 px-4 py-3 text-sm text-neutral-600">
             <Info size={18} className="shrink-0 text-brand-600 mt-0.5" />

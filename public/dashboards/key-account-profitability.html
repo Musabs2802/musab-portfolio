@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Key Account Profitability &amp; Trade Spend Dashboard | Sample by Musab Shaikh</title>
+<meta name="description" content="Sample commercial finance dashboard for an FMCG supplier in Saudi Arabia: price waterfall from gross sales to contribution, trade spend and cost to serve by retail account, a year-on-year profit bridge and promotion ROI. Built by Musab Shaikh with fictional data." />
+<link rel="canonical" href="https://musab-shaikh.vercel.app/dashboards/key-account-profitability.html" />
+<meta property="og:image" content="https://musab-shaikh.vercel.app/thumbnails/key-account-profitability.webp" />
+<link rel="icon" type="image/svg+xml" href="/icon.svg" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lexend:wght@600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="dash.css" />
+</head>
+<body>
+<header class="topbar">
+  <div class="wrap">
+    <a class="back" href="/works"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>Musab Shaikh</a>
+    <span class="spacer"></span>
+    <span class="pill">Sample dashboard · fictional data</span>
+    <a class="btn" href="/contact">Get one built</a>
+  </div>
+</header>
+
+<main>
+  <section class="wrap intro">
+    <div>
+      <p class="eyebrow">Commercial finance · FMCG, Saudi Arabia</p>
+      <h1>Key account profitability</h1>
+      <p class="context">Najma Foods sells to 12 retail and foodservice accounts. Each one negotiates its own invoice discounts, rebates, promo funding and listing fees, and some need daily deliveries and merchandisers. The commercial and finance teams wanted one view of what each account really earns before the 2027 negotiations.</p>
+    </div>
+    <div class="question">
+      <div class="label">The business question</div>
+      <p>Which accounts actually make us money after trade spend and cost to serve, and what should change in next year's terms?</p>
+    </div>
+  </section>
+
+  <div class="filters">
+    <div class="wrap">
+      <div class="filter"><span>Channel</span><div id="f-channel"></div></div>
+      <div class="filter"><span>Account</span><select class="select" id="f-account" aria-label="Account"></select></div>
+      <span class="note" id="period"></span>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="kpis" id="kpis"></div>
+
+    <section class="insight" aria-labelledby="ins-h">
+      <h2 id="ins-h">What the data says</h2>
+      <ol id="insights"></ol>
+    </section>
+
+    <div class="grid">
+      <article class="card span-7">
+        <div class="card-head"><div><h3 id="wf-title">From gross sales to contribution</h3><p class="sub">Where each riyal of gross sales goes</p></div></div>
+        <div id="c-wf"></div>
+      </article>
+      <article class="card span-5">
+        <div class="card-head"><div><h3>Contribution margin by account</h3><p class="sub">Contribution as % of net sales</p></div></div>
+        <div id="c-margin"></div>
+      </article>
+
+      <article class="card span-7">
+        <div class="card-head"><div><h3>Trade spend by account</h3><p class="sub">% of gross sales, by type of term</p></div></div>
+        <div id="lg-trade"></div>
+        <div id="c-trade"></div>
+      </article>
+      <article class="card span-5">
+        <div class="card-head"><div><h3>Why contribution changed vs last year</h3><p class="sub">All accounts, Jan–Sep 2026 vs Jan–Sep 2025</p></div></div>
+        <div id="c-bridge"></div>
+        <p class="callout" id="bridge-note"></p>
+      </article>
+
+      <article class="card span-5">
+        <div class="card-head"><div><h3>Which promotions paid back?</h3><p class="sub">Return on promo spend, from extra gross profit</p></div></div>
+        <div id="c-promo"></div>
+      </article>
+      <article class="card span-7">
+        <div class="card-head"><div><h3>Account scorecard</h3><p class="sub">Click a column to sort</p></div></div>
+        <div id="t-acc"></div>
+      </article>
+    </div>
+
+    <section class="next">
+      <h2>What I'd do next</h2>
+      <ol id="next"></ol>
+    </section>
+
+    <section class="cta">
+      <div>
+        <h2>Want this before your next negotiation?</h2>
+        <p>I build account P&amp;Ls in Power BI or Excel from your ERP invoices, trade agreements and logistics costs.</p>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <a class="btn" href="/contact">Get a quote</a>
+        <a class="btn ghost" href="/works">See other samples</a>
+      </div>
+    </section>
+    <p class="foot">Sample built by Musab Shaikh. Najma Foods, the retail accounts and all figures are fictional.</p>
+  </div>
+</main>
+
+<script src="dash.js"></script>
+<script src="data/accounts.js"></script>
+<script>
+const D = window.DATA, { fmt, sum } = Dash;
+document.getElementById("period").textContent = `${D.period} · SAR`;
+const state = { channel: "all", account: "all" };
+const calc = (a) => {
+  const trade = a.invoice + a.rebate + a.promo + a.listing;
+  const net = a.gross - trade;
+  const contrib = net - a.cogs - a.serve - a.returns;
+  return { ...a, trade, net, contrib, margin: (contrib / net) * 100, tradePct: (trade / a.gross) * 100 };
+};
+const ACC = D.accounts.map(calc);
+const total = (list) => {
+  const k = ["gross", "invoice", "rebate", "promo", "listing", "cogs", "serve", "returns", "trade", "net", "contrib"];
+  const t = Object.fromEntries(k.map((x) => [x, sum(list, (a) => a[x])]));
+  t.margin = (t.contrib / t.net) * 100; t.tradePct = (t.trade / t.gross) * 100;
+  t.lyMargin = sum(list, (a) => a.lyMargin * a.net) / t.net;
+  return t;
+};
+
+(function story() {
+  const T = total(ACC);
+  const byGross = [...ACC].sort((a, b) => b.gross - a.gross);
+  const big = byGross[0];
+  const worst = [...ACC].sort((a, b) => a.margin - b.margin)[0];
+  const online = total(ACC.filter((a) => a.channel === 2));
+  const b = D.bridge;
+  const tyContrib = b[0].value + sum(b.slice(1), (x) => x.value);
+  document.getElementById("insights").innerHTML = [
+    `<b>${big.name}</b> is the biggest account (${((big.gross / T.gross) * 100).toFixed(0)}% of gross sales) but earns the <b>${big === worst ? "lowest" : "a low"} margin: ${big.margin.toFixed(1)}%</b>, against ${T.margin.toFixed(1)}% overall. Its terms cost ${big.tradePct.toFixed(1)}% of gross sales.`,
+    `<b>Online & q-commerce</b> is only ${((online.gross / T.gross) * 100).toFixed(0)}% of sales but earns <b>${online.margin.toFixed(0)}%</b>: light terms, no listing fees and central delivery to dark stores.`,
+    `Contribution grew <b>${fmt.sar(tyContrib - b[0].value)}</b> on last year. The March price increase added ${fmt.sar(b[1].value)}, but <b>higher trade spend took back ${fmt.sar(-b[4].value)}</b> of it.`,
+  ].map((h, i) => `<li><span class="n">${i + 1}</span><span>${h}</span></li>`).join("");
+  const worstPromo = [...D.promos].sort((a, b) => a.roi - b.roi)[0];
+  const lift = big.net * 0.04;
+  document.getElementById("next").innerHTML = [
+    { h: `Renegotiate ${big.name} on performance`, p: `Turn part of the fixed rebate and listing fees into growth-linked rebates, and stop funding promotions like “${worstPromo.name}” (${worstPromo.roi}% return).`, i: `+4 pts margin ≈ ${fmt.sar(lift)} a year` },
+    { h: "Charge for daily drops", p: "Supermarkets with small, frequent orders cost the most to serve. Set a minimum drop size or a delivery fee below it, and move small stores to distributor coverage.", i: "Cuts cost to serve where it is highest" },
+    { h: "Grow the profitable channels", p: "Give online & q-commerce and foodservice their own growth plans and range. They earn twice the margin of hypermarkets per riyal sold.", i: "Shifts mix towards higher-margin sales" },
+  ].map((n, i) => `<li><div class="step">STEP ${i + 1}</div><h3>${n.h}</h3><p>${n.p}</p><div class="impact">${n.i}</div></li>`).join("");
+})();
+
+function render() {
+  const list = ACC.filter((a) => state.channel === "all" || a.channel === +state.channel);
+  const sel = state.account === "all" ? null : ACC.find((a) => a.name === state.account);
+  const T = sel ? { ...sel } : total(list);
+  if (sel) T.lyMargin = sel.lyMargin;
+  Dash.kpis("#kpis", [
+    { label: "Gross sales", value: fmt.sar(T.gross), sub: sel ? D.channels[sel.channel] : `${list.length} accounts` },
+    { label: "Trade spend", value: fmt.sar(T.trade), sub: `${fmt.pct(T.tradePct)} of gross sales` },
+    { label: "Net sales", value: fmt.sar(T.net) },
+    { label: "Contribution", value: fmt.sar(T.contrib), sub: "after product, delivery and returns" },
+    { label: "Contribution margin", value: fmt.pct(T.margin), delta: { text: `${T.margin - T.lyMargin >= 0 ? "+" : "−"}${Math.abs(T.margin - T.lyMargin).toFixed(1)} pts vs last year`, tone: Math.abs(T.margin - T.lyMargin) < 0.2 ? "neutral" : T.margin > T.lyMargin ? "good" : "bad" } },
+  ]);
+
+  document.getElementById("wf-title").textContent = sel ? `${sel.name}: from gross sales to contribution` : "From gross sales to contribution";
+  const pc = (v) => ({ name: "% of gross", value: fmt.pct((Math.abs(v) / T.gross) * 100) });
+  Dash.waterfall("#c-wf", {
+    steps: [
+      { label: "Gross sales", value: T.gross, total: true },
+      { label: "Invoice discount", value: -T.invoice, extra: [pc(T.invoice)] },
+      { label: "Rebates", value: -T.rebate, extra: [pc(T.rebate)] },
+      { label: "Promo funding", value: -T.promo, extra: [pc(T.promo)] },
+      { label: "Listing & display", value: -T.listing, extra: [pc(T.listing)] },
+      { label: "Net sales", value: T.net, total: true },
+      { label: "Product cost", value: -T.cogs, extra: [pc(T.cogs)] },
+      { label: "Cost to serve", value: -T.serve, extra: [pc(T.serve)] },
+      { label: "Returns & expiry", value: -T.returns, extra: [pc(T.returns)] },
+      { label: "Contribution", value: T.contrib, total: true, extra: [{ name: "Margin on net", value: fmt.pct(T.margin) }] },
+    ],
+    format: fmt.sar, labelFormat: (v) => fmt.compact(v), height: 280, label: "Price waterfall",
+  });
+
+  const avg = total(list).margin;
+  const bm = [...list].sort((a, b) => b.margin - a.margin);
+  const low = bm[bm.length - 1];
+  Dash.hbars("#c-margin", {
+    items: bm.map((a) => ({ label: a.name + (sel && a === sel ? "  ◀" : ""), values: [a.margin], color: a === low && list.length > 1 ? "--s2" : "--s1", extra: [{ name: "Contribution", value: fmt.sar(a.contrib) }, { name: "Last year", value: fmt.pct(a.lyMargin) }] })),
+    valueName: "Margin", format: (v) => fmt.pct(v, 0), tipFormat: (v) => fmt.pct(v), target: list.length > 1 ? { value: avg, label: `Avg ${avg.toFixed(0)}%` } : null, rowHeight: 26, label: "Contribution margin by account",
+  });
+
+  const ts = [{ name: "Invoice discount", color: "--s3" }, { name: "Rebates", color: "--s5" }, { name: "Promo funding", color: "--s2" }, { name: "Listing & display", color: "--s4" }];
+  Dash.legend("#lg-trade", ts);
+  Dash.hbars("#c-trade", {
+    series: ts, rowHeight: 26,
+    items: [...list].sort((a, b) => b.tradePct - a.tradePct).map((a) => ({ label: a.name, values: [a.invoice, a.rebate, a.promo, a.listing].map((v) => (v / a.gross) * 100) })),
+    format: (v) => fmt.pct(v, 1), label: "Trade spend by account",
+  });
+
+  const pr = D.promos.filter((p) => list.some((a) => a.name === p.account)).sort((a, b) => b.roi - a.roi);
+  Dash.hbars("#c-promo", {
+    items: pr.map((p) => ({ label: p.name, values: [p.roi], color: p.roi < 0 ? "--s2" : "--s1", extra: [{ name: "Account", value: p.account }, { name: "Promo spend", value: fmt.sar(p.spend) }, { name: "Extra gross profit", value: fmt.sar(p.incGP) }] })),
+    valueName: "Return", format: (v) => (v > 0 ? "+" : "") + v + "%", rowHeight: 30, label: "Promotion ROI",
+  });
+
+  Dash.table("#t-acc", {
+    sort: "contrib", rows: list.map((a) => ({ ...a, _class: sel && a === sel ? "total" : "" })),
+    columns: [
+      { key: "name", label: "Account", render: (a) => `<span class="strong">${a.name}</span><br><span class="dim">${D.channels[a.channel]}</span>` },
+      { key: "gross", label: "Gross", align: "right", render: (a) => fmt.sar(a.gross) },
+      { key: "tradePct", label: "Trade spend", align: "right", render: (a) => fmt.pct(a.tradePct) },
+      { key: "contrib", label: "Contribution", align: "right", render: (a) => `<span class="strong">${fmt.sar(a.contrib)}</span>` },
+      { key: "margin", label: "Margin", align: "right", render: (a) => `<span class="tag ${a.margin < avg - 4 ? "bad" : a.margin > avg + 4 ? "good" : "neutral"}">${fmt.pct(a.margin)}</span>` },
+      { key: "chg", label: "vs LY", align: "right", value: (a) => a.margin - a.lyMargin, render: (a) => `${a.margin - a.lyMargin >= 0 ? "+" : "−"}${Math.abs(a.margin - a.lyMargin).toFixed(1)} pts` },
+    ],
+  });
+}
+
+(function staticViews() {
+  const b = D.bridge;
+  const ty = b[0].value + sum(b.slice(1), (x) => x.value);
+  Dash.waterfall("#c-bridge", { steps: [{ label: "Last year", value: b[0].value, total: true }, ...b.slice(1).map((x) => ({ label: x.label, value: x.value })), { label: "This year", value: ty, total: true }], format: fmt.sar, labelFormat: (v) => fmt.compact(v), height: 260, label: "Contribution bridge" });
+  document.getElementById("bridge-note").innerHTML = `Price and volume added <b>${fmt.sar(b[1].value + b[2].value)}</b>; trade spend, mix and delivery costs took back <b>${fmt.sar(-(b[3].value + b[4].value + b[5].value))}</b>.`;
+})();
+
+const accSelect = document.getElementById("f-account");
+const fillAccounts = () => Dash.select(accSelect, [{ value: "all", label: "All accounts" }, ...ACC.filter((a) => state.channel === "all" || a.channel === +state.channel).map((a) => ({ value: a.name, label: a.name }))], state.account, () => {});
+accSelect.addEventListener("change", () => { state.account = accSelect.value; render(); });
+Dash.segmented("#f-channel", [{ value: "all", label: "All" }, ...D.channels.map((c, i) => ({ value: String(i), label: c }))], state.channel, (v) => { state.channel = v; state.account = "all"; fillAccounts(); render(); });
+fillAccounts();
+render();
+</script>
+</body>
+</html>

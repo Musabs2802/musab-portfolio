@@ -21,42 +21,37 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://musab-shaikh.vercel.app/pl-dashboard.html</loc>
+    <loc>https://musab-shaikh.vercel.app/dashboards/sales-performance.html</loc>
     <lastmod>2026-10-11</lastmod>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://musab-shaikh.vercel.app/salesman-action-dashboard.html</loc>
+    <loc>https://musab-shaikh.vercel.app/dashboards/pnl.html</loc>
     <lastmod>2026-10-11</lastmod>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://musab-shaikh.vercel.app/price-elasticity-dashboard.html</loc>
+    <loc>https://musab-shaikh.vercel.app/dashboards/pricing-promotion.html</loc>
     <lastmod>2026-10-11</lastmod>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://musab-shaikh.vercel.app/trade-promo-roi-dashboard.html</loc>
+    <loc>https://musab-shaikh.vercel.app/dashboards/demand-planning.html</loc>
     <lastmod>2026-10-11</lastmod>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://musab-shaikh.vercel.app/demand-forecasting-dashboard.html</loc>
+    <loc>https://musab-shaikh.vercel.app/dashboards/key-account-profitability.html</loc>
     <lastmod>2026-10-11</lastmod>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://musab-shaikh.vercel.app/distribution-dashboard.html</loc>
+    <loc>https://musab-shaikh.vercel.app/dashboards/sales-distributor.html</loc>
     <lastmod>2026-10-11</lastmod>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://musab-shaikh.vercel.app/customer-profitability-dashboard.html</loc>
-    <lastmod>2026-10-11</lastmod>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://musab-shaikh.vercel.app/market-share-tracker.html</loc>
+    <loc>https://musab-shaikh.vercel.app/dashboards/finance-cash.html</loc>
     <lastmod>2026-10-11</lastmod>
     <priority>0.6</priority>
   </url>

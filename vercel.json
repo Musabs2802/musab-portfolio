@@ -1,8 +1,64 @@
 {
   "trailingSlash": false,
   "rewrites": [
-    { "source": "/works", "destination": "/works/index.html" },
-    { "source": "/experience", "destination": "/experience/index.html" },
-    { "source": "/contact", "destination": "/contact/index.html" }
+    {
+      "source": "/works",
+      "destination": "/works/index.html"
+    },
+    {
+      "source": "/experience",
+      "destination": "/experience/index.html"
+    },
+    {
+      "source": "/contact",
+      "destination": "/contact/index.html"
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/pl-dashboard.html",
+      "destination": "/dashboards/pnl.html",
+      "permanent": true
+    },
+    {
+      "source": "/financial-dashboard.html",
+      "destination": "/dashboards/pnl.html",
+      "permanent": true
+    },
+    {
+      "source": "/salesman-action-dashboard.html",
+      "destination": "/dashboards/sales-distributor.html",
+      "permanent": true
+    },
+    {
+      "source": "/price-elasticity-dashboard.html",
+      "destination": "/dashboards/pricing-promotion.html",
+      "permanent": true
+    },
+    {
+      "source": "/trade-promo-roi-dashboard.html",
+      "destination": "/dashboards/pricing-promotion.html",
+      "permanent": true
+    },
+    {
+      "source": "/distribution-dashboard.html",
+      "destination": "/dashboards/sales-distributor.html",
+      "permanent": true
+    },
+    {
+      "source": "/demand-forecasting-dashboard.html",
+      "destination": "/dashboards/demand-planning.html",
+      "permanent": true
+    },
+    {
+      "source": "/customer-profitability-dashboard.html",
+      "destination": "/dashboards/key-account-profitability.html",
+      "permanent": true
+    },
+    {
+      "source": "/market-share-tracker.html",
+      "destination": "/dashboards/pricing-promotion.html",
+      "permanent": true
+    }
   ]
 }

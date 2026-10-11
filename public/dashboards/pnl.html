@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Detailed P&amp;L Dashboard: Actual vs Budget vs Last Year | Sample by Musab Shaikh</title>
+<meta name="description" content="Sample detailed P&L dashboard for an FMCG manufacturer in Saudi Arabia: expandable income statement from gross sales to net profit, actual vs budget vs last year, gross margin bridge, margin trends and cost structure by category. Built by Musab Shaikh with fictional data." />
+<link rel="canonical" href="https://musab-shaikh.vercel.app/dashboards/pnl.html" />
+<meta property="og:image" content="https://musab-shaikh.vercel.app/thumbnails/pnl.webp" />
+<link rel="icon" type="image/svg+xml" href="/icon.svg" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lexend:wght@600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="dash.css" />
+</head>
+<body>
+<header class="topbar">
+  <div class="wrap">
+    <a class="back" href="/works"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>Musab Shaikh</a>
+    <span class="spacer"></span>
+    <span class="pill">Sample dashboard · fictional data</span>
+    <a class="btn" href="/contact">Get one built</a>
+  </div>
+</header>
+
+<main>
+  <section class="wrap intro">
+    <div>
+      <p class="eyebrow">Finance · FMCG manufacturer, Saudi Arabia</p>
+      <h1>Detailed P&amp;L</h1>
+      <p class="context">Najma Foods makes and sells frozen and chilled food in four categories. Finance closes the books monthly and the leadership team reviews the full P&amp;L against budget and last year, down to raw materials, freight and advertising.</p>
+    </div>
+    <div class="question">
+      <div class="label">The business question</div>
+      <p>Sales are growing, so why is profit below budget, and which costs are responsible?</p>
+    </div>
+  </section>
+
+  <div class="filters">
+    <div class="wrap">
+      <div class="filter"><span>Period</span><select class="select" id="f-period" aria-label="Period"></select></div>
+      <div class="filter"><span>Category</span><div id="f-cat"></div></div>
+      <span class="note">FY2026 · closed to September · SAR</span>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="kpis" id="kpis"></div>
+
+    <section class="insight" aria-labelledby="ins-h">
+      <h2 id="ins-h">What the data says</h2>
+      <ol id="insights"></ol>
+    </section>
+
+    <div class="grid">
+      <article class="card span-12">
+        <div class="card-head" style="flex-wrap:wrap">
+          <div><h3>Income statement</h3><p class="sub" id="pl-sub"></p></div>
+          <div class="seg" id="pl-expand"></div>
+        </div>
+        <div class="tbl-wrap" id="t-pl"></div>
+        <p class="callout" id="alloc-note" hidden>Overheads below gross profit are shared across categories by net sales.</p>
+      </article>
+
+      <article class="card span-8">
+        <div class="card-head"><div><h3>Monthly net sales</h3><p class="sub">This year vs last year, with budget</p></div></div>
+        <div id="lg-sales"></div>
+        <div id="c-sales"></div>
+      </article>
+      <article class="card span-4">
+        <div class="card-head"><div><h3>Margins by month</h3><p class="sub">% of net sales; dashed is budget</p></div></div>
+        <div id="lg-margin"></div>
+        <div id="c-margin"></div>
+      </article>
+
+      <article class="card span-7">
+        <div class="card-head"><div><h3>Why gross profit fell vs last year</h3><p class="sub">Jan–Sep 2026 vs Jan–Sep 2025, all categories</p></div></div>
+        <div id="c-bridge"></div>
+        <p class="callout" id="bridge-note"></p>
+      </article>
+      <article class="card span-5">
+        <div class="card-head"><div><h3>Cost structure by category</h3><p class="sub">% of net sales, selected period</p></div></div>
+        <div id="lg-cost"></div>
+        <div id="c-cost"></div>
+      </article>
+    </div>
+
+    <section class="next">
+      <h2>What I'd do next</h2>
+      <ol id="next"></ol>
+    </section>
+
+    <section class="cta">
+      <div>
+        <h2>Want your month-end P&amp;L like this?</h2>
+        <p>I build P&amp;L dashboards in Power BI or Excel straight from your ERP trial balance, with budget and last year side by side.</p>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <a class="btn" href="/contact">Get a quote</a>
+        <a class="btn ghost" href="/works">See other samples</a>
+      </div>
+    </section>
+    <p class="foot">Sample built by Musab Shaikh. Najma Foods and all figures are fictional.</p>
+  </div>
+</main>
+
+<script src="dash.js"></script>
+<script src="data/pnl.js"></script>
+<script>
+const D = window.DATA, { fmt, sum } = Dash;
+const A = D.actualMonths;
+const PERIODS = [
+  { id: "ytd", label: "Year to date (Jan–Sep)", months: [...Array(A).keys()] },
+  { id: "q3", label: "Q3 (Jul–Sep)", months: [6, 7, 8] },
+  { id: "q2", label: "Q2 (Apr–Jun)", months: [3, 4, 5] },
+  { id: "q1", label: "Q1 (Jan–Mar)", months: [0, 1, 2] },
+  ...[...Array(A).keys()].reverse().map((m) => ({ id: "m" + m, label: D.months[m] + " 2026", months: [m] })),
+];
+const state = { period: "ytd", cat: "all", open: new Set(["cogs", "opex"]) };
+
+// P&L for months, scenario (0 actual, 1 budget, 2 last year) and category filter
+function pl(months, sc, cat) {
+  const rows = D.catRows.filter((r) => r[2] === sc && months.includes(r[0]));
+  const pick = rows.filter((r) => cat === "all" || r[1] === +cat);
+  const f = (i, list = pick) => sum(list, (r) => r[i]);
+  const byCat = D.categories.map((_, k) => { const cr = pick.filter((r) => r[1] === k); return { gross: f(3, cr), net: f(3, cr) - f(4, cr) }; });
+  const p = { gross: f(3), trade: f(4), mat: f(5), pack: f(6), conv: f(7), frt: f(8), byCat };
+  p.net = p.gross - p.trade; p.cogs = p.mat + p.pack + p.conv + p.frt; p.gp = p.net - p.cogs;
+  const netAll = sum(rows, (r) => r[3] - r[4]);
+  const share = netAll ? p.net / netAll : 0;
+  const ox = D.opexRows.filter((o) => o[1] === sc && months.includes(o[0]));
+  const o = D.opex.map((_, i) => sum(ox, (r) => r[2 + i]) * share);
+  [p.dist, p.sales, p.ap, p.ga, p.da, p.fin, p.zakat] = o;
+  p.opex = p.dist + p.sales + p.ap + p.ga;
+  p.ebitda = p.gp - p.opex; p.ebit = p.ebitda - p.da; p.np = p.ebit - p.fin - p.zakat;
+  p.gm = (p.gp / p.net) * 100; p.em = (p.ebitda / p.net) * 100; p.nm = (p.np / p.net) * 100;
+  return p;
+}
+const period = () => PERIODS.find((p) => p.id === state.period);
+
+(function story() {
+  const M = PERIODS[0].months;
+  const a = pl(M, 0, "all"), b = pl(M, 1, "all"), l = pl(M, 2, "all");
+  const br = D.gpBridge, raw = br.find((x) => x.label === "Raw materials"), price = br.find((x) => x.label === "Price increase");
+  document.getElementById("insights").innerHTML = [
+    `Net sales are <b>${fmt.signedPct((a.net / l.net - 1) * 100)} on last year</b> but ${Math.abs((a.net / b.net - 1) * 100).toFixed(1)}% below budget. Profit has fallen faster: <b>EBITDA margin is ${a.em.toFixed(1)}%</b>, against ${b.em.toFixed(1)}% budget and ${l.em.toFixed(1)}% last year.`,
+    `<b>Raw materials cost ${fmt.sar(-raw.value)} more</b> than last year as feed and milk powder prices rose. The March price increase only recovered ${fmt.sar(price.value)}, so gross margin fell to <b>${a.gm.toFixed(1)}%</b>.`,
+    `To protect profit, <b>advertising was cut ${fmt.sar(b.ap - a.ap)} below budget</b>, while distribution & warehousing ran ${fmt.sar(a.dist - b.dist)} over on fuel and cold-store rent.`,
+  ].map((h, i) => `<li><span class="n">${i + 1}</span><span>${h}</span></li>`).join("");
+  document.getElementById("next").innerHTML = [
+    { h: "Price where demand allows", p: "A second 3% increase on poultry and dairy in traditional trade, where buyers are least price-sensitive. Test it first in the pricing simulator.", i: `≈ ${fmt.sar(a.byCat[0].net * 0.012 + a.byCat[2].net * 0.012)} a year in gross profit` },
+    { h: "Lock in input costs", p: "Agree 6-month forward prices for feed and milk powder with the two main suppliers, and add a second powder source to cut import lead times.", i: "Makes next year's margin predictable" },
+    { h: "Restore advertising in Q4", p: "The cut protected this year's profit but put Q4 growth at risk. Put back half of the underspend behind ready meals, the fastest-growing, highest-margin category.", i: "Supports the categories that earn the most" },
+  ].map((n, i) => `<li><div class="step">STEP ${i + 1}</div><h3>${n.h}</h3><p>${n.p}</p><div class="impact">${n.i}</div></li>`).join("");
+  const others = br.filter((x) => !x.total && x.value > 0);
+  document.getElementById("bridge-note").innerHTML = `Price, volume, mix and factory savings added <b>${fmt.sar(sum(others, (x) => x.value))}</b>, but raw materials alone took away <b>${fmt.sar(-raw.value)}</b>.`;
+})();
+
+function render() {
+  const P = period();
+  const a = pl(P.months, 0, state.cat), b = pl(P.months, 1, state.cat), l = pl(P.months, 2, state.cat);
+  const vs = (x, y, up = true) => ({ text: `${fmt.signedPct(((x - y) / Math.abs(y)) * 100)} vs budget`, tone: Math.abs((x - y) / y) < 0.005 ? "neutral" : (x > y) === up ? "good" : "bad" });
+  const pts = (x, y) => ({ text: `${x - y >= 0 ? "+" : "−"}${Math.abs(x - y).toFixed(1)} pts vs budget`, tone: Math.abs(x - y) < 0.1 ? "neutral" : x > y ? "good" : "bad" });
+  Dash.kpis("#kpis", [
+    { label: "Net sales", value: fmt.sar(a.net), delta: vs(a.net, b.net), sub: `${fmt.signedPct((a.net / l.net - 1) * 100)} vs last year` },
+    { label: "Gross margin", value: fmt.pct(a.gm), delta: pts(a.gm, b.gm), sub: `last year ${fmt.pct(l.gm)}` },
+    { label: "EBITDA", value: fmt.sar(a.ebitda), delta: vs(a.ebitda, b.ebitda) },
+    { label: "EBITDA margin", value: fmt.pct(a.em), delta: pts(a.em, b.em), sub: `last year ${fmt.pct(l.em)}` },
+    { label: "Net profit", value: fmt.sar(a.np), delta: vs(a.np, b.np), sub: `${fmt.pct(a.nm)} of net sales` },
+  ]);
+
+  // Income statement tree
+  const catName = state.cat === "all" ? "all categories" : D.categories[+state.cat];
+  document.getElementById("pl-sub").textContent = `${P.label} · ${catName} · costs shown as negatives`;
+  document.getElementById("alloc-note").hidden = state.cat === "all";
+  const rows = [];
+  const add = (id, label, key, opts = {}) => rows.push({ id, label, key, ...opts });
+  add("gross", "Gross sales", "gross", { up: true, grp: state.cat === "all" ? "gross" : null });
+  if (state.cat === "all" && state.open.has("gross")) D.categories.forEach((c, k) => add("g" + k, c, (p) => p.byCat[k].gross, { up: true, cls: "l1" }));
+  add("trade", "Trade spend (discounts, rebates, promotions)", (p) => -p.trade, { up: true });
+  add("net", "Net sales", "net", { up: true, cls: "key" });
+  add("cogs", "Cost of goods sold", (p) => -p.cogs, { up: true, grp: "cogs" });
+  if (state.open.has("cogs")) [["Raw materials", "mat"], ["Packaging", "pack"], ["Factory conversion", "conv"], ["Freight to DC", "frt"]].forEach(([n, k]) => add(k, n, (p) => -p[k], { up: true, cls: "l1" }));
+  add("gp", "Gross profit", "gp", { up: true, cls: "key" });
+  add("gm", "Gross margin", "gm", { ratio: true });
+  add("opex", "Operating expenses", (p) => -p.opex, { up: true, grp: "opex" });
+  if (state.open.has("opex")) [["Distribution & warehousing", "dist"], ["Sales force", "sales"], ["Advertising & promotion", "ap"], ["General & admin", "ga"]].forEach(([n, k]) => add(k, n, (p) => -p[k], { up: true, cls: "l1" }));
+  add("ebitda", "EBITDA", "ebitda", { up: true, cls: "key" });
+  add("em", "EBITDA margin", "em", { ratio: true });
+  add("da", "Depreciation & amortisation", (p) => -p.da, { up: true });
+  add("ebit", "EBIT", "ebit", { up: true, cls: "key" });
+  add("fin", "Finance costs", (p) => -p.fin, { up: true });
+  add("zakat", "Zakat", (p) => -p.zakat, { up: true });
+  add("np", "Net profit", "np", { up: true, cls: "key" });
+  add("nm", "Net margin", "nm", { ratio: true });
+
+  const val = (r, p) => (typeof r.key === "function" ? r.key(p) : p[r.key]);
+  const money = (v) => (v < 0 ? `(${fmt.sar(-v).replace("SAR ", "")})` : fmt.sar(v).replace("SAR ", ""));
+  const tag = (x, y, up) => {
+    if (!y) return "";
+    // Costs are stored as negatives: show the change in the cost itself (+ = cost went up)
+    const cost = y < 0;
+    const v = cost ? ((Math.abs(x) - Math.abs(y)) / Math.abs(y)) * 100 : ((x - y) / Math.abs(y)) * 100;
+    const tone = Math.abs(v) < 1 ? "neutral" : (x > y) === up ? "good" : "bad";
+    return `<span class="tag ${tone}">${tone === "good" ? "▲" : tone === "bad" ? "▼" : ""} ${fmt.signedPct(v)}</span>`;
+  };
+  const body = rows.map((r) => {
+    const x = val(r, a), y = val(r, b), z = val(r, l);
+    if (r.ratio) {
+      const d = (u, w) => `${u - w >= 0 ? "+" : "−"}${Math.abs(u - w).toFixed(1)} pts`;
+      return `<tr class="ratio"><td>${r.label}</td><td class="r">${fmt.pct(x)}</td><td class="r">${fmt.pct(y)}</td><td class="r">${d(x, y)}</td><td class="r"></td><td class="r">${fmt.pct(z)}</td><td class="r">${d(x, z)}</td><td class="r"></td></tr>`;
+    }
+    const tw = r.grp ? `<span class="tw">${state.open.has(r.grp) ? "▾" : "▸"}</span>` : "";
+    return `<tr class="${r.cls || ""} ${r.grp ? "grp" : ""}" ${r.grp ? `data-grp="${r.grp}" tabindex="0" aria-expanded="${state.open.has(r.grp)}"` : ""}>
+      <td>${tw}${r.label}</td><td class="r strong">${money(x)}</td><td class="r">${money(y)}</td><td class="r">${money(x - y)}</td><td class="r">${tag(x, y, r.up)}</td>
+      <td class="r">${money(z)}</td><td class="r">${tag(x, z, r.up)}</td><td class="r dim">${((Math.abs(x) / a.net) * 100).toFixed(1)}%</td></tr>`;
+  }).join("");
+  const tbl = document.getElementById("t-pl");
+  tbl.innerHTML = `<table class="tbl"><thead><tr><th>SAR</th><th class="r">Actual</th><th class="r">Budget</th><th class="r">vs budget</th><th class="r"></th><th class="r">Last year</th><th class="r">vs LY</th><th class="r">% of net sales</th></tr></thead><tbody>${body}</tbody></table>`;
+  tbl.querySelectorAll("tr.grp").forEach((tr) => {
+    const toggle = () => { const g = tr.dataset.grp; state.open.has(g) ? state.open.delete(g) : state.open.add(g); render(); tbl.querySelector(`tr[data-grp="${g}"]`)?.focus(); };
+    tr.addEventListener("click", toggle);
+    tr.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); } });
+  });
+
+  // Monthly net sales (full year context, category filter applies)
+  const months = D.months.map((_, m) => ({ a: m < A ? pl([m], 0, state.cat).net : null, b: pl([m], 1, state.cat).net, l: pl([m], 2, state.cat).net }));
+  const ss = [{ name: "This year", color: "--s1", values: months.map((x) => x.a) }, { name: "Last year", color: "--s3", values: months.map((x) => x.l) }];
+  Dash.legend("#lg-sales", [...ss, { name: "Budget", color: "--ink", type: "tick" }]);
+  Dash.columns("#c-sales", { categories: D.months, series: ss, overlay: { name: "Budget", values: months.map((x) => x.b), color: "--ink" }, format: fmt.sar, height: 240, label: "Monthly net sales" });
+
+  const mm = D.months.slice(0, A).map((_, m) => ({ a: pl([m], 0, state.cat), b: pl([m], 1, state.cat) }));
+  const ms = [
+    { name: "Gross margin", color: "--s1", values: mm.map((x) => x.a.gm) },
+    { name: "Gross margin budget", color: "--s1", values: mm.map((x) => x.b.gm), dashed: true },
+    { name: "EBITDA margin", color: "--s2", values: mm.map((x) => x.a.em) },
+    { name: "EBITDA margin budget", color: "--s2", values: mm.map((x) => x.b.em), dashed: true },
+  ];
+  Dash.legend("#lg-margin", [{ name: "Gross margin", color: "--s1", type: "line" }, { name: "EBITDA margin", color: "--s2", type: "line" }, { name: "Budget", color: "--muted", type: "dash" }]);
+  Dash.line("#c-margin", { categories: D.months.slice(0, A), series: ms, format: (v) => v.toFixed(0) + "%", tipFormat: (v) => fmt.pct(v), height: 240, label: "Margins by month" });
+
+  const cs = [{ name: "Raw materials", color: "--s3" }, { name: "Packaging", color: "--s5" }, { name: "Conversion", color: "--s4" }, { name: "Freight", color: "--s2" }, { name: "Gross margin", color: "--s1" }];
+  Dash.legend("#lg-cost", cs);
+  Dash.hbars("#c-cost", {
+    series: cs, rowHeight: 34,
+    items: D.categories.map((c, k) => { const p = pl(P.months, 0, String(k)); return { label: c, values: [p.mat, p.pack, p.conv, p.frt, Math.max(0, p.gp)].map((v) => (v / p.net) * 100), valueLabel: "" }; }),
+    format: (v) => fmt.pct(v, 0), tipFormat: (v) => fmt.pct(v), label: "Cost structure by category",
+  });
+}
+
+Dash.waterfall("#c-bridge", { steps: D.gpBridge, format: fmt.sar, labelFormat: (v) => fmt.compact(v), height: 260, label: "Gross profit bridge" });
+Dash.select("#f-period", PERIODS.map((p) => ({ value: p.id, label: p.label })), state.period, (v) => { state.period = v; render(); });
+Dash.segmented("#f-cat", [{ value: "all", label: "All" }, ...D.categories.map((c, i) => ({ value: String(i), label: c }))], state.cat, (v) => { state.cat = v; render(); });
+Dash.segmented("#pl-expand", [{ value: "open", label: "Expand all" }, { value: "close", label: "Collapse" }], "", (v) => { state.open = v === "open" ? new Set(["gross", "cogs", "opex"]) : new Set(); render(); });
+render();
+</script>
+</body>
+</html>

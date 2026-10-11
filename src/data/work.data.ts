@@ -1,109 +1,92 @@
 import { Work } from "../types";
 
+// Sample dashboards in public/dashboards/, aimed at commercial, finance and
+// demand planning teams. Data comes from scripts/dashboards/generate_data.py
+// and is fictional.
 const workData: Work[] = [
   {
     id: 1,
-    title: "P&L Dashboard",
+    title: "Sales vs target",
     description:
-      "5-year expandable Profit & Loss dashboard for FMCG. Drill from annual summary to quarterly and monthly detail. Includes full income statement waterfall, margin trend charts, YoY variance analysis, and dynamic filters by Business Unit, Region, and Channel.",
-    image: "/thumbnails/pl-dashboard.webp",
-    technologies: ["Python", "JavaScript", "Data Viz"],
+      "The daily commercial report: sales against target by region, channel, category and salesman, growth vs last year, and whether this month will land at the current run rate.",
+    image: "/thumbnails/sales-performance.webp",
+    technologies: ["Target tracking", "Run-rate projection", "Salesman tracker"],
     category: "Dashboard",
-    client: "Sample build · fictional data",
-    results:
-      "Covers Revenue → Gross Profit → EBITDA → EBIT → Net Income with live filter slicing, SVG charts, CSV export, and USD/thousands or millions toggle",
-    demo: "/pl-dashboard.html",
-  },
-  {
-    id: 2,
-    title: "Salesman Action Dashboard",
-    description:
-      "Customer-level sales action dashboard for FMCG field teams. Categorises customers into Battles (acquire) and Hold Position (retain) using a propensity-style scoring model. Includes SKU portfolio drill-down, 6-month completion trend charts, and regional performance summaries.",
-    image: "/thumbnails/salesman-action-dashboard.webp",
-    technologies: ["Python", "JavaScript", "Data Viz"],
-    category: "Dashboard",
-    client: "Sample build · fictional data",
-    results:
-      "Covers 6 salesmen × 50 customers × 6 months with Revenue / Qty / Tonnage metrics, searchable salesman filter, completion flags, and CSV export",
-    demo: "/salesman-action-dashboard.html",
-  },
-  {
-    id: 3,
-    title: "Price Elasticity Dashboard",
-    description:
-      "Commercial price elasticity analysis for a 5-SKU FMCG portfolio vs 6 competitor SKUs. Own-price elasticity, cross-price substitution matrix, competitive positioning map, and an interactive price simulator that computes revenue/volume/GP impact with cross-elasticity effects auto-applied.",
-    image: "/thumbnails/price-elasticity-dashboard.webp",
-    technologies: ["Python", "JavaScript", "Data Viz"],
-    category: "Dashboard",
-    client: "Sample build · fictional data",
-    results:
-      "Covers elasticity analysis, 5×5 cross-elasticity matrix, cannibalisation heatmap, price-response curves, revenue optimisation curves, and a live price simulator with waterfall impact chart",
-    demo: "/price-elasticity-dashboard.html",
-  },
-  {
-    id: 4,
-    title: "Trade Promotion ROI Dashboard",
-    description:
-      "Full-year trade promotion ROI analysis for a 5-SKU FMCG portfolio across 4 promo mechanics (TPR, Display, Feature, Bundle). Tracks spend vs incremental revenue, gross profit uplift, net ROI per event, and volume uplift %. Includes a promo calendar heatmap, mechanic benchmarking, margin waterfall bridge, and an interactive budget optimizer.",
-    image: "/thumbnails/trade-promo-roi-dashboard.webp",
-    technologies: ["Python", "JavaScript", "Data Viz"],
-    category: "Dashboard",
-    client: "Sample build · fictional data",
-    results:
-      "24 promo events · 5 SKUs · Waterfall margin bridge · ROI optimizer with live spend reallocation sliders · Promo calendar heatmap · Mechanic benchmarking",
-    demo: "/trade-promo-roi-dashboard.html",
-  },
-  {
-    id: 5,
-    title: "Demand Forecasting Dashboard",
-    description:
-      "24-month demand history (Jan 2024 – Dec 2025) for a 5-SKU FMCG portfolio with 3-month forward forecasts using a Trend × Seasonality model. Compares Naïve, Moving Average, and Trend methods. Includes accuracy metrics (MAPE, MAE, RMSE, Bias), residual diagnostics, and an interactive Scenario Planner with per-SKU growth multiplier sliders.",
-    image: "/thumbnails/demand-forecasting-dashboard.webp",
-    technologies: ["Python", "JavaScript", "Data Viz"],
-    category: "Dashboard",
-    client: "Sample build · fictional data",
-    results:
-      "5 SKUs · 24-month actuals · 3-month forecast · MAPE / MAE / RMSE accuracy panel · Residual scatter · Method comparison · Scenario planner with live volume reforecast",
-    demo: "/demand-forecasting-dashboard.html",
+    client: "Commercial · sample with fictional data",
+    results: "Shows where the year's gap comes from and what each salesman needs per day",
+    demo: "/dashboards/sales-performance.html",
   },
   {
     id: 6,
-    title: "Distribution & SKU Availability Dashboard",
+    title: "Detailed P&L",
     description:
-      "End-to-end distribution intelligence for a 5-SKU FMCG portfolio across 6 channels and 120 outlets. Tracks Numeric Distribution (ND%), Weighted Distribution (WD%), Out-of-Stock rates, and SKU range compliance over 6 rolling months. Includes per-channel and per-SKU drill-downs, an OOS heatmap, and a Gap Analyser showing uncovered outlets vs target.",
-    image: "/thumbnails/distribution-dashboard.webp",
-    technologies: ["Python", "JavaScript", "Data Viz"],
+      "The month-end income statement from gross sales to net profit, expandable to raw materials, freight and advertising, against budget and last year, with a gross margin bridge and cost structure by category.",
+    image: "/thumbnails/pnl.webp",
+    technologies: ["Income statement", "Budget vs actual", "Margin bridge"],
     category: "Dashboard",
-    client: "Sample build · fictional data",
-    results:
-      "5 SKUs · 6 channels · 120 outlets · ND% / WD% / OOS% metrics · SKU × Channel heatmaps · Coverage score vs target · Gap analyser with outlet-level breakdown",
-    demo: "/distribution-dashboard.html",
+    client: "Finance · sample with fictional data",
+    results: "Shows that raw material inflation, not sales, is why profit missed budget",
+    demo: "/dashboards/pnl.html",
   },
   {
     id: 7,
-    title: "Customer Profitability Dashboard",
+    title: "Pricing & promotion simulator",
     description:
-      "Full customer-level P&L for a 30-customer FMCG portfolio across 4 channels. Tracks Revenue, COGS, Gross Profit, Trade Spend, Logistics, and Net Contribution Margin per customer over 6 rolling months. Includes a revenue vs CM% scatter plot, customer tier classification (A/B/C), per-customer P&L waterfall with SKU mix donut, channel benchmarking, and a Pareto 80/20 analysis.",
-    image: "/thumbnails/customer-profitability-dashboard.webp",
-    technologies: ["Python", "JavaScript", "Data Viz"],
+      "A what-if simulator for price changes and promotions built on price elasticity estimated from two years of weekly sales, plus competitor price index, market share and history by product and channel.",
+    image: "/thumbnails/pricing-promotion.webp",
+    technologies: ["Price elasticity", "Promo simulator", "Competitor index"],
     category: "Dashboard",
-    client: "Sample build · fictional data",
-    results:
-      "30 customers · 4 channels · Revenue / GP / Trade / Logistics / Net CM waterfall · Tier A/B/C classification · Pareto cumulative curves · Channel cost structure breakdown",
-    demo: "/customer-profitability-dashboard.html",
+    client: "Commercial · sample with fictional data",
+    results: "Tests a price or promo plan's profit impact before the budget is committed",
+    demo: "/dashboards/pricing-promotion.html",
   },
   {
-    id: 8,
-    title: "Market Share & Competitive Tracker",
+    id: 3,
+    title: "Demand, stock and supply",
     description:
-      "Competitive intelligence dashboard tracking ProClean vs 4 rivals (BrightClean, EcoWash, CleanPro, ZipClean) across 5 FMCG categories and 4 channels over 6 rolling months. Covers Volume Share %, Value Share %, Numeric Distribution %, and Share of Shelf %. Includes category drill-downs, channel benchmarking, head-to-head brand comparisons, and a share movement heatmap showing gains/losses vs prior period.",
-    image: "/thumbnails/market-share-tracker.webp",
-    technologies: ["Python", "JavaScript", "Data Viz"],
+      "For the S&OP meeting: forecast accuracy and bias, projected stock by product and DC, expiry and stock-out risk, customer OTIF, production adherence, warehouse space and supplier performance.",
+    image: "/thumbnails/demand-planning.webp",
+    technologies: ["Forecast accuracy", "Stock projection", "OTIF & suppliers"],
     category: "Dashboard",
-    client: "Sample build · fictional data",
-    results:
-      "5 brands · 5 categories · 4 channels · Volume & Value share trends · Distribution & shelf share · Head-to-head comparison · Share movement heatmap · Category rank tracker",
-    demo: "/market-share-tracker.html",
+    client: "Demand & supply planning · sample with fictional data",
+    results: "Shows that sales overrides reduce accuracy, and the stock at risk of expiry",
+    demo: "/dashboards/demand-planning.html",
+  },
+  {
+    id: 2,
+    title: "Key account profitability",
+    description:
+      "What each retail account really earns: a price waterfall from gross sales to contribution, trade spend by term, a year-on-year profit bridge and promotion ROI.",
+    image: "/thumbnails/key-account-profitability.webp",
+    technologies: ["Price waterfall", "Trade spend", "Promo ROI"],
+    category: "Dashboard",
+    client: "Commercial finance · sample with fictional data",
+    results: "Finds the biggest account earning the lowest margin before negotiations",
+    demo: "/dashboards/key-account-profitability.html",
+  },
+  {
+    id: 4,
+    title: "Who to visit, and what to sell",
+    description:
+      "A machine learning model ranks which customers each salesman should visit this month and what to offer them, with a check of last month's accuracy, distribution gaps and promo ROI.",
+    image: "/thumbnails/sales-distributor.webp",
+    technologies: ["Propensity model", "Distribution gaps", "Promo ROI"],
+    category: "Dashboard",
+    client: "Commercial · sample with fictional data",
+    results: "Ranks 320 customers by opportunity for the field team",
+    demo: "/dashboards/sales-distributor.html",
+  },
+  {
+    id: 5,
+    title: "Budget and cash",
+    description:
+      "A food distributor's P&L against budget, cost variances, a 13-week cash forecast and receivables aging. Shows why the bank balance falls while sales beat the plan.",
+    image: "/thumbnails/finance-cash.webp",
+    technologies: ["P&L vs budget", "Cash forecast", "Receivables aging"],
+    category: "Dashboard",
+    client: "Finance · sample with fictional data",
+    results: "Spots a cash shortfall eight weeks ahead and the customers causing it",
+    demo: "/dashboards/finance-cash.html",
   },
 ];
 

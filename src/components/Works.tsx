@@ -13,9 +13,9 @@ const Works: React.FC = () => {
             <p className="eyebrow mb-3">Sample dashboards</p>
             <h2 className="section-title">Click around before you hire me.</h2>
             <p className="mt-4 text-neutral-600 text-lg leading-relaxed">
-              Interactive dashboards I built on fictional FMCG data to show
-              what's possible. Yours is built in Power BI or Excel, on your own
-              data.
+              Built for commercial, finance and demand planning teams. Each
+              sample answers one real business question on fictional data.
+              Yours is built in Power BI or Excel, on your own data.
             </p>
           </div>
           <Link to="/works" className="btn-secondary shrink-0 self-start md:self-auto">

@@ -25,5 +25,6 @@ dist-ssr
 *.sw?
 *.html
 !public/*.html
+!public/dashboards/*.html
 src/projects/Salesman Action Dashboard/Salesman_Action_Dashboard_Demo.html
 dist-server

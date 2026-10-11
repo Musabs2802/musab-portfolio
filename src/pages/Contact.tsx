@@ -13,6 +13,7 @@ import SEO from "../components/SEO";
 import site, { whatsappLink } from "../data/site.data";
 
 const serviceOptions = [
+  "Data analysis / forecasting",
   "Power BI dashboard",
   "Excel tracker / template",
   "Reporting automation",

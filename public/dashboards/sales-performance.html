@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>FMCG Sales vs Target Dashboard | Sample by Musab Shaikh</title>
+<meta name="description" content="Sample commercial dashboard for an FMCG company in Saudi Arabia: sales against target by region, channel, category and salesman, growth vs last year, and month-to-date pace with a month-end projection. Built by Musab Shaikh with fictional data." />
+<link rel="canonical" href="https://musab-shaikh.vercel.app/dashboards/sales-performance.html" />
+<meta property="og:image" content="https://musab-shaikh.vercel.app/thumbnails/sales-performance.webp" />
+<link rel="icon" type="image/svg+xml" href="/icon.svg" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lexend:wght@600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="dash.css" />
+</head>
+<body>
+<header class="topbar">
+  <div class="wrap">
+    <a class="back" href="/works"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>Musab Shaikh</a>
+    <span class="spacer"></span>
+    <span class="pill">Sample dashboard · fictional data</span>
+    <a class="btn" href="/contact">Get one built</a>
+  </div>
+</header>
+
+<main>
+  <section class="wrap intro">
+    <div>
+      <p class="eyebrow">Commercial · FMCG, Saudi Arabia</p>
+      <h1>Sales vs target</h1>
+      <p class="context">Najma Foods sells frozen and chilled food across 4 regions and 5 channels. Every morning the sales director, regional managers and 24 salesmen open this report to see where the year stands and whether this month will land.</p>
+    </div>
+    <div class="question">
+      <div class="label">The business question</div>
+      <p>Will we hit this month's and this year's target, and exactly where are we falling behind?</p>
+    </div>
+  </section>
+
+  <div class="filters">
+    <div class="wrap">
+      <div class="filter"><span>Region</span><div id="f-region"></div></div>
+      <div class="filter"><span>Channel</span><select class="select" id="f-channel" aria-label="Channel"></select></div>
+      <span class="note" id="asof"></span>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="kpis" id="kpis"></div>
+
+    <section class="insight" aria-labelledby="ins-h">
+      <h2 id="ins-h">What the data says</h2>
+      <ol id="insights"></ol>
+    </section>
+
+    <div class="grid">
+      <article class="card span-7">
+        <div class="card-head"><div><h3>October so far</h3><p class="sub">Cumulative sales against the month's target phasing, with a projection at the current run rate</p></div></div>
+        <div id="lg-mtd"></div>
+        <div id="c-mtd"></div>
+        <p class="callout" id="mtd-note"></p>
+      </article>
+      <article class="card span-5">
+        <div class="card-head"><div><h3>Where the gap is</h3><p class="sub">Year-to-date sales as % of target, region by channel</p></div></div>
+        <div id="lg-heat"></div>
+        <div id="c-heat"></div>
+      </article>
+
+      <article class="card span-7">
+        <div class="card-head"><div><h3>Monthly sales against target</h3><p class="sub">Ramadan (Feb–Mar) is the year's biggest season</p></div></div>
+        <div id="lg-month"></div>
+        <div id="c-month"></div>
+      </article>
+      <article class="card span-5">
+        <div class="card-head"><div><h3>Growth by category</h3><p class="sub">Year to date vs the same months last year</p></div></div>
+        <div id="c-cat"></div>
+        <p class="callout" id="cat-note"></p>
+      </article>
+
+      <article class="card span-12">
+        <div class="card-head"><div><h3>Salesman tracker</h3><p class="sub">October target, month-to-date sales and what each salesman needs per day to close the month</p></div></div>
+        <div id="t-sm"></div>
+      </article>
+    </div>
+
+    <section class="next">
+      <h2>What I'd do next</h2>
+      <ol id="next"></ol>
+    </section>
+
+    <section class="cta">
+      <div>
+        <h2>Want this for your sales team?</h2>
+        <p>I run this kind of daily report for 250+ users, from the CEO to field sales. I can build yours in Power BI from your ERP.</p>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <a class="btn" href="/contact">Get a quote</a>
+        <a class="btn ghost" href="/works">See other samples</a>
+      </div>
+    </section>
+    <p class="foot">Sample built by Musab Shaikh. Najma Foods, its salesmen and all figures are fictional.</p>
+  </div>
+</main>
+
+<script src="dash.js"></script>
+<script src="data/sales.js"></script>
+<script>
+const D = window.DATA, { fmt, sum } = Dash;
+const DAYS = D.octDailyTarget.length, DONE = D.octDailyActual.length;
+const state = { region: "all", channel: "all" };
+document.getElementById("asof").textContent = `FY2026 · updated ${D.asOf} · SAR`;
+// row: month, region, channel, category, target, actual, lastYear
+const inScope = (r, c, s = state) => (s.region === "all" || r === +s.region) && (s.channel === "all" || c === +s.channel);
+const ytd = (rows) => ({ t: sum(rows, (r) => r[4]), a: sum(rows, (r) => r[5]), ly: sum(rows, (r) => r[6]) });
+const mtdFor = (s) => {
+  const parts = D.mtd.filter((x) => inScope(x[0], x[1], s));
+  const tShare = sum(parts, (x) => x[2]) / sum(D.mtd, (x) => x[2]);
+  const aShare = sum(parts, (x) => x[3]) / sum(D.mtd, (x) => x[3]);
+  const target = D.octDailyTarget.map((v) => v * tShare);
+  const actual = D.octDailyActual.map((v) => v * aShare);
+  const tMonth = sum(target), tToDate = sum(target.slice(0, DONE)), aToDate = sum(actual);
+  const projected = aToDate + (aToDate / tToDate) * (tMonth - tToDate);
+  return { target, actual, tMonth, tToDate, aToDate, projected, pace: (aToDate / tToDate) * 100 };
+};
+
+(function story() {
+  const all = ytd(D.rows);
+  const gap = all.t - all.a;
+  const by = (idx, names) => names.map((n, i) => { const x = ytd(D.rows.filter((r) => r[idx] === i)); return { n, ach: (x.a / x.t) * 100, gap: x.t - x.a, g: (x.a / x.ly - 1) * 100 }; });
+  const regions = by(1, D.regions).sort((a, b) => a.ach - b.ach);
+  const channels = by(2, D.channels).sort((a, b) => a.ach - b.ach);
+  const cats = by(3, D.categories).sort((a, b) => b.g - a.g);
+  const online = channels.find((c) => c.n.startsWith("Online"));
+  const m = mtdFor({ region: "all", channel: "all" });
+  const perDay = (m.tMonth - m.aToDate) / (DAYS - DONE);
+  const runRate = m.aToDate / DONE;
+  const ri = D.regions.indexOf(regions[0].n);
+  const ka = ytd(D.rows.filter((r) => r[1] === ri && r[2] === 0));
+  const keyAcc = (ka.a / ka.t) * 100;
+  document.getElementById("insights").innerHTML = [
+    `The year is at <b>${((all.a / all.t) * 100).toFixed(1)}% of target</b>, ${fmt.sar(gap)} short. <b>${regions[0].n}</b> (${regions[0].ach.toFixed(1)}%) and <b>${channels[0].n}</b> (${channels[0].ach.toFixed(1)}%) account for most of the gap.`,
+    `<b>${online.n}</b> is at ${online.ach.toFixed(0)}% of target, and <b>${cats[0].n}</b> is up ${cats[0].g.toFixed(0)}% on last year, the fastest-growing category. Overall sales are ${fmt.signedPct((all.a / all.ly - 1) * 100)} vs last year.`,
+    `October is running at <b>${m.pace.toFixed(0)}% of pace</b>. At this rate the month ends at ${fmt.sar(m.projected)} against ${fmt.sar(m.tMonth)}. Closing the gap needs <b>${fmt.sar(perDay)} a day</b>, ${((perDay / runRate - 1) * 100).toFixed(0)}% above the current run rate.`,
+  ].map((h, i) => `<li><span class="n">${i + 1}</span><span>${h}</span></li>`).join("");
+  document.getElementById("next").innerHTML = [
+    { h: `Recover the lost listing in ${regions[0].n}`, p: `Key accounts in ${regions[0].n} are at ${keyAcc.toFixed(0)}% of target after a hypermarket chain delisted 6 products in spring. Agree a recovery plan with the buyer: a relisting fee or a joint promotion in the November leaflet.`, i: `Up to ${fmt.sar(regions[0].gap / 9)} a month` },
+    { h: `Reset the ${channels[0].n} plan`, p: "Foodservice volumes have not come back after summer. Review prices against competitors for the top 20 restaurant accounts and add a second HoReCa salesman in Riyadh.", i: "Brings the weakest channel back to target" },
+    { h: "Back what is working", p: `Move part of next quarter's trade budget to ${online.n.toLowerCase()} and ${cats[0].n.toLowerCase()}, where every riyal of target is being beaten.`, i: "Grows the channels already above plan" },
+  ].map((n, i) => `<li><div class="step">STEP ${i + 1}</div><h3>${n.h}</h3><p>${n.p}</p><div class="impact">${n.i}</div></li>`).join("");
+})();
+
+function render() {
+  const rows = D.rows.filter((r) => inScope(r[1], r[2]));
+  const y = ytd(rows);
+  const m = mtdFor(state);
+  Dash.kpis("#kpis", [
+    { label: "Sales year to date", value: fmt.sar(y.a), sub: `target ${fmt.sar(y.t)}` },
+    { label: "Achievement", value: fmt.pct((y.a / y.t) * 100), delta: { text: `${fmt.sar(Math.abs(y.a - y.t))} ${y.a >= y.t ? "ahead" : "behind"}`, tone: y.a >= y.t ? "good" : "bad" } },
+    { label: "Growth vs last year", value: fmt.signedPct((y.a / y.ly - 1) * 100), sub: `last year ${fmt.sar(y.ly)}` },
+    { label: "October pace", value: fmt.pct(m.pace, 0), sub: `${fmt.sar(m.aToDate)} of ${fmt.sar(m.tToDate)} due by ${D.asOf.slice(0, 6)}` },
+    { label: "October projection", value: fmt.pct((m.projected / m.tMonth) * 100, 0), delta: { text: `${fmt.sar(Math.abs(m.tMonth - m.projected))} ${m.projected >= m.tMonth ? "over" : "short"}`, tone: m.projected >= m.tMonth ? "good" : "bad" } },
+  ]);
+
+  // Month-to-date cumulative
+  const cum = (arr) => arr.reduce((o, v, i) => (o.push((o[i - 1] || 0) + v), o), []);
+  const tc = cum(m.target), ac = cum(m.actual);
+  const rate = m.aToDate / m.tToDate;
+  const proj = tc.map((v, i) => (i < DONE - 1 ? null : i === DONE - 1 ? ac[DONE - 1] : ac[DONE - 1] + (v - tc[DONE - 1]) * rate));
+  const ms = [
+    { name: "Target", color: "--s3", values: tc },
+    { name: "Actual", color: "--s1", values: [...ac, ...Array(DAYS - DONE).fill(null)] },
+    { name: "Projection", color: "--s1", values: proj, dashed: true },
+  ];
+  Dash.legend("#lg-mtd", [{ name: "Target", color: "--s3", type: "line" }, { name: "Actual", color: "--s1", type: "line" }, { name: "Projection", color: "--s1", type: "dash" }]);
+  Dash.line("#c-mtd", { categories: tc.map((_, i) => `${i + 1} Oct`), series: ms, format: fmt.sar, height: 240, endDots: true, label: "October cumulative sales" });
+  document.getElementById("mtd-note").innerHTML = `To hit target, the rest of October needs <b>${fmt.sar((m.tMonth - m.aToDate) / (DAYS - DONE))} a day</b> against ${fmt.sar(m.aToDate / DONE)} a day so far.`;
+
+  // Region x channel achievement (region filter narrows rows, channel filter narrows columns)
+  const rIdx = D.regions.map((_, i) => i).filter((i) => state.region === "all" || i === +state.region);
+  const cIdx = D.channels.map((_, i) => i).filter((i) => state.channel === "all" || i === +state.channel);
+  const short = { "Key accounts": "Key acc.", Supermarkets: "Supers", "Traditional trade": "Trad.", HoReCa: "HoReCa", "Online & q-commerce": "Online" };
+  Dash.legend("#lg-heat", [{ name: "Below target", color: "--s2" }, { name: "On target", color: "--surface-2" }, { name: "Above target", color: "--s1" }]);
+  Dash.heatmap("#c-heat", {
+    rows: rIdx.map((i) => D.regions[i]), cols: cIdx.map((i) => short[D.channels[i]]),
+    values: rIdx.map((r) => cIdx.map((c) => { const x = ytd(D.rows.filter((q) => q[1] === r && q[2] === c)); return (x.a / x.t) * 100; })),
+    diverging: { mid: 100, span: 15 }, showValues: true, cellHeight: 40, format: (v) => v.toFixed(0) + "%", valueName: "Achievement", label: "Achievement by region and channel",
+  });
+
+  const months = D.months.map((_, mi) => ytd(rows.filter((r) => r[0] === mi)));
+  Dash.legend("#lg-month", [{ name: "Actual", color: "--s1" }, { name: "Target", color: "--ink", type: "tick" }]);
+  Dash.columns("#c-month", { categories: D.months, series: [{ name: "Actual", color: "--s1", values: months.map((x) => x.a) }], overlay: { name: "Target", values: months.map((x) => x.t), color: "--ink" },
+    format: fmt.sar, height: 240, label: "Monthly sales vs target",
+    tipExtra: (i) => [{ name: "Achievement", value: fmt.pct((months[i].a / months[i].t) * 100) }, { name: "vs last year", value: fmt.signedPct((months[i].a / months[i].ly - 1) * 100) }] });
+
+  const cats = D.categories.map((n, k) => { const x = ytd(rows.filter((r) => r[3] === k)); return { n, g: (x.a / x.ly - 1) * 100, ach: (x.a / x.t) * 100, a: x.a }; }).sort((a, b) => b.g - a.g);
+  Dash.hbars("#c-cat", {
+    items: cats.map((c) => ({ label: c.n, values: [c.g], color: c.g < 0 ? "--s2" : "--s1", extra: [{ name: "Sales", value: fmt.sar(c.a) }, { name: "vs target", value: fmt.pct(c.ach) }] })),
+    valueName: "Growth", format: (v) => fmt.signedPct(v, 0), tipFormat: (v) => fmt.signedPct(v), rowHeight: 34, label: "Growth by category",
+  });
+  const behind = cats.filter((c) => c.ach < 100);
+  document.getElementById("cat-note").innerHTML = behind.length
+    ? `Every category grew, but <b>${behind.map((c) => c.n).join(", ")}</b> ${behind.length > 1 ? "are" : "is"} still below target because the plan assumed faster growth.`
+    : "Every category is growing and at or above target.";
+
+  const sm = D.salesmen.filter((s) => inScope(s.region, s.channel)).map((s) => {
+    const due = (s.target * DONE) / DAYS;
+    return { ...s, pace: (s.mtd / due) * 100, need: (s.target - s.mtd) / (DAYS - DONE) };
+  });
+  Dash.table("#t-sm", {
+    sort: "pace", dir: 1, limit: 12, resetLimit: true, rows: sm,
+    columns: [
+      { key: "name", label: "Salesman", render: (s) => `<span class="strong">${s.name}</span><br><span class="dim">${D.regions[s.region]} · ${D.channels[s.channel]}</span>` },
+      { key: "target", label: "Oct target", align: "right", render: (s) => fmt.sar(s.target) },
+      { key: "mtd", label: "Month to date", align: "right", render: (s) => fmt.sar(s.mtd) },
+      { key: "pace", label: "Pace", align: "right", render: (s) => `<span class="meter"><i style="width:${Math.min(100, s.pace)}%"></i></span>${s.pace.toFixed(0)}%` },
+      { key: "need", label: "Needed / day", align: "right", render: (s) => fmt.sar(s.need) },
+      { key: "ytdAch", label: "YTD achievement", align: "right", render: (s) => fmt.pct(s.ytdAch) },
+      { key: "status", label: "Status", value: (s) => s.pace, render: (s) => (s.pace < 90 ? '<span class="tag bad">▼ At risk</span>' : s.pace < 100 ? '<span class="tag warn">● Behind</span>' : '<span class="tag good">▲ On track</span>') },
+    ],
+  });
+}
+
+Dash.segmented("#f-region", [{ value: "all", label: "All" }, ...D.regions.map((r, i) => ({ value: String(i), label: r }))], state.region, (v) => { state.region = v; render(); });
+Dash.select("#f-channel", [{ value: "all", label: "All channels" }, ...D.channels.map((c, i) => ({ value: String(i), label: c }))], state.channel, (v) => { state.channel = v; render(); });
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,397 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Pricing &amp; Promotion Simulator with Competitor Analysis | Sample by Musab Shaikh</title>
+<meta name="description" content="Sample pricing and promotion dashboard for an FMCG company: a what-if simulator for price changes and promotions using price elasticity estimated from history, competitor price index and market share, and weekly price and volume trends by product and channel. Built by Musab Shaikh with fictional data." />
+<link rel="canonical" href="https://musab-shaikh.vercel.app/dashboards/pricing-promotion.html" />
+<meta property="og:image" content="https://musab-shaikh.vercel.app/thumbnails/pricing-promotion.webp" />
+<link rel="icon" type="image/svg+xml" href="/icon.svg" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lexend:wght@600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="dash.css" />
+</head>
+<body>
+<header class="topbar">
+  <div class="wrap">
+    <a class="back" href="/works"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>Musab Shaikh</a>
+    <span class="spacer"></span>
+    <span class="pill">Sample dashboard · fictional data</span>
+    <a class="btn" href="/contact">Get one built</a>
+  </div>
+</header>
+
+<main>
+  <section class="wrap intro">
+    <div>
+      <p class="eyebrow">Commercial · Revenue growth management</p>
+      <h1>Pricing &amp; promotion</h1>
+      <p class="context">Najma Foods raised poultry and dairy prices 6% in March. Its main competitor did not follow, and the trade marketing team keeps asking for deeper discounts. This dashboard uses two years of weekly sales to measure how customers react to price, then lets the team test a plan before committing budget.</p>
+    </div>
+    <div class="question">
+      <div class="label">The business question</div>
+      <p>What happens to volume and profit if we change price or run a promotion, and how do we compare with competitors?</p>
+    </div>
+  </section>
+
+  <div class="filters">
+    <div class="wrap">
+      <div class="filter"><span>Product</span><select class="select" id="f-sku" aria-label="Product"></select></div>
+      <div class="filter"><span>Channel</span><div id="f-ch"></div></div>
+      <span class="note">Weekly data, Oct 2024 – Sep 2026 · SAR</span>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <section class="insight" aria-labelledby="ins-h" style="margin-top:16px">
+      <h2 id="ins-h">What the data says</h2>
+      <ol id="insights"></ol>
+    </section>
+
+    <div class="tabs" id="tabs">
+      <button data-tab="sim">Price &amp; promo simulator</button>
+      <button data-tab="comp">Competitor analysis</button>
+      <button data-tab="hist">History by product &amp; channel</button>
+    </div>
+
+    <!-- Simulator -->
+    <section id="sim">
+      <div class="sim">
+        <aside class="controls" aria-label="Scenario settings">
+          <h3>Plan for next quarter</h3>
+          <p class="sub">Oct–Dec 2026, 13 weeks</p>
+          <div class="ctrl"><label for="s-price">List price change <output id="o-price"></output></label><input type="range" id="s-price" min="-10" max="10" step="1" value="0" /><div class="hint" id="h-price"></div></div>
+          <div class="ctrl"><label for="s-depth">Promotion discount <output id="o-depth"></output></label><input type="range" id="s-depth" min="0" max="30" step="5" value="20" /></div>
+          <div class="ctrl"><label for="s-weeks">Promotion weeks <output id="o-weeks"></output></label><input type="range" id="s-weeks" min="0" max="6" step="1" value="3" /></div>
+          <div class="ctrl"><label class="check"><input type="checkbox" id="s-display" checked /> Gondola end display during promotion (SAR 8K a week)</label></div>
+          <div class="ctrl"><label class="check"><input type="checkbox" id="s-react" /> Competitors match our price change</label></div>
+          <div class="model" id="model"></div>
+        </aside>
+        <div class="sim-out">
+          <div class="kpis" id="sim-kpis"></div>
+          <div class="grid">
+            <article class="card span-12">
+              <div class="card-head"><div><h3>What drives the profit change</h3><p class="sub">Gross profit for the quarter, from the current plan to this scenario</p></div></div>
+              <div id="c-wf"></div>
+              <p class="callout" id="sim-note"></p>
+            </article>
+            <article class="card span-7">
+              <div class="card-head"><div><h3>Weekly units</h3><p class="sub">Current plan vs scenario</p></div></div>
+              <div id="lg-weekly"></div>
+              <div id="c-weekly"></div>
+            </article>
+            <article class="card span-5">
+              <div class="card-head"><div><h3>Which discount works best?</h3><p class="sub">Profit change per riyal of promo spend, by discount, this product and channel</p></div></div>
+              <div id="c-depth"></div>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Competitors -->
+    <section id="comp" hidden>
+      <div class="grid">
+        <article class="card span-6">
+          <div class="card-head"><div><h3>Price index vs competitors</h3><p class="sub">Our list price ÷ competitor average, last 13 weeks. 100 = same price.</p></div></div>
+          <div id="c-index"></div>
+        </article>
+        <article class="card span-6">
+          <div class="card-head"><div><h3 id="share-title">Market share</h3><p class="sub">Value share by month, retail audit</p></div></div>
+          <div id="lg-share"></div>
+          <div id="c-share"></div>
+          <p class="callout" id="share-note"></p>
+        </article>
+        <article class="card span-12">
+          <div class="card-head"><div><h3>Price ladder</h3><p class="sub">Average shelf price, last 13 weeks, selected channel</p></div></div>
+          <div id="t-ladder"></div>
+        </article>
+      </div>
+    </section>
+
+    <!-- History -->
+    <section id="hist" hidden>
+      <div class="grid">
+        <article class="card span-12">
+          <div class="card-head"><div><h3 id="hist-title">Weekly shelf price</h3><p class="sub">Our price vs competitor average. Dips are promotions.</p></div></div>
+          <div id="lg-hprice"></div>
+          <div id="c-hprice"></div>
+        </article>
+        <article class="card span-12">
+          <div class="card-head"><div><h3>Weekly units sold</h3><p class="sub">Promotion weeks in orange</p></div></div>
+          <div id="c-hunits"></div>
+        </article>
+        <article class="card span-6">
+          <div class="card-head"><div><h3>Price sensitivity by channel</h3><p class="sub">% change in units for a 1% price increase, estimated from history</p></div></div>
+          <div id="c-elastic"></div>
+        </article>
+        <article class="card span-6">
+          <div class="card-head"><div><h3>Last 12 months vs the 12 before</h3><p class="sub">Selected product, by channel</p></div></div>
+          <div id="t-yoy"></div>
+        </article>
+        <article class="card span-12">
+          <div class="card-head"><div><h3>Past promotions</h3><p class="sub">Selected product and channel · click a column to sort</p></div></div>
+          <div id="t-promos"></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="next">
+      <h2>What I'd do next</h2>
+      <ol id="next"></ol>
+    </section>
+
+    <section class="cta">
+      <div>
+        <h2>Want a simulator built on your own sales history?</h2>
+        <p>I estimate price elasticity and promo uplift in Python from your sell-in or retailer data and put it into Power BI or Excel for your team.</p>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <a class="btn" href="/contact">Get a quote</a>
+        <a class="btn ghost" href="/works">See other samples</a>
+      </div>
+    </section>
+    <p class="foot">Sample built by Musab Shaikh. Najma Foods, its competitors and all figures are fictional.</p>
+  </div>
+</main>
+
+<script src="dash.js"></script>
+<script src="data/pricing.js"></script>
+<script>
+const D = window.DATA, { fmt, sum } = Dash;
+const W = D.weeks.length;
+const state = { sku: 0, ch: 0 };
+// row: week, sku, channel, list price, shelf price, competitor price, promo depth %, display, units
+const series = (sku, ch) => D.rows.filter((r) => r[1] === sku && r[2] === ch);
+const promoWeeks = (rows) => new Set(rows.filter((r) => r[6] > 0).map((r) => r[0]));
+
+// Least squares for y = Xb (small dense system)
+function ols(X, y) {
+  const k = X[0].length;
+  const A = Array.from({ length: k }, (_, i) => Array.from({ length: k + 1 }, (_, j) => (j < k ? sum(X, (r) => r[i] * r[j]) : sum(X, (r, n) => r[i] * y[n]))));
+  for (let i = 0; i < k; i++) {
+    const p = A[i][i];
+    for (let j = i; j <= k; j++) A[i][j] /= p;
+    for (let r = 0; r < k; r++) if (r !== i) { const f = A[r][i]; for (let j = i; j <= k; j++) A[r][j] -= f * A[i][j]; }
+  }
+  return A.map((r) => r[k]);
+}
+// Price response model for one product and channel, from history
+const cache = new Map();
+function model(sku, ch) {
+  const key = sku + "-" + ch;
+  if (cache.has(key)) return cache.get(key);
+  const rows = series(sku, ch);
+  const pw = promoWeeks(rows);
+  const clean = rows.filter((r) => !pw.has(r[0]) && !pw.has(r[0] - 1));
+  const y = clean.map((r) => Math.log(r[8] / D.season[r[0]]));
+  const b = ols(clean.map((r) => [1, Math.log(r[4]), Math.log(r[5])]), y);
+  const mean = sum(y) / y.length;
+  const fit = clean.map((r) => b[0] + b[1] * Math.log(r[4]) + b[2] * Math.log(r[5]));
+  const r2 = 1 - sum(y, (v, i) => (v - fit[i]) ** 2) / sum(y, (v) => (v - mean) ** 2);
+  const base = (r) => Math.exp(b[0] + b[1] * Math.log(r[4]) + b[2] * Math.log(r[5])) * D.season[r[0]];
+  const promos = rows.filter((r) => r[6] > 0);
+  const u = ols(promos.map((r) => [r[6] / 100, r[7]]), promos.map((r) => r[8] / base(r) - 1));
+  const m = { e: b[1], cross: b[2], b0: b[0], r2, k: u[0], disp: u[1], base, rows, promos, n: clean.length };
+  cache.set(key, m);
+  return m;
+}
+const last = (rows, n = 13) => rows.slice(-n);
+const P = (sku) => D.skus[sku];
+
+// ---------- scenario
+function simulate(sku, ch, s) {
+  const m = model(sku, ch);
+  const cur = last(m.rows);
+  const list = cur[cur.length - 1][3], comp = sum(cur, (r) => r[5]) / cur.length, cost = P(sku).cost;
+  const base = (l, c) => Math.exp(m.b0 + m.e * Math.log(l) + m.cross * Math.log(c));
+  const newList = list * (1 + s.price / 100);
+  const newComp = comp * (1 + (s.react ? s.price / 100 : 0));
+  const slots = s.weeks ? Array.from({ length: s.weeks }, (_, i) => Math.round(1 + (i * 12) / s.weeks)) : [];
+  const weeks = D.nextQuarterSeason.map((sea, w) => {
+    const b0 = base(list, comp) * sea;
+    const b1 = base(newList, newComp) * sea;
+    const promo = slots.includes(w);
+    const post = slots.includes(w - 1) ? 0.9 : 1;
+    const units = promo ? base(newList * (1 - s.depth / 100), newComp) * sea * (1 + m.k * (s.depth / 100) + (s.display ? m.disp : 0)) : b1 * post;
+    return { b0, b1, units, promo, price: promo ? newList * (1 - s.depth / 100) : newList };
+  });
+  const G0 = sum(weeks, (w) => w.b0 * (list - cost));
+  const G1 = sum(weeks, (w) => w.b0 * (newList - cost));
+  const G2 = sum(weeks, (w) => w.b1 * (newList - cost));
+  const G3 = sum(weeks, (w) => w.units * (newList - cost));
+  const disc = sum(weeks.filter((w) => w.promo), (w) => w.units * newList * (s.depth / 100));
+  const fees = s.display && s.depth ? slots.length * 8000 : 0;
+  const incUnits = sum(weeks, (w) => w.units - w.b1);
+  const cannibal = Math.max(0, incUnits) * 0.25 * (newList - cost);
+  const G = G3 - disc - fees - cannibal;
+  const spend = disc + fees;
+  return {
+    weeks, list, newList, comp, cost, G0, G, spend,
+    units0: sum(weeks, (w) => w.b0), units: sum(weeks, (w) => w.units),
+    rev0: sum(weeks, (w) => w.b0 * list), rev: sum(weeks, (w) => w.units * w.price),
+    promoGain: G - G2,
+    steps: [
+      { label: "Current plan", value: G0, total: true },
+      { label: "Price change", value: G1 - G0 },
+      { label: "Volume response", value: G2 - G1 },
+      { label: "Promo volume", value: G3 - G2 },
+      { label: "Discount cost", value: -disc },
+      { label: "Display fees", value: -fees },
+      { label: "Cannibalisation", value: -cannibal },
+      { label: "Scenario", value: G, total: true },
+    ],
+  };
+}
+
+function readControls() {
+  return { price: +document.getElementById("s-price").value, depth: +document.getElementById("s-depth").value, weeks: +document.getElementById("s-weeks").value, display: document.getElementById("s-display").checked, react: document.getElementById("s-react").checked };
+}
+
+function renderSim() {
+  const s = readControls();
+  const eff = { ...s, weeks: s.depth ? s.weeks : 0, depth: s.weeks ? s.depth : 0 };
+  document.getElementById("o-price").textContent = fmt.signedPct(s.price, 0);
+  document.getElementById("o-depth").textContent = s.depth + "%";
+  document.getElementById("o-weeks").textContent = `${s.weeks} of 13`;
+  const r = simulate(state.sku, state.ch, eff);
+  const m = model(state.sku, state.ch);
+  document.getElementById("h-price").textContent = `SAR ${r.list.toFixed(2)} → SAR ${r.newList.toFixed(2)} (competitors avg SAR ${r.comp.toFixed(2)})`;
+  document.getElementById("model").innerHTML = `Estimated from <b>${m.n} normal weeks</b> of ${P(state.sku).name} in ${D.channels[state.ch].toLowerCase()}: a 1% price rise loses <b>${Math.abs(m.e).toFixed(1)}%</b> of units (fit R² ${m.r2.toFixed(2)}). Each 10% of discount adds <b>${(m.k * 10).toFixed(0)}%</b> on top of the price effect; a display adds <b>${(m.disp * 100).toFixed(0)}%</b>. A quarter of promo extra volume is assumed to come from our other products.`;
+
+  const ch = (x, y, up = true) => ({ text: `${fmt.signedPct(((x - y) / Math.abs(y)) * 100)} vs current plan`, tone: Math.abs((x - y) / y) < 0.005 ? "neutral" : (x > y) === up ? "good" : "bad" });
+  Dash.kpis("#sim-kpis", [
+    { label: "Units", value: fmt.compact(r.units), delta: ch(r.units, r.units0) },
+    { label: "Revenue", value: fmt.sar(r.rev), delta: ch(r.rev, r.rev0) },
+    { label: "Gross profit", value: fmt.sar(r.G), delta: ch(r.G, r.G0) },
+    { label: "Promo spend", value: r.spend ? fmt.sar(r.spend) : "–", sub: r.spend ? "discount + display" : "no promotion" },
+    { label: "Promo return", value: r.spend ? `${r.promoGain >= 0 ? "+" : "−"}SAR ${Math.abs(r.promoGain / r.spend).toFixed(2)}` : "–", sub: r.spend ? "profit per riyal spent" : "", delta: r.spend ? { text: r.promoGain >= 0 ? "pays back" : "loses money", tone: r.promoGain >= 0 ? "good" : "bad" } : null },
+  ]);
+  Dash.waterfall("#c-wf", { steps: r.steps, format: fmt.sar, labelFormat: (v) => fmt.compact(v), height: 260, label: "Gross profit bridge" });
+  const dG = r.G - r.G0;
+  document.getElementById("sim-note").innerHTML = `This plan ${dG >= 0 ? "adds" : "loses"} <b>${fmt.sar(Math.abs(dG))}</b> of gross profit for the quarter${eff.weeks ? `, and each riyal of promo spend ${r.promoGain >= 0 ? "returns" : "loses"} <b>SAR ${Math.abs(r.promoGain / r.spend).toFixed(2)}</b>` : ""}.`;
+
+  const ws = [{ name: "Current plan", color: "--s3", values: r.weeks.map((w) => w.b0) }, { name: "Scenario", color: "--s1", values: r.weeks.map((w) => w.units) }];
+  Dash.legend("#lg-weekly", ws);
+  Dash.columns("#c-weekly", { categories: r.weeks.map((_, i) => "W" + (i + 1)), series: ws, format: fmt.compact, tipFormat: (v) => fmt.num(v) + " units", height: 220, label: "Weekly units" });
+
+  // Discount ladder: promo return at each depth with today's other settings
+  const depths = [10, 15, 20, 25, 30];
+  const res = depths.map((d) => { const x = simulate(state.sku, state.ch, { ...s, depth: d, weeks: Math.max(1, s.weeks) }); return x.promoGain / x.spend; });
+  Dash.hbars("#c-depth", {
+    items: depths.map((d, i) => ({ label: `${d}% off${d === s.depth ? "  ◀" : ""}`, values: [res[i]], color: res[i] < 0 ? "--s2" : "--s1" })),
+    valueName: "Profit per riyal", format: (v) => (v >= 0 ? "+" : "−") + Math.abs(v).toFixed(2), rowHeight: 32, label: "Promo return by discount depth",
+  });
+}
+
+// ---------- competitors
+function renderComp() {
+  const idx = D.skus.map((s, i) => { const r = last(series(i, state.ch)); const our = sum(r, (x) => x[3]) / r.length, comp = sum(r, (x) => x[5]) / r.length; return { name: s.name, i, v: (our / comp) * 100, our, comp }; }).sort((a, b) => b.v - a.v);
+  Dash.hbars("#c-index", {
+    items: idx.map((x) => ({ label: x.name + (x.i === state.sku ? "  ◀" : ""), values: [x.v], color: x.v > 105 ? "--s2" : "--s1", extra: [{ name: "Our list price", value: "SAR " + x.our.toFixed(2) }, { name: "Competitor avg", value: "SAR " + x.comp.toFixed(2) }] })),
+    valueName: "Price index", format: (v) => v.toFixed(0), target: { value: 100, label: "Parity" }, rowHeight: 28, label: "Price index vs competitors",
+  });
+  const cat = P(state.sku).category;
+  document.getElementById("share-title").textContent = `Market share · ${D.categories[cat]}`;
+  const names = ["Najma Foods", ...D.competitors];
+  const ss = names.map((n, j) => ({ name: n, color: Dash.slot(j), values: D.share[cat].map((m) => m[j]) }));
+  Dash.legend("#lg-share", ss.map((x) => ({ ...x, type: "line" })));
+  Dash.line("#c-share", { categories: D.shareMonths, series: ss, format: (v) => v.toFixed(0) + "%", tipFormat: (v) => fmt.pct(v), zero: false, height: 240, endLabels: false, label: "Market share" });
+  const s = D.share[cat];
+  const before = s[16][0], low = Math.min(...s.slice(17, 20).map((x) => x[0])), now = s[s.length - 1][0];
+  document.getElementById("share-note").innerHTML = cat === 0 || cat === 2
+    ? `After the March price increase our share fell from <b>${before}%</b> to <b>${low}%</b> while Golden Farms held its price. It has recovered to ${now}%.`
+    : `Share is ${s[0][0]}% → <b>${now}%</b> over two years.`;
+  const ratios = [0.97, 1.05, 0.98];
+  Dash.table("#t-ladder", {
+    sort: "idx",
+    rows: idx.map((x) => ({ ...x, c: ratios.map((q) => x.comp * q) })),
+    columns: [
+      { key: "name", label: "Product", render: (x) => `<span class="strong">${x.name}</span>` },
+      { key: "our", label: "Najma Foods", align: "right", render: (x) => `<span class="strong">${x.our.toFixed(2)}</span>` },
+      ...D.competitors.map((c, j) => ({ key: "c" + j, label: c, align: "right", value: (x) => x.c[j], render: (x) => x.c[j].toFixed(2) })),
+      { key: "idx", label: "Index", align: "right", value: (x) => x.v, render: (x) => `<span class="tag ${x.v > 105 ? "bad" : x.v < 97 ? "good" : "neutral"}">${x.v.toFixed(0)}</span>` },
+    ],
+  });
+}
+
+// ---------- history
+function renderHist() {
+  const m = model(state.sku, state.ch);
+  const rows = m.rows;
+  document.getElementById("hist-title").textContent = `Weekly shelf price · ${P(state.sku).name} · ${D.channels[state.ch]}`;
+  const lab = D.weeks.map((w) => w.slice(3));
+  const ps = [{ name: "Our shelf price", color: "--s1", values: rows.map((r) => r[4]) }, { name: "Competitor average", color: "--s3", values: rows.map((r) => r[5]) }];
+  Dash.legend("#lg-hprice", ps.map((x) => ({ ...x, type: "line" })));
+  Dash.line("#c-hprice", { categories: lab, series: ps, format: (v) => "SAR " + v.toFixed(0), tipFormat: (v) => "SAR " + v.toFixed(2), zero: false, height: 220, label: "Weekly price", tipTitle: (i) => "Week of " + D.weeks[i],
+    tipExtra: (i) => (rows[i][6] ? [{ name: "Promotion", value: `${rows[i][6]}% off${rows[i][7] ? " + display" : ""}` }] : []) });
+  Dash.columns("#c-hunits", { categories: lab, series: [{ name: "Units", values: rows.map((r) => r[8]), color: (i) => (rows[i][6] ? "--s2" : "--s1") }], format: fmt.compact, tipFormat: (v) => fmt.num(v), height: 200, label: "Weekly units", tipTitle: (i) => "Week of " + D.weeks[i],
+    tipExtra: (i) => (rows[i][6] ? [{ name: "Promotion", value: `${rows[i][6]}% off` }, { name: "vs normal", value: fmt.signedPct((rows[i][8] / m.base(rows[i]) - 1) * 100, 0) }] : []) });
+
+  const el = D.channels.map((c, ci) => ({ c, e: model(state.sku, ci).e }));
+  Dash.hbars("#c-elastic", { items: el.map((x) => ({ label: x.c + (D.channels.indexOf(x.c) === state.ch ? "  ◀" : ""), values: [Math.abs(x.e)], color: "--s1" })), valueName: "Units lost per 1% price rise", format: (v) => "−" + v.toFixed(1) + "%", rowHeight: 34, label: "Price sensitivity by channel" });
+
+  const yoy = D.channels.map((c, ci) => {
+    const r = series(state.sku, ci), a = r.slice(52), b = r.slice(0, 52);
+    const u = (x) => sum(x, (q) => q[8]), rv = (x) => sum(x, (q) => q[8] * q[4]);
+    return { c, units: u(a), uG: (u(a) / u(b) - 1) * 100, rev: rv(a), rG: (rv(a) / rv(b) - 1) * 100, price: rv(a) / u(a), pG: (rv(a) / u(a) / (rv(b) / u(b)) - 1) * 100 };
+  });
+  Dash.table("#t-yoy", { rows: yoy, columns: [
+    { key: "c", label: "Channel", render: (x) => `<span class="strong">${x.c}</span>` },
+    { key: "price", label: "Avg price", align: "right", render: (x) => `SAR ${x.price.toFixed(2)} <span class="dim">${fmt.signedPct(x.pG)}</span>` },
+    { key: "units", label: "Units", align: "right", render: (x) => `${fmt.compact(x.units)} <span class="dim">${fmt.signedPct(x.uG)}</span>` },
+    { key: "rev", label: "Revenue", align: "right", render: (x) => `${fmt.sar(x.rev)} <span class="${x.rG >= 0 ? "tag good" : "tag bad"}">${fmt.signedPct(x.rG)}</span>` },
+  ] });
+
+  const cost = P(state.sku).cost;
+  const hist = m.promos.map((r) => {
+    const base = m.base({ ...r, 4: r[3] });
+    const inc = r[8] - base;
+    const disc = r[8] * r[3] * (r[6] / 100);
+    const gain = inc * (r[3] - cost) - disc - (r[7] ? 8000 : 0);
+    return { week: D.weeks[r[0]], w: r[0], depth: r[6], display: r[7], units: r[8], uplift: (r[8] / base - 1) * 100, ret: gain / (disc + (r[7] ? 8000 : 0)) };
+  });
+  Dash.table("#t-promos", { sort: "w", rows: hist, columns: [
+    { key: "w", label: "Week of", value: (x) => x.w, render: (x) => x.week },
+    { key: "depth", label: "Discount", align: "right", render: (x) => x.depth + "%" },
+    { key: "display", label: "Display", render: (x) => (x.display ? "Yes" : '<span class="dim">No</span>') },
+    { key: "units", label: "Units", align: "right", render: (x) => fmt.num(x.units) },
+    { key: "uplift", label: "Uplift vs normal", align: "right", render: (x) => fmt.signedPct(x.uplift, 0) },
+    { key: "ret", label: "Profit per riyal", align: "right", render: (x) => `<span class="tag ${x.ret >= 0 ? "good" : "bad"}">${x.ret >= 0 ? "+" : "−"}${Math.abs(x.ret).toFixed(2)}</span>` },
+  ] });
+}
+
+(function story() {
+  const m0 = model(0, 0), m2 = model(0, 2);
+  const allPromos = [];
+  D.skus.forEach((s, si) => D.channels.forEach((_, ci) => { const m = model(si, ci); m.promos.forEach((r) => { const base = m.base({ ...r, 4: r[3] }); const inc = r[8] - base; const disc = r[8] * r[3] * (r[6] / 100); allPromos.push({ si, d: r[6], g: inc * (r[3] - s.cost) - disc, spend: disc }); }); }));
+  const by = (f) => { const x = allPromos.filter(f); return sum(x, (p) => p.g) / sum(x, (p) => p.spend); };
+  const shallow = by((p) => p.d <= 15), deep = by((p) => p.d >= 25);
+  const perSku = D.skus.map((s, si) => ({ n: s.name, r: by((p) => p.si === si), m: 1 - s.cost / s.price })).sort((a, b) => b.r - a.r);
+  const payers = perSku.filter((x) => x.r > 0), worstSku = perSku[perSku.length - 1];
+  const ret = (v) => `${v >= 0 ? "return" : "lose"} <b>SAR ${Math.abs(v).toFixed(2)}</b>`;
+  const list = (a) => (a.length < 2 ? a.join("") : a.slice(0, -1).join(", ") + " and " + a[a.length - 1]);
+  const sh = D.share[0];
+  document.getElementById("insights").innerHTML = [
+    `After the March price increase, Golden Farms held its prices. Our poultry share fell from <b>${sh[16][0]}% to ${Math.min(...sh.slice(17, 20).map((x) => x[0]))}%</b> before recovering to ${sh[sh.length - 1][0]}%.`,
+    `Customers react very differently by channel. For chicken breast, a 1% price rise loses <b>${Math.abs(m0.e).toFixed(1)}%</b> of units in key accounts but only <b>${Math.abs(m2.e).toFixed(1)}%</b> in traditional trade.`,
+    `Promotions at 25–30% off ${ret(deep)} per riyal of discount; 10–15% off ${ret(shallow)}. Only higher-margin products pay back (<b>${list(payers.slice(0, 3).map((x) => x.n))}</b>); <b>${worstSku.n}</b> loses SAR ${Math.abs(worstSku.r).toFixed(2)} on every riyal.`,
+  ].map((h, i) => `<li><span class="n">${i + 1}</span><span>${h}</span></li>`).join("");
+  document.getElementById("next").innerHTML = [
+    { h: "Price by channel, not one list price", p: "Keep key account prices close to Golden Farms and take the next increase in traditional trade, where customers react least.", i: "More margin with less volume risk" },
+    { h: "Promote the products that can afford it", p: `Move promo budget from ${worstSku.n.toLowerCase()} to ${payers.length ? payers[0].n.toLowerCase() : "higher-margin products"}, cap discounts at 15%, and check each deal in the simulator before agreeing it with the retailer.`, i: "Turns promo spend from cost into return" },
+    { h: "Watch the price gap weekly", p: "Track the price index against Golden Farms every week and act when the gap passes 5%: a pack-size change or a targeted promotion, not a blanket cut.", i: "Protects share without giving away margin" },
+  ].map((n, i) => `<li><div class="step">STEP ${i + 1}</div><h3>${n.h}</h3><p>${n.p}</p><div class="impact">${n.i}</div></li>`).join("");
+})();
+
+const render = () => { renderSim(); renderComp(); renderHist(); };
+Dash.select("#f-sku", D.skus.map((s, i) => ({ value: String(i), label: s.name })), String(state.sku), (v) => { state.sku = +v; render(); });
+Dash.segmented("#f-ch", D.channels.map((c, i) => ({ value: String(i), label: c })), String(state.ch), (v) => { state.ch = +v; render(); });
+["s-price", "s-depth", "s-weeks", "s-display", "s-react"].forEach((id) => document.getElementById(id).addEventListener("input", renderSim));
+Dash.tabs("#tabs");
+render();
+</script>
+</body>
+</html>

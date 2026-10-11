@@ -21,7 +21,7 @@ export const pages: Record<string, PageMeta> = {
   "/works": {
     title: "Case Studies & Sample Power BI Dashboards | Musab Shaikh",
     description:
-      "Client case studies and interactive sample dashboards: P&L, price elasticity, trade promotion ROI, demand forecasting, distribution, customer profitability and market share.",
+      "Client case studies and interactive sample dashboards for commercial, finance and demand planning teams: sales vs target, detailed P&L, pricing and promotion simulator, demand and supply planning, key account profitability, sales targeting and cash flow.",
   },
   "/experience": {
     title: "Experience | Musab Shaikh, Commercial Data Analyst",

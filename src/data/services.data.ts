@@ -54,47 +54,34 @@ export interface Package {
 // Engagement types; quotes depend on scope (data sources, pages, screens)
 export const packages: Package[] = [
   {
-    name: "Excel Tracker",
+    name: "Data Analysis",
     summary:
-      "A ready-to-use tracker or template with formulas, validation and a summary dashboard.",
+      "Answers to a specific business question, from your raw data to a clear recommendation.",
     includes: [
-      "Requirements call",
-      "Structured data entry sheets",
-      "Summary dashboard with charts",
-      "1 round of revisions",
-      "Short how-to video",
+      "Sales, pricing, promo or distribution analysis",
+      "Forecasting and machine learning models",
+      "Customer and product segmentation",
+      "Findings deck with clear next steps",
+      "Walkthrough call with your team",
     ],
-    timeline: "3–5 days",
+    timeline: "1–3 weeks",
   },
   {
-    name: "Dashboard Build",
+    name: "Dashboards & Trackers",
     summary:
-      "A Power BI report built on your data, from data model to published dashboard.",
+      "Power BI dashboards and Excel trackers your team opens every morning, with optional ongoing support.",
     includes: [
       "Requirements and KPI workshop",
-      "Data model and DAX measures",
-      "Up to 3 report pages",
-      "2 rounds of revisions",
-      "Handover session and 2 weeks of support",
+      "Data model, DAX and Power Query",
+      "Automated refresh and reporting",
+      "Revisions, handover and training",
+      "Optional monthly support retainer",
     ],
-    timeline: "1–2 weeks",
-  },
-  {
-    name: "BI Partner",
-    summary:
-      "Your part-time BI analyst: keep reports running and keep improving them.",
-    includes: [
-      "Up to 10 hours a month",
-      "Report maintenance and refresh fixes",
-      "New visuals, measures and pages",
-      "Monthly insights summary",
-      "Priority WhatsApp support",
-    ],
-    timeline: "Month to month",
+    timeline: "3 days – 2 weeks",
     featured: true,
   },
   {
-    name: "Mobile App",
+    name: "Mobile Apps",
     summary:
       "An Android and iOS app, designed, built and published to both stores.",
     includes: [

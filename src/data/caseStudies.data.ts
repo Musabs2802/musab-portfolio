@@ -39,11 +39,11 @@ const caseStudies: CaseStudy[] = [
     tools: ["Python", "LightGBM", "XGBoost", "Power BI"],
     visual: {
       type: "image",
-      src: "/thumbnails/salesman-action-dashboard.webp",
-      alt: "Salesman action dashboard listing customers to win and to protect",
+      src: "/thumbnails/sales-distributor.webp",
+      alt: "Sales dashboard listing which customers each salesman should visit and what to offer",
       caption: "Recreated with sample data. Client data stays confidential.",
     },
-    link: { label: "Open the sample dashboard", href: "/salesman-action-dashboard.html" },
+    link: { label: "Open the sample dashboard", href: "/dashboards/sales-distributor.html" },
   },
   {
     id: "reporting-automation",

@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>P&amp;L vs Budget &amp; 13-Week Cash Flow Dashboard | Sample by Musab Shaikh</title>
+<meta name="description" content="Sample finance dashboard for a Saudi food distributor: P&L against budget, cost variances, a 13-week cash flow forecast and receivables aging. Built by Musab Shaikh with fictional data." />
+<link rel="canonical" href="https://musab-shaikh.vercel.app/dashboards/finance-cash.html" />
+<meta property="og:image" content="https://musab-shaikh.vercel.app/thumbnails/finance-cash.webp" />
+<link rel="icon" type="image/svg+xml" href="/icon.svg" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lexend:wght@600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="dash.css" />
+</head>
+<body>
+<header class="topbar">
+  <div class="wrap">
+    <a class="back" href="/works"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>Musab Shaikh</a>
+    <span class="spacer"></span>
+    <span class="pill">Sample dashboard · fictional data</span>
+    <a class="btn" href="/contact">Get one built</a>
+  </div>
+</header>
+
+<main>
+  <section class="wrap intro">
+    <div>
+      <p class="eyebrow">Finance · Food distributor, Riyadh</p>
+      <h1>Budget and cash</h1>
+      <p class="context">Sahel Food Distribution supplies 40 food brands to supermarkets, restaurant groups and hotels on 30–60 day credit. Sales are ahead of plan, so the owners were surprised when the bank balance kept falling. This dashboard puts profit and cash on one page for the monthly review.</p>
+    </div>
+    <div class="question">
+      <div class="label">The business question</div>
+      <p>Are we on budget, and will we have enough cash to pay suppliers through year end?</p>
+    </div>
+  </section>
+
+  <div class="filters">
+    <div class="wrap">
+      <div class="filter"><span>View</span><div id="f-view"></div></div>
+      <span class="note">FY2026 · actuals to September · SAR</span>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="kpis" id="kpis"></div>
+
+    <section class="insight" aria-labelledby="ins-h">
+      <h2 id="ins-h">What the data says</h2>
+      <ol id="insights"></ol>
+    </section>
+
+    <div class="grid">
+      <article class="card span-7">
+        <div class="card-head"><div><h3>Monthly revenue against budget</h3><p class="sub">Oct–Dec show budget only</p></div></div>
+        <div id="lg-rev"></div>
+        <div id="c-rev"></div>
+      </article>
+      <article class="card span-5">
+        <div class="card-head"><div><h3>Costs over or under budget</h3><p class="sub" id="var-sub"></p></div></div>
+        <div id="c-var"></div>
+        <p class="callout" id="var-note"></p>
+      </article>
+
+      <article class="card span-7">
+        <div class="card-head"><div><h3>13-week cash forecast</h3><p class="sub">Closing bank balance each week, from 4 October</p></div></div>
+        <div id="lg-cash"></div>
+        <div id="c-cash"></div>
+      </article>
+      <article class="card span-5">
+        <div class="card-head"><div><h3>Who owes us, and for how long</h3><p class="sub">Receivables by customer and age</p></div></div>
+        <div id="lg-aging"></div>
+        <div id="c-aging"></div>
+      </article>
+
+      <article class="card span-12">
+        <div class="card-head"><div><h3>Profit &amp; loss</h3><p class="sub" id="pl-sub"></p></div></div>
+        <div id="t-pl"></div>
+      </article>
+    </div>
+
+    <section class="next">
+      <h2>What I'd do next</h2>
+      <ol id="next"></ol>
+    </section>
+
+    <section class="cta">
+      <div>
+        <h2>Want this for your business?</h2>
+        <p>I build this in Power BI or Excel from your accounting system (Zoho, QuickBooks, Odoo, Tally or Excel), refreshed monthly.</p>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <a class="btn" href="/contact">Get a quote</a>
+        <a class="btn ghost" href="/works">See other samples</a>
+      </div>
+    </section>
+    <p class="foot">Sample built by Musab Shaikh. Sahel Food Distribution, its customers and all figures are fictional.</p>
+  </div>
+</main>
+
+<script src="dash.js"></script>
+<script src="data/finance.js"></script>
+<script>
+const D = window.DATA, { fmt, sum } = Dash;
+const L = D.lines, A = D.actualMonths;
+const OPEX = ["Salaries", "Rent & utilities", "Logistics & fuel", "Marketing", "General & admin"];
+const VIEWS = { m: { label: "September", months: [A - 1] }, q: { label: "Q3", months: [6, 7, 8] }, ytd: { label: "Year to date", months: [...Array(A).keys()] } };
+const state = { view: "ytd" };
+
+const pl = (months) => {
+  const v = (name, k) => sum(months, (m) => L[name][k][m]);
+  const out = {};
+  ["actual", "budget"].forEach((k) => {
+    const rev = v("Revenue", k), cogs = v("Cost of goods sold", k);
+    const opex = Object.fromEntries(OPEX.map((o) => [o, v(o, k)]));
+    const gp = rev - cogs, ebitda = gp - sum(OPEX, (o) => opex[o]);
+    out[k] = { rev, cogs, gp, opex, ebitda, gm: (gp / rev) * 100 };
+  });
+  return out;
+};
+const pctVar = (a, b) => ((a - b) / Math.abs(b)) * 100;
+
+(function story() {
+  const y = pl(VIEWS.ytd.months);
+  const logi = "Logistics & fuel";
+  const low = D.cashWeeks.reduce((m, w, i) => (w.closing < m.v ? { v: w.closing, i } : m), { v: Infinity, i: -1 });
+  const below = D.cashWeeks.filter((w) => w.closing < D.minCash);
+  const overdue = sum(D.aging, (a) => a.buckets[2] + a.buckets[3]);
+  const top = [...D.aging].sort((a, b) => b.buckets[2] + b.buckets[3] - (a.buckets[2] + a.buckets[3])).slice(0, 3);
+  const topShare = (sum(top, (a) => a.buckets[2] + a.buckets[3]) / overdue) * 100;
+  document.getElementById("insights").innerHTML = [
+    `Revenue is <b>${Math.abs(pctVar(y.actual.rev, y.budget.rev)).toFixed(1)}% ahead of budget</b> this year, but EBITDA is ${Math.abs(pctVar(y.actual.ebitda, y.budget.ebitda)).toFixed(1)}% ${y.actual.ebitda < y.budget.ebitda ? "below" : "above"} budget. <b>Logistics & fuel is ${fmt.signedPct(pctVar(y.actual.opex[logi], y.budget.opex[logi]), 0)} over budget</b> and eats most of the gain.`,
+    `Cash falls <b>below the ${fmt.sar(D.minCash)} safety level</b> for ${below.length} weeks from ${below[0].week}, bottoming at <b>${fmt.sar(low.v)}</b>, when a supplier payment run and quarterly VAT fall due together.`,
+    `<b>${fmt.sar(overdue)} is overdue by 60+ days.</b> Three customers hold ${topShare.toFixed(0)}% of it: ${top.map((a) => a.customer).join(", ")}. Average collection time is ${D.dso.actual} days against a ${D.dso.target}-day target.`,
+  ].map((h, i) => `<li><span class="n">${i + 1}</span><span>${h}</span></li>`).join("");
+  const logiOver = y.actual.opex[logi] - y.budget.opex[logi];
+  document.getElementById("next").innerHTML = [
+    { h: "Collect from the three late payers first", p: `Weekly calls from the owner, and hold new deliveries for anything over 90 days. Collecting half of the overdue balance keeps cash above the safety level.`, i: `≈ ${fmt.sar(overdue / 2)} brought forward` },
+    { h: "Fix logistics before the busy season", p: "Combine part loads into full trucks by area and day, and re-tender the 3PL contract. Delivery costs grew faster than sales.", i: `Up to ${fmt.sar((logiOver / A) * 3)} a quarter` },
+    { h: "Line up a buffer now", p: `Agree a short overdraft or move the ${below[0].week} supplier run by two weeks, before it becomes urgent. Banks say yes more easily before cash gets tight.`, i: "No missed supplier payments" },
+  ].map((n, i) => `<li><div class="step">STEP ${i + 1}</div><h3>${n.h}</h3><p>${n.p}</p><div class="impact">${n.i}</div></li>`).join("");
+})();
+
+function render() {
+  const V = VIEWS[state.view];
+  const p = pl(V.months), a = p.actual, b = p.budget;
+  const vs = (x, y, upGood = true) => ({ text: `${fmt.signedPct(pctVar(x, y))} vs budget`, tone: Math.abs(pctVar(x, y)) < 0.5 ? "neutral" : (x > y) === upGood ? "good" : "bad" });
+  Dash.kpis("#kpis", [
+    { label: `Revenue · ${V.label}`, value: fmt.sar(a.rev), delta: vs(a.rev, b.rev) },
+    { label: "Gross margin", value: fmt.pct(a.gm), delta: { text: `${a.gm - b.gm >= 0 ? "+" : "−"}${Math.abs(a.gm - b.gm).toFixed(1)} pts vs budget`, tone: a.gm >= b.gm ? "good" : "bad" } },
+    { label: "EBITDA", value: fmt.sar(a.ebitda), delta: vs(a.ebitda, b.ebitda) },
+    { label: "Cash in bank", value: fmt.sar(D.cashWeeks[0].closing), sub: `low of ${fmt.sar(Math.min(...D.cashWeeks.map((w) => w.closing)))} in 13 weeks` },
+    { label: "Days to collect", value: D.dso.actual + " days", delta: { text: `${D.dso.actual - D.dso.target} days over target`, tone: "bad" } },
+  ]);
+
+  const opexItems = OPEX.map((o) => ({ o, v: pctVar(a.opex[o], b.opex[o]), d: a.opex[o] - b.opex[o] })).sort((x, y) => y.v - x.v);
+  document.getElementById("var-sub").textContent = `${V.label}, % difference from budget`;
+  Dash.hbars("#c-var", {
+    items: opexItems.map((x) => ({ label: x.o, values: [x.v], color: x.v > 2 ? "--s2" : x.v < -2 ? "--s1" : "--mute-mark", extra: [{ name: "Actual", value: fmt.sar(a.opex[x.o]) }, { name: "Budget", value: fmt.sar(b.opex[x.o]) }, { name: "Difference", value: fmt.sar(x.d) }] })),
+    valueName: "vs budget", format: (v) => fmt.signedPct(v, 0), tipFormat: (v) => fmt.signedPct(v), label: "Cost variance by line",
+  });
+  const worst = opexItems[0];
+  document.getElementById("var-note").innerHTML = `<b>${worst.o}</b> is ${fmt.sar(worst.d)} over budget in ${V.label === "Year to date" ? "the year so far" : V.label}.`;
+
+  document.getElementById("pl-sub").textContent = `${V.label} · actual vs budget`;
+  const rows = [
+    { line: "Revenue", a: a.rev, b: b.rev, up: true, _class: "" },
+    { line: "Cost of goods sold", a: a.cogs, b: b.cogs, up: false, _class: "sub" },
+    { line: "Gross profit", a: a.gp, b: b.gp, up: true, _class: "total" },
+    ...OPEX.map((o) => ({ line: o, a: a.opex[o], b: b.opex[o], up: false, _class: "sub" })),
+    { line: "EBITDA", a: a.ebitda, b: b.ebitda, up: true, _class: "total" },
+  ];
+  Dash.table("#t-pl", {
+    rows,
+    columns: [
+      { key: "line", label: "", sortable: false },
+      { key: "a", label: "Actual", align: "right", sortable: false, render: (r) => fmt.sarFull(r.a) },
+      { key: "b", label: "Budget", align: "right", sortable: false, render: (r) => fmt.sarFull(r.b) },
+      { key: "d", label: "Difference", align: "right", sortable: false, render: (r) => fmt.sarFull(r.a - r.b) },
+      { key: "p", label: "", align: "right", sortable: false, render: (r) => { const v = pctVar(r.a, r.b); const good = (v > 0) === r.up; const tone = Math.abs(v) < 2 ? "neutral" : good ? "good" : "bad"; return `<span class="tag ${tone}">${tone === "good" ? "▲" : tone === "bad" ? "▼" : ""} ${fmt.signedPct(v)}</span>`; } },
+    ],
+  });
+}
+
+(function staticViews() {
+  const rs = [{ name: "Actual", color: "--s1", values: L.Revenue.actual }];
+  Dash.legend("#lg-rev", [{ name: "Actual", color: "--s1" }, { name: "Budget", color: "--ink", type: "tick" }]);
+  Dash.columns("#c-rev", { categories: D.months, series: rs, overlay: { name: "Budget", values: L.Revenue.budget, color: "--ink" }, format: fmt.sar, height: 240, label: "Monthly revenue vs budget",
+    tipExtra: (i) => (L.Revenue.actual[i] ? [{ name: "vs budget", value: fmt.signedPct(pctVar(L.Revenue.actual[i], L.Revenue.budget[i])) }] : [{ name: "Status", value: "forecast" }]) });
+
+  const cw = D.cashWeeks;
+  const lowI = cw.reduce((m, w, i) => (w.closing < cw[m].closing ? i : m), 0);
+  Dash.legend("#lg-cash", [{ name: "Closing balance", color: "--s1", type: "line" }, { name: `Safety level ${fmt.sar(D.minCash)}`, color: "--bad", type: "line" }]);
+  Dash.line("#c-cash", { categories: cw.map((w) => w.week), series: [{ name: "Closing balance", color: "--s1", values: cw.map((w) => w.closing) }], area: true, zero: true,
+    threshold: { value: D.minCash, label: "Safety level", below: true }, markers: [{ index: lowI, value: cw[lowI].closing, label: "Low " + fmt.sar(cw[lowI].closing) }],
+    format: fmt.sar, height: 240, label: "13-week cash forecast", tipTitle: (i) => "Week of " + cw[i].week,
+    tipExtra: (i) => [{ name: "Cash in", value: fmt.sar(cw[i].inflow) }, { name: "Cash out", value: fmt.sar(cw[i].outflow) }] });
+
+  const ag = [...D.aging].sort((x, y) => sum(y.buckets) - sum(x.buckets));
+  const bs = D.agingBuckets.map((n, i) => ({ name: n, color: ["--q3", "--q5", "--q7", "--s2"][i] }));
+  Dash.legend("#lg-aging", bs);
+  Dash.hbars("#c-aging", { series: bs, items: ag.map((x) => ({ label: x.customer, values: x.buckets })), format: fmt.sar, rowHeight: 28, label: "Receivables aging" });
+})();
+
+Dash.segmented("#f-view", Object.entries(VIEWS).map(([value, v]) => ({ value, label: v.label })), state.view, (v) => { state.view = v; render(); });
+render();
+</script>
+</body>
+</html>

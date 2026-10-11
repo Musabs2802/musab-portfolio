@@ -17,7 +17,7 @@ const Quote: React.FC = () => {
           </p>
         </div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className="grid md:grid-cols-3 gap-5">
           {packages.map((pkg) => (
             <article
               key={pkg.name}
