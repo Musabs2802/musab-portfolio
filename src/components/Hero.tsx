@@ -4,7 +4,7 @@ import { ArrowRight, CalendarDays, TrendingUp, Users } from "lucide-react";
 import site from "../data/site.data";
 
 const experienceWith = [
-  { name: "Seara (JBS)", note: "World's largest protein company" },
+  { name: "JBS", note: "World's largest protein company" },
   { name: "Al Kabeer Group", note: "Leading GCC frozen food maker" },
   {
     name: "Tritone Health",

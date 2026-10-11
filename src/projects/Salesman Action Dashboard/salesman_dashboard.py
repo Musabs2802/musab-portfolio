@@ -537,7 +537,7 @@ body{{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
 <div class="main" id="main"></div>
 
 <!-- FOOTER -->
-<div class="footer">Developed by <strong>Musab Shaikh</strong> &nbsp;&bull;&nbsp; JBS | Seara | Commercial Intelligence &nbsp;&bull;&nbsp; {_dt.now().year}</div>
+<div class="footer">Developed by <strong>Musab Shaikh</strong> &nbsp;&bull;&nbsp; JBS | Commercial Intelligence &nbsp;&bull;&nbsp; {_dt.now().year}</div>
 
 <!-- INFO MODAL -->
 <div class="modal-overlay" id="infoModal" onclick="if(event.target===this)closeInfo()">

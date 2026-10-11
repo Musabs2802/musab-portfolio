@@ -536,7 +536,7 @@ input[type=range]::-webkit-slider-thumb{{
   </div>
 
 </div>
-<div class="footer">Developed by <strong>Musab Shaikh</strong> &nbsp;&bull;&nbsp; JBS | Seara | Commercial Intelligence &nbsp;&bull;&nbsp; 2026</div>
+<div class="footer">Developed by <strong>Musab Shaikh</strong> &nbsp;&bull;&nbsp; JBS | Commercial Intelligence &nbsp;&bull;&nbsp; 2026</div>
 
 <script>
 // ─────────────────────────────── DATA ────────────────────────────────────────

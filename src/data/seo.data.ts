@@ -14,7 +14,7 @@ export interface PageMeta {
 
 export const pages: Record<string, PageMeta> = {
   "/": {
-    title: "Musab Shaikh | Power BI Consultant & Data Analyst, Saudi Arabia",
+    title: "Musab Shaikh | Data & AI Consultant",
     description:
       "Freelance data analyst in Jeddah. Power BI dashboards, sales forecasting, pricing analysis, reporting automation and Android & iOS apps for growing businesses in the GCC and worldwide.",
   },
@@ -35,7 +35,8 @@ export const pages: Record<string, PageMeta> = {
   },
 };
 
-export const getPageMeta = (path: string): PageMeta => pages[path] ?? pages["/"];
+export const getPageMeta = (path: string): PageMeta =>
+  pages[path] ?? pages["/"];
 
 export const canonicalUrl = (path: string) =>
   `${SITE_URL}${path === "/" ? "/" : path}`;

@@ -4,9 +4,18 @@ import { ArrowRight, GraduationCap, MapPin, Clock } from "lucide-react";
 import site from "../data/site.data";
 
 const facts = [
-  { icon: <MapPin size={16} />, text: "Jeddah, Saudi Arabia · works remotely worldwide" },
-  { icon: <GraduationCap size={16} />, text: "MSc Data Science (Distinction), Middlesex University Dubai" },
-  { icon: <Clock size={16} />, text: "Overlaps with GCC, UK and European working hours" },
+  {
+    icon: <MapPin size={16} />,
+    text: "Jeddah, Saudi Arabia · works remotely worldwide",
+  },
+  {
+    icon: <GraduationCap size={16} />,
+    text: "MSc Data Science (Distinction), Middlesex University Dubai",
+  },
+  {
+    icon: <Clock size={16} />,
+    text: "Overlaps with GCC, UK and European working hours",
+  },
 ];
 
 const About: React.FC = () => {
@@ -32,10 +41,10 @@ const About: React.FC = () => {
           <div className="space-y-4 text-neutral-600 text-[17px] leading-relaxed">
             <p>
               I've spent 3+ years in FMCG commercial teams across the GCC. Today
-              I'm a Sales Analyst III at Seara (JBS), where I own the Power BI
-              reporting that everyone from the CEO to field sales opens each
-              morning. I also set sales targets for 250+ salesmen and track the
-              incentive programs behind 35% year-on-year growth.
+              I'm a Sales Analyst III at JBS, where I own the Power BI reporting
+              that everyone from the CEO to field sales opens each morning. I
+              also set sales targets for 250+ salesmen and track the incentive
+              programs behind 35% year-on-year growth.
             </p>
             <p>
               That's what I bring to freelance work: dashboards built around the
@@ -47,8 +56,13 @@ const About: React.FC = () => {
 
           <ul className="mt-8 space-y-3">
             {facts.map(({ icon, text }) => (
-              <li key={text} className="flex items-center gap-3 text-sm text-ink">
-                <span className="p-2 rounded-lg bg-brand-50 text-brand-700">{icon}</span>
+              <li
+                key={text}
+                className="flex items-center gap-3 text-sm text-ink"
+              >
+                <span className="p-2 rounded-lg bg-brand-50 text-brand-700">
+                  {icon}
+                </span>
                 {text}
               </li>
             ))}

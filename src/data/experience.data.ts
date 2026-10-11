@@ -3,7 +3,7 @@ import { Experience } from "../types";
 const experienceData: Experience[] = [
   {
     title: "Sales Analyst III",
-    company: "Seara (JBS)",
+    company: "JBS",
     companyNote: "Part of JBS, the world's largest protein company",
     location: "Jeddah, KSA",
     period: "Apr 2025 - Present",
@@ -13,7 +13,14 @@ const experienceData: Experience[] = [
       "Guide area and channel managers with incentive and rebate programs that delivered 35% YoY sales growth and a 23% uplift against forecast for targeted product families",
       "Set sales targets for 250+ salesmen across 7 channels, cascaded to salesman, customer and SKU level, and oversee the customer distribution KPI that guides market coverage",
     ],
-    technologies: ["Power BI", "DAX", "Power Automate", "Python", "SQL", "Excel"],
+    technologies: [
+      "Power BI",
+      "DAX",
+      "Power Automate",
+      "Python",
+      "SQL",
+      "Excel",
+    ],
   },
   {
     title: "Data Analyst",
