@@ -7,11 +7,7 @@ import SEO from "../components/SEO";
 const Experience: React.FC = () => {
   return (
     <main className="min-h-screen bg-sand-100 pt-32 pb-24">
-      <SEO
-        title="Experience"
-        description="Commercial BI experience of Musab Shaikh: Power BI reporting for a $700M+ FMCG business, propensity modelling, target setting and reporting automation across the GCC."
-        path="/experience"
-      />
+      <SEO />
       <div className="container-page max-w-4xl">
         <header className="mb-14">
           <p className="eyebrow mb-3">Experience</p>

@@ -1,21 +1,11 @@
 import { useEffect, type FC } from "react";
 import { useLocation } from "react-router-dom";
-
-interface SEOProps {
-  title: string;
-  description: string;
-  path?: string;
-  image?: string;
-}
-
-const DEFAULT_SITE_URL = "https://musab-shaikh.vercel.app";
-const DEFAULT_IMAGE =
-  "https://res.cloudinary.com/de75b0zis/image/upload/v1767276493/musab-img_dbulfo.png";
-
-const getSiteUrl = () => {
-  const envUrl = import.meta.env.VITE_SITE_URL;
-  return (envUrl || DEFAULT_SITE_URL).replace(/\/$/, "");
-};
+import {
+  OG_IMAGE,
+  canonicalUrl,
+  getPageMeta,
+  structuredData,
+} from "../data/seo.data";
 
 const upsertMeta = (
   key: string,
@@ -31,105 +21,41 @@ const upsertMeta = (
   tag.setAttribute("content", value);
 };
 
-const SEO: FC<SEOProps> = ({ title, description, path, image }) => {
-  const location = useLocation();
+// Keeps the <head> in sync on client-side navigation. The first load already
+// has these tags in the HTML, written by scripts/prerender.mjs.
+const SEO: FC = () => {
+  const { pathname } = useLocation();
 
   useEffect(() => {
-    const siteUrl = getSiteUrl();
-    const finalPath = path ?? location.pathname;
-    const canonicalUrl = `${siteUrl}${finalPath === "/" ? "" : finalPath}`;
-    const finalImage = image || DEFAULT_IMAGE;
+    const { title, description } = getPageMeta(pathname);
+    const url = canonicalUrl(pathname);
 
-    document.title = `${title} | Musab Shaikh`;
-
+    document.title = title;
     upsertMeta("description", description);
-    upsertMeta("robots", "index, follow, max-image-preview:large");
-
-    upsertMeta("og:type", "website", "property");
-    upsertMeta("og:title", `${title} | Musab Shaikh`, "property");
+    upsertMeta("og:title", title, "property");
     upsertMeta("og:description", description, "property");
-    upsertMeta("og:url", canonicalUrl, "property");
-    upsertMeta("og:image", finalImage, "property");
-
-    upsertMeta("twitter:card", "summary_large_image");
-    upsertMeta("twitter:title", `${title} | Musab Shaikh`);
+    upsertMeta("og:url", url, "property");
+    upsertMeta("og:image", OG_IMAGE, "property");
+    upsertMeta("twitter:title", title);
     upsertMeta("twitter:description", description);
-    upsertMeta("twitter:image", finalImage);
 
-    let canonicalTag = document.querySelector("link[rel='canonical']");
-    if (!canonicalTag) {
-      canonicalTag = document.createElement("link");
-      canonicalTag.setAttribute("rel", "canonical");
-      document.head.appendChild(canonicalTag);
+    let canonical = document.querySelector("link[rel='canonical']");
+    if (!canonical) {
+      canonical = document.createElement("link");
+      canonical.setAttribute("rel", "canonical");
+      document.head.appendChild(canonical);
     }
-    canonicalTag.setAttribute("href", canonicalUrl);
+    canonical.setAttribute("href", url);
 
-    const ldJsonId = "website-ld-json";
-    let scriptTag = document.getElementById(
-      ldJsonId,
-    ) as HTMLScriptElement | null;
-    if (!scriptTag) {
-      scriptTag = document.createElement("script");
-      scriptTag.id = ldJsonId;
-      scriptTag.type = "application/ld+json";
-      document.head.appendChild(scriptTag);
+    let ldJson = document.getElementById("ld-json") as HTMLScriptElement | null;
+    if (!ldJson) {
+      ldJson = document.createElement("script");
+      ldJson.id = "ld-json";
+      ldJson.type = "application/ld+json";
+      document.head.appendChild(ldJson);
     }
-
-    scriptTag.text = JSON.stringify({
-      "@context": "https://schema.org",
-      "@graph": [
-        {
-          "@type": "Person",
-          name: "Musab Shaikh",
-          jobTitle: "Power BI Consultant & Mobile App Developer",
-          url: siteUrl,
-          image: DEFAULT_IMAGE,
-          sameAs: [
-            "https://www.linkedin.com/in/musab-shaikh-2802/",
-            "https://github.com/Musabs2802",
-          ],
-        },
-        {
-          "@type": "ProfessionalService",
-          name: "Musab Shaikh - Analytics & App Development",
-          url: siteUrl,
-          image: DEFAULT_IMAGE,
-          email: "musabs2802@gmail.com",
-          telephone: "+966507055745",
-          areaServed: ["SA", "AE", "KW", "QA", "BH", "OM", "Worldwide"],
-          address: {
-            "@type": "PostalAddress",
-            addressLocality: "Jeddah",
-            addressCountry: "SA",
-          },
-          hasOfferCatalog: {
-            "@type": "OfferCatalog",
-            name: "Services",
-            itemListElement: [
-              "Power BI dashboard development",
-              "Excel trackers and data models",
-              "Reporting automation",
-              "Android and iOS app development",
-            ].map((service) => ({
-              "@type": "Offer",
-              itemOffered: { "@type": "Service", name: service },
-            })),
-          },
-        },
-        {
-          "@type": "WebSite",
-          name: "Musab Shaikh Portfolio",
-          url: siteUrl,
-        },
-        {
-          "@type": "WebPage",
-          name: title,
-          url: canonicalUrl,
-          description,
-        },
-      ],
-    });
-  }, [title, description, path, image, location.pathname]);
+    ldJson.text = JSON.stringify(structuredData(pathname));
+  }, [pathname]);
 
   return null;
 };

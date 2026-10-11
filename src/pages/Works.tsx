@@ -9,11 +9,7 @@ import { getDemoUrl } from "../utils/demoUrl";
 const Work: React.FC = () => {
   return (
     <main className="min-h-screen bg-sand-100 pt-32 pb-24">
-      <SEO
-        title="Work & Sample Dashboards"
-        description="Client case studies and interactive sample dashboards by Musab Shaikh: P&L, sales, price elasticity, trade promotion ROI, forecasting, distribution and more."
-        path="/works"
-      />
+      <SEO />
       <div className="container-page">
         <header className="max-w-2xl mb-14">
           <p className="eyebrow mb-3">Work</p>

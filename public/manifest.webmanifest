@@ -1,20 +1,25 @@
 {
-  "name": "Musab Shaikh Portfolio",
-  "short_name": "Musab Portfolio",
+  "name": "Musab Shaikh | Power BI Consultant & Data Analyst",
+  "short_name": "Musab Shaikh",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#f8f6f3",
   "theme_color": "#0f3d3e",
-  "description": "Power BI dashboards, Excel trackers and mobile apps by Musab Shaikh.",
+  "description": "Power BI dashboards, forecasting, pricing analysis, reporting automation and mobile apps by Musab Shaikh.",
   "icons": [
     {
-      "src": "/vite.svg",
+      "src": "/icon-192.png",
       "sizes": "192x192",
-      "type": "image/svg+xml"
+      "type": "image/png"
     },
     {
-      "src": "/vite.svg",
+      "src": "/icon-512.png",
       "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
       "type": "image/svg+xml"
     }
   ]

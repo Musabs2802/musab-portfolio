@@ -14,11 +14,7 @@ import SEO from "../components/SEO";
 const Home: React.FC = () => {
   return (
     <main className="min-h-screen">
-      <SEO
-        title="Power BI Consultant & Mobile App Developer"
-        description="Power BI dashboards, Excel trackers, reporting automation and Android & iOS apps for growing businesses in Saudi Arabia, the GCC and worldwide."
-        path="/"
-      />
+      <SEO />
       <Hero />
       <Stats />
       <Services />

@@ -6,7 +6,10 @@ import site from "../data/site.data";
 const experienceWith = [
   { name: "Seara (JBS)", note: "World's largest protein company" },
   { name: "Al Kabeer Group", note: "Leading GCC frozen food maker" },
-  { name: "Tritone Health", note: "UK health-tech startup working with the NHS" },
+  {
+    name: "Tritone Health",
+    note: "UK health-tech startup working with the NHS",
+  },
   { name: "MBVS", note: "Swiss network of Muslim professionals" },
 ];
 
@@ -27,7 +30,7 @@ const RotatingFocus: React.FC = () => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const id = window.setInterval(
       () => setIndex((i) => (i + 1) % focusAreas.length),
-      2600
+      2600,
     );
     return () => window.clearInterval(id);
   }, []);
@@ -38,7 +41,9 @@ const RotatingFocus: React.FC = () => {
         <span
           key={phrase}
           className={`[grid-area:1/1] transition-all duration-500 ease-out ${
-            i === index ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3"
+            i === index
+              ? "opacity-100 translate-y-0"
+              : "opacity-0 translate-y-3"
           }`}
         >
           {phrase}
@@ -65,7 +70,7 @@ const Hero: React.FC = () => {
               <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-ping" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
             </span>
-            Taking new projects · Jeddah &amp; remote
+            Taking new projects
           </div>
 
           <h1 className="text-4xl sm:text-5xl lg:text-[3.6rem] font-semibold text-ink leading-[1.08] mb-6">
@@ -98,7 +103,10 @@ const Hero: React.FC = () => {
               <CalendarDays size={18} />
               Book a free 20-min call
             </a>
-            <Link to="/works" className="btn-secondary !px-7 !py-3.5 !text-[15px]">
+            <Link
+              to="/works"
+              className="btn-secondary !px-7 !py-3.5 !text-[15px]"
+            >
               See sample dashboards
               <ArrowRight size={16} />
             </Link>
@@ -139,7 +147,9 @@ const Hero: React.FC = () => {
               <p className="font-heading font-semibold text-ink leading-none">
                 250+
               </p>
-              <p className="text-xs text-neutral-500 mt-1">daily report users</p>
+              <p className="text-xs text-neutral-500 mt-1">
+                daily report users
+              </p>
             </div>
           </div>
 

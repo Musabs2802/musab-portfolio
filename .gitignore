@@ -26,3 +26,4 @@ dist-ssr
 *.html
 !public/*.html
 src/projects/Salesman Action Dashboard/Salesman_Action_Dashboard_Demo.html
+dist-server

@@ -74,11 +74,7 @@ const Contact: React.FC = () => {
 
   return (
     <main className="min-h-screen bg-sand-100 pt-32 pb-24">
-      <SEO
-        title="Contact Musab Shaikh"
-        description="Book a free call or message Musab Shaikh about a Power BI dashboard, Excel tracker, reporting automation or mobile app project."
-        path="/contact"
-      />
+      <SEO />
       <div className="container-page">
         <header className="max-w-2xl mb-12">
           <p className="eyebrow mb-3">Contact</p>
